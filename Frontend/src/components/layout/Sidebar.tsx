@@ -12,27 +12,16 @@ import {
   ShieldCheck,
   Workflow,
 } from "lucide-react";
+import { NavLink } from "react-router-dom";
 
 const sections = [
   {
     title: "Repository",
     items: [
-      {
-        label: "Overview",
-        icon: LayoutDashboard,
-      },
-      {
-        label: "Code Review",
-        icon: Code2,
-      },
-      {
-        label: "Security",
-        icon: ShieldCheck,
-      },
-      {
-        label: "Dependencies",
-        icon: Box,
-      },
+      { label: "Overview", icon: LayoutDashboard, path: "/dashboard" },
+      { label: "Code Review", icon: Code2, path: "/dashboard/review" },
+      { label: "Security", icon: ShieldCheck, path: "/dashboard/security" },
+      { label: "Dependencies", icon: Box, path: "/dashboard/dependencies" },
     ],
   },
   {
@@ -41,22 +30,27 @@ const sections = [
       {
         label: "Architecture",
         icon: Network,
+        path: "/dashboard/architecture",
       },
       {
         label: "Performance",
         icon: Gauge,
+        path: "/dashboard/performance",
       },
       {
         label: "Codebase Chat",
         icon: MessageSquareCode,
+        path: "/dashboard/chat",
       },
       {
         label: "Documentation",
         icon: FileText,
+        path: "/dashboard/documentation",
       },
       {
         label: "CI/CD",
         icon: Workflow,
+        path: "/dashboard/cicd",
       },
     ],
   },
@@ -65,7 +59,6 @@ const sections = [
 function Sidebar() {
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r border-slate-800/80 bg-[#070b12] lg:flex lg:flex-col">
-      {/* Brand */}
       <div className="flex h-16 items-center border-b border-slate-800/80 px-5">
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center border border-violet-400/30 bg-violet-500/10 text-violet-300">
@@ -84,7 +77,6 @@ function Sidebar() {
         </div>
       </div>
 
-      {/* Repository context */}
       <div className="border-b border-slate-800/80 p-4">
         <div className="border border-slate-800 bg-[#0a0f18] p-3">
           <div className="flex items-center gap-2">
@@ -112,7 +104,6 @@ function Sidebar() {
         </div>
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         {sections.map((section) => (
           <div key={section.title} className="mb-6">
@@ -123,41 +114,47 @@ function Sidebar() {
             <div className="space-y-0.5">
               {section.items.map((item) => {
                 const Icon = item.icon;
-                const isActive = item.label === "Overview";
 
                 return (
-                  <button
+                  <NavLink
                     key={item.label}
-                    type="button"
-                    className={`group flex w-full items-center gap-3 border-l px-3 py-2 text-left text-sm transition ${
-                      isActive
-                        ? "border-violet-400 bg-violet-500/[0.07] text-white"
-                        : "border-transparent text-slate-500 hover:border-slate-700 hover:bg-white/[0.025] hover:text-slate-200"
-                    }`}
-                  >
-                    <Icon
-                      size={16}
-                      className={
+                    to={item.path}
+                    end={item.path === "/dashboard"}
+                    className={({ isActive }) =>
+                      `group flex w-full items-center gap-3 border-l px-3 py-2 text-left text-sm transition ${
                         isActive
-                          ? "text-violet-400"
-                          : "text-slate-600 group-hover:text-slate-400"
-                      }
-                    />
+                          ? "border-violet-400 bg-violet-500/[0.07] text-white"
+                          : "border-transparent text-slate-500 hover:border-slate-700 hover:bg-white/[0.025] hover:text-slate-200"
+                      }`
+                    }
+                  >
+                    {({ isActive }) => (
+                      <>
+                        <Icon
+                          size={16}
+                          className={
+                            isActive
+                              ? "text-violet-400"
+                              : "text-slate-600 group-hover:text-slate-400"
+                          }
+                        />
 
-                    <span>{item.label}</span>
+                        <span>{item.label}</span>
 
-                    {item.label === "Security" && (
-                      <span className="ml-auto font-mono text-[9px] text-orange-400">
-                        22
-                      </span>
+                        {item.label === "Security" && (
+                          <span className="ml-auto font-mono text-[9px] text-orange-400">
+                            22
+                          </span>
+                        )}
+
+                        {item.label === "Code Review" && (
+                          <span className="ml-auto font-mono text-[9px] text-slate-600">
+                            AI
+                          </span>
+                        )}
+                      </>
                     )}
-
-                    {item.label === "Code Review" && (
-                      <span className="ml-auto font-mono text-[9px] text-slate-600">
-                        AI
-                      </span>
-                    )}
-                  </button>
+                  </NavLink>
                 );
               })}
             </div>
@@ -165,7 +162,6 @@ function Sidebar() {
         ))}
       </nav>
 
-      {/* Bottom status */}
       <div className="border-t border-slate-800/80 p-4">
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center border border-cyan-400/20 bg-cyan-400/5 text-cyan-400">
