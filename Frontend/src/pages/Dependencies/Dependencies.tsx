@@ -13,7 +13,6 @@ import {
   ShieldCheck,
   Terminal,
   TrendingUp,
-  XCircle,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
