@@ -1,80 +1,105 @@
 import {
-  Activity,
   Bell,
   ChevronDown,
   Command,
   GitBranch,
   Search,
-  ShieldCheck,
 } from "lucide-react";
 
 function CommandBar() {
   return (
-    <header className="flex h-16 items-center justify-between border-b border-slate-800/80 bg-[#070b14] px-6 text-white">
-      <div className="flex items-center gap-8">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-black">
-            <ShieldCheck size={19} strokeWidth={2.5} />
+    <header className="sticky top-0 z-30 h-16 border-b border-slate-800/80 bg-[#070b12]/95 backdrop-blur">
+      <div className="flex h-full items-center justify-between px-5 lg:px-7">
+        {/* Left */}
+        <div className="flex items-center gap-5">
+          <div className="flex items-center gap-2 lg:hidden">
+            <div className="flex h-8 w-8 items-center justify-center border border-violet-400/30 bg-violet-500/10 text-violet-300">
+              <Command size={16} />
+            </div>
+
+            <span className="text-sm font-semibold text-white">
+              SecureAI
+            </span>
           </div>
 
-          <span className="text-lg font-semibold tracking-tight">
-            SecureAI
-          </span>
+          <div className="hidden items-center gap-2 text-xs lg:flex">
+            <span className="font-mono text-slate-600">
+              SECUREAI
+            </span>
+
+            <span className="text-slate-700">/</span>
+
+            <span className="text-slate-400">
+              krushnak39/SecureAI
+            </span>
+
+            <span className="text-slate-700">/</span>
+
+            <div className="flex items-center gap-1.5 text-slate-300">
+              <GitBranch size={12} />
+              <span className="font-mono">feature</span>
+            </div>
+          </div>
         </div>
 
-        <nav className="hidden items-center gap-6 text-sm md:flex">
-          <a
-            href="/dashboard"
-            className="text-white transition hover:text-slate-300"
-          >
-            Intelligence
-          </a>
+        {/* Center search */}
+        <button
+          type="button"
+          className="hidden w-full max-w-sm items-center justify-between border border-slate-800 bg-[#0a0f18] px-3 py-2 text-left transition hover:border-slate-700 md:flex"
+        >
+          <div className="flex items-center gap-2">
+            <Search size={15} className="text-slate-600" />
 
-          <a
-            href="/projects"
-            className="text-slate-500 transition hover:text-white"
-          >
-            Projects
-          </a>
-
-          <a
-            href="/security"
-            className="text-slate-500 transition hover:text-white"
-          >
-            Security
-          </a>
-
-          <a
-            href="/code-chat"
-            className="text-slate-500 transition hover:text-white"
-          >
-            AI Chat
-          </a>
-        </nav>
-      </div>
-
-      <div className="flex items-center gap-3">
-        <button className="hidden items-center gap-2 rounded-lg border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-400 transition hover:border-slate-700 hover:text-white sm:flex">
-          <Search size={16} />
-          <span>Search</span>
-          <span className="ml-3 flex items-center gap-1 text-xs text-slate-600">
-            <Command size={11} /> K
-          </span>
-        </button>
-
-        <button className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-900 hover:text-white">
-          <Bell size={19} />
-        </button>
-
-        <div className="hidden h-6 w-px bg-slate-800 sm:block" />
-
-        <button className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-800 text-xs font-semibold">
-            D
+            <span className="text-xs text-slate-500">
+              Search repository, findings, files...
+            </span>
           </div>
 
-          <ChevronDown size={14} className="text-slate-500" />
+          <div className="flex items-center gap-1 text-[10px] text-slate-600">
+            <kbd className="border border-slate-800 px-1.5 py-0.5">
+              Ctrl
+            </kbd>
+
+            <kbd className="border border-slate-800 px-1.5 py-0.5">
+              K
+            </kbd>
+          </div>
         </button>
+
+        {/* Right */}
+        <div className="flex items-center gap-3">
+          <div className="hidden items-center gap-2 border border-emerald-400/10 bg-emerald-400/[0.03] px-2.5 py-1.5 sm:flex">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+
+            <span className="font-mono text-[9px] uppercase tracking-wider text-emerald-400">
+              Engine live
+            </span>
+          </div>
+
+          <button
+            type="button"
+            aria-label="Notifications"
+            className="flex h-8 w-8 items-center justify-center text-slate-500 transition hover:text-white"
+          >
+            <Bell size={16} />
+          </button>
+
+          <div className="h-5 w-px bg-slate-800" />
+
+          <button
+            type="button"
+            className="flex items-center gap-2"
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-700 bg-slate-800 font-mono text-xs text-slate-300">
+              D
+            </div>
+
+            <ChevronDown
+              size={13}
+              className="text-slate-600"
+            />
+          </button>
+        </div>
       </div>
     </header>
   );

@@ -1,245 +1,496 @@
-import type { ReactNode } from "react";
-
 import {
   Activity,
   ArrowUpRight,
   CheckCircle2,
-  GitBranch,
   GitCommit,
   ShieldAlert,
   Sparkles,
   Zap,
 } from "lucide-react";
 
-const metrics = [
-  {
-    label: "Code Quality",
-    value: 86,
-    change: "+4.2%",
-  },
-  {
-    label: "Security",
-    value: 71,
-    change: "-2.1%",
-  },
-  {
-    label: "Performance",
-    value: 89,
-    change: "+7.8%",
-  },
-  {
-    label: "Architecture",
-    value: 78,
-    change: "+3.4%",
-  },
-  {
-    label: "Maintainability",
-    value: 84,
-    change: "+5.1%",
-  },
-];
+import MetricCard from "../../components/common/MetricCard";
+import RepositoryHeader from "../../components/common/RepositoryHeader";
+import SectionCard from "../../components/common/SectionCard";
+import StatusBadge from "../../components/common/StatusBadge";
 
 function Dashboard() {
   return (
-    <main className="px-6 py-8 lg:px-10">
-      {/* Project Header */}
-      <section className="mb-8 flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
-        <div>
-          <div className="mb-3 flex items-center gap-2 text-xs text-slate-500">
-            <GitBranch size={14} />
-            <span>PROJECT</span>
-            <span>/</span>
-            <span className="text-slate-300">SecureAI</span>
-          </div>
+    <div className="space-y-8">
+      {/* Repository Header */}
+      <RepositoryHeader
+        repositoryName="SecureAI"
+        repositoryPath="krushnak39/SecureAI"
+        branch="feature"
+        lastAnalyzed="4 minutes ago"
+      />
 
-          <h1 className="text-3xl font-semibold tracking-tight">
-            Engineering Intelligence
-          </h1>
-
-          <p className="mt-2 text-sm text-slate-500">
-            github.com/krushnak39/SecureAI
-          </p>
-        </div>
-
-        <button className="flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-medium text-black transition hover:bg-slate-200">
-          <Sparkles size={16} />
-          Run Analysis
-        </button>
-      </section>
-
-      {/* Health Hero */}
-      <section className="relative mb-5 overflow-hidden rounded-2xl border border-slate-800 bg-[#0a0f1a] p-7">
-        <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-slate-700/10 blur-3xl" />
-
-        <div className="relative flex flex-col justify-between gap-8 md:flex-row md:items-center">
+      {/* Engineering Intelligence */}
+      <section>
+        <div className="mb-5 flex items-end justify-between">
           <div>
-            <div className="mb-3 flex items-center gap-2 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
-              <Activity size={14} />
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-violet-400">
+              Engineering Intelligence
+            </p>
+
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white">
               Project Health
-            </div>
+            </h2>
 
-            <div className="flex items-end gap-3">
-              <span className="text-7xl font-semibold tracking-tighter">
-                82
-              </span>
-
-              <span className="mb-3 text-sm text-slate-500">/ 100</span>
-            </div>
-
-            <p className="mt-2 text-sm text-slate-500">
-              Overall engineering health score
+            <p className="mt-1 text-sm text-secure-muted">
+              A high-level view of your repository's engineering health.
             </p>
           </div>
 
-          <div className="grid grid-cols-3 gap-8 border-l border-slate-800 pl-8">
-            <div>
-              <p className="text-xs text-slate-600">Checks</p>
-              <p className="mt-1 text-xl font-medium">164</p>
+          <div className="hidden items-center gap-2 text-xs text-secure-muted sm:flex">
+            <Activity size={14} />
+            Live repository intelligence
+          </div>
+        </div>
+
+        {/* Health Overview */}
+        <div className="grid gap-4 lg:grid-cols-[1.25fr_1fr_1fr_1fr]">
+          {/* Overall Health */}
+          <div className="rounded-2xl border border-secure-border bg-secure-panel p-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs text-secure-muted">
+                  Overall Health
+                </p>
+
+                <div className="mt-3 flex items-end gap-2">
+                  <span className="text-5xl font-semibold tracking-tight text-white">
+                    82
+                  </span>
+
+                  <span className="mb-1 text-sm text-secure-muted">
+                    / 100
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-violet-500/20 bg-violet-500/10 text-violet-400">
+                <Sparkles size={20} />
+              </div>
             </div>
 
-            <div>
-              <p className="text-xs text-slate-600">Passed</p>
-              <p className="mt-1 text-xl font-medium">142</p>
+            <div className="mt-6 h-2 overflow-hidden rounded-full bg-slate-800">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-violet-500 to-cyan-400"
+                style={{ width: "82%" }}
+              />
             </div>
 
-            <div>
-              <p className="text-xs text-slate-600">Issues</p>
-              <p className="mt-1 text-xl font-medium">22</p>
+            <div className="mt-4 flex items-center justify-between text-xs">
+              <span className="text-secure-muted">
+                Engineering health score
+              </span>
+
+              <span className="text-emerald-400">
+                +5.6% this analysis
+              </span>
+            </div>
+          </div>
+
+          {/* Checks */}
+          <div className="rounded-2xl border border-secure-border bg-secure-panel p-6">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-secure-muted">
+                Checks
+              </p>
+
+              <CheckCircle2
+                size={18}
+                className="text-emerald-400"
+              />
+            </div>
+
+            <p className="mt-5 text-3xl font-semibold text-white">
+              164
+            </p>
+
+            <p className="mt-2 text-xs text-secure-muted">
+              Total checks performed
+            </p>
+
+            <div className="mt-5 flex items-center gap-2">
+              <span className="text-sm font-medium text-emerald-400">
+                142 passed
+              </span>
+
+              <span className="text-xs text-slate-600">
+                •
+              </span>
+
+              <span className="text-sm text-orange-400">
+                22 issues
+              </span>
+            </div>
+          </div>
+
+          {/* Findings */}
+          <div className="rounded-2xl border border-secure-border bg-secure-panel p-6">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-secure-muted">
+                Findings
+              </p>
+
+              <ShieldAlert
+                size={18}
+                className="text-orange-400"
+              />
+            </div>
+
+            <p className="mt-5 text-3xl font-semibold text-white">
+              22
+            </p>
+
+            <p className="mt-2 text-xs text-secure-muted">
+              Issues requiring review
+            </p>
+
+            <div className="mt-5 flex gap-3 text-xs">
+              <span className="text-red-400">
+                2 high
+              </span>
+
+              <span className="text-amber-400">
+                8 medium
+              </span>
+
+              <span className="text-slate-400">
+                12 low
+              </span>
+            </div>
+          </div>
+
+          {/* Analysis Time */}
+          <div className="rounded-2xl border border-secure-border bg-secure-panel p-6">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-secure-muted">
+                Analysis Time
+              </p>
+
+              <Zap
+                size={18}
+                className="text-cyan-400"
+              />
+            </div>
+
+            <p className="mt-5 text-3xl font-semibold text-white">
+              42s
+            </p>
+
+            <p className="mt-2 text-xs text-secure-muted">
+              Repository analysis duration
+            </p>
+
+            <div className="mt-5 flex items-center gap-2 text-xs text-emerald-400">
+              <ArrowUpRight size={13} />
+              18% faster than previous run
             </div>
           </div>
         </div>
       </section>
 
-      {/* Metrics */}
-      <section className="mb-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        {metrics.map((metric) => (
-          <div
-            key={metric.label}
-            className="rounded-xl border border-slate-800 bg-[#090e18] p-5 transition hover:border-slate-700"
-          >
-            <p className="text-xs text-slate-500">{metric.label}</p>
+      {/* Engineering Metrics */}
+      <section>
+        <div className="mb-5">
+          <h2 className="text-lg font-medium text-white">
+            Engineering Metrics
+          </h2>
 
-            <div className="mt-4 flex items-end justify-between">
-              <span className="text-3xl font-semibold tracking-tight">
-                {metric.value}
-              </span>
+          <p className="mt-1 text-xs text-secure-muted">
+            SecureAI's analysis across the major engineering dimensions.
+          </p>
+        </div>
 
-              <span className="text-xs text-slate-500">
-                {metric.change}
-              </span>
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <MetricCard
+            label="Code Quality"
+            value={86}
+            change="+4.2%"
+          />
+
+          <MetricCard
+            label="Security"
+            value={71}
+            change="-2.1%"
+          />
+
+          <MetricCard
+            label="Performance"
+            value={89}
+            change="+7.8%"
+          />
+
+          <MetricCard
+            label="Architecture"
+            value={78}
+            change="+3.4%"
+          />
+        </div>
+
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <MetricCard
+            label="Maintainability"
+            value={84}
+            change="+5.1%"
+          />
+
+          <MetricCard
+            label="Dependencies"
+            value={91}
+            change="+2.8%"
+          />
+
+          <MetricCard
+            label="Test Coverage"
+            value={76}
+            change="+6.3%"
+          />
+
+          <MetricCard
+            label="Documentation"
+            value={68}
+            change="+9.4%"
+          />
+        </div>
+      </section>
+
+      {/* Analysis Overview + AI Brief */}
+      <div className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
+        {/* Analysis Overview */}
+        <SectionCard
+          title="Analysis Overview"
+          subtitle="Latest findings across your repository"
+          action={
+            <button
+              type="button"
+              className="flex items-center gap-1.5 text-xs text-slate-400 transition hover:text-white"
+            >
+              View all
+              <ArrowUpRight size={13} />
+            </button>
+          }
+        >
+          <div className="space-y-3">
+            {/* Security */}
+            <div className="flex items-center justify-between rounded-xl border border-secure-border bg-secure-panel-soft p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-500/10 text-red-400">
+                  <ShieldAlert size={17} />
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-white">
+                    Security Analysis
+                  </p>
+
+                  <p className="mt-1 text-xs text-secure-muted">
+                    2 high-severity findings detected
+                  </p>
+                </div>
+              </div>
+
+              <StatusBadge
+                status="high"
+                label="Attention"
+              />
             </div>
 
-            <div className="mt-4 h-1 overflow-hidden rounded-full bg-slate-800">
-              <div
-                className="h-full rounded-full bg-slate-300"
-                style={{ width: `${metric.value}%` }}
+            {/* Performance */}
+            <div className="flex items-center justify-between rounded-xl border border-secure-border bg-secure-panel-soft p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400">
+                  <Zap size={17} />
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-white">
+                    Performance Analysis
+                  </p>
+
+                  <p className="mt-1 text-xs text-secure-muted">
+                    No critical performance regressions
+                  </p>
+                </div>
+              </div>
+
+              <StatusBadge
+                status="healthy"
+                label="Healthy"
+              />
+            </div>
+
+            {/* Code Intelligence */}
+            <div className="flex items-center justify-between rounded-xl border border-secure-border bg-secure-panel-soft p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-500/10 text-violet-400">
+                  <Sparkles size={17} />
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-white">
+                    Code Intelligence
+                  </p>
+
+                  <p className="mt-1 text-xs text-secure-muted">
+                    18 maintainability recommendations
+                  </p>
+                </div>
+              </div>
+
+              <StatusBadge
+                status="medium"
+                label="Review"
+              />
+            </div>
+
+            {/* Dependency Analysis */}
+            <div className="flex items-center justify-between rounded-xl border border-secure-border bg-secure-panel-soft p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-cyan-500/10 text-cyan-400">
+                  <CheckCircle2 size={17} />
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-white">
+                    Dependency Analysis
+                  </p>
+
+                  <p className="mt-1 text-xs text-secure-muted">
+                    142 checks passed successfully
+                  </p>
+                </div>
+              </div>
+
+              <StatusBadge
+                status="healthy"
+                label="Healthy"
               />
             </div>
           </div>
-        ))}
-      </section>
+        </SectionCard>
 
-      {/* Lower Dashboard */}
-      <section className="grid gap-5 lg:grid-cols-3">
-        {/* Analysis */}
-        <div className="rounded-2xl border border-slate-800 bg-[#090e18] p-6 lg:col-span-2">
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <h2 className="font-medium">Analysis Overview</h2>
+        {/* AI Engineering Brief */}
+        <SectionCard
+          title="AI Engineering Brief"
+          subtitle="Generated from repository intelligence"
+        >
+          <div className="rounded-xl border border-violet-500/10 bg-violet-500/[0.04] p-5">
+            <div className="flex items-center gap-2 text-violet-400">
+              <Sparkles size={16} />
 
-              <p className="mt-1 text-xs text-slate-500">
-                Latest repository intelligence
-              </p>
+              <span className="text-xs font-medium">
+                SecureAI Intelligence
+              </span>
             </div>
 
-            <button className="text-slate-500 transition hover:text-white">
-              <ArrowUpRight size={18} />
-            </button>
+            <p className="mt-5 text-sm leading-6 text-slate-300">
+              Your repository shows strong performance characteristics,
+              but the security layer requires attention.
+            </p>
+
+            <div className="mt-5 space-y-3">
+              <div className="flex gap-3">
+                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-400" />
+
+                <p className="text-xs leading-5 text-slate-400">
+                  Authentication logic appears across multiple modules.
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-400" />
+
+                <p className="text-xs leading-5 text-slate-400">
+                  Database queries may occur inside iterative operations.
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-400" />
+
+                <p className="text-xs leading-5 text-slate-400">
+                  Input validation should be reviewed across API boundaries.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 border-t border-violet-500/10 pt-5">
+              <p className="text-[11px] uppercase tracking-wider text-secure-muted">
+                Recommended first action
+              </p>
+
+              <p className="mt-2 text-sm font-medium text-white">
+                Review authentication middleware.
+              </p>
+            </div>
           </div>
-
-          <div className="space-y-2">
-            <AnalysisRow
-              icon={<ShieldAlert size={17} />}
-              title="Security Analysis"
-              description="2 high-severity findings detected"
-              status="Attention"
-            />
-
-            <AnalysisRow
-              icon={<Zap size={17} />}
-              title="Performance Analysis"
-              description="No critical performance regressions"
-              status="Healthy"
-            />
-
-            <AnalysisRow
-              icon={<GitCommit size={17} />}
-              title="Code Intelligence"
-              description="18 maintainability recommendations"
-              status="Review"
-            />
-
-            <AnalysisRow
-              icon={<CheckCircle2 size={17} />}
-              title="Dependency Analysis"
-              description="142 checks passed successfully"
-              status="Healthy"
-            />
-          </div>
-        </div>
-
-        {/* AI Insight */}
-        <div className="rounded-2xl border border-slate-800 bg-[#090e18] p-6">
-          <div className="mb-6 flex items-center gap-2">
-            <Sparkles size={17} />
-            <h2 className="font-medium">AI Insight</h2>
-          </div>
-
-          <p className="text-sm leading-6 text-slate-400">
-            Your repository shows strong performance characteristics, but the
-            security layer requires attention. SecureAI detected patterns that
-            may increase risk around input validation and configuration
-            management.
-          </p>
-
-          <button className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg border border-slate-800 py-2.5 text-sm text-slate-300 transition hover:bg-slate-800/50 hover:text-white">
-            Explore Findings
-            <ArrowUpRight size={15} />
-          </button>
-        </div>
-      </section>
-    </main>
-  );
-}
-
-function AnalysisRow({
-  icon,
-  title,
-  description,
-  status,
-}: {
-  icon: ReactNode;
-  title: string;
-  description: string;
-  status: string;
-}) {
-  return (
-    <div className="flex items-center justify-between rounded-xl border border-slate-800/70 bg-slate-950/40 p-4">
-      <div className="flex items-center gap-4">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-slate-400">
-          {icon}
-        </div>
-
-        <div>
-          <p className="text-sm font-medium">{title}</p>
-
-          <p className="mt-1 text-xs text-slate-500">{description}</p>
-        </div>
+        </SectionCard>
       </div>
 
-      <span className="hidden text-xs text-slate-500 sm:block">
-        {status}
-      </span>
+      {/* Repository Activity */}
+      <SectionCard
+        title="Repository Activity"
+        subtitle="Recent engineering events"
+      >
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="rounded-xl border border-secure-border bg-secure-panel-soft p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-800 text-slate-300">
+                <GitCommit size={16} />
+              </div>
+
+              <div>
+                <p className="text-sm font-medium text-white">
+                  Latest commit
+                </p>
+
+                <p className="mt-1 text-xs text-secure-muted">
+                  Feature development branch updated
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-secure-border bg-secure-panel-soft p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400">
+                <CheckCircle2 size={16} />
+              </div>
+
+              <div>
+                <p className="text-sm font-medium text-white">
+                  Analysis completed
+                </p>
+
+                <p className="mt-1 text-xs text-secure-muted">
+                  Repository intelligence is up to date
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-secure-border bg-secure-panel-soft p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-500/10 text-violet-400">
+                <Sparkles size={16} />
+              </div>
+
+              <div>
+                <p className="text-sm font-medium text-white">
+                  AI insights generated
+                </p>
+
+                <p className="mt-1 text-xs text-secure-muted">
+                  18 recommendations available
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </SectionCard>
     </div>
   );
 }
