@@ -18,21 +18,8 @@ import Security from "./pages/Security/Security";
 
 import Projects from "./pages/Projects/Projects";
 
-function ProjectDetails() {
-  return (
-    <div className="p-10 text-white">
-      Project Details
-    </div>
-  );
-}
-
-function Settings() {
-  return (
-    <div className="p-10 text-white">
-      Settings
-    </div>
-  );
-}
+import ProjectDetails from "./pages/Projects/ProjectDetails";
+import Settings from "./pages/Settings/Settings";
 
 function App() {
   return (
