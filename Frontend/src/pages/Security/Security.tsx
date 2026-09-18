@@ -1,815 +1,817 @@
-import { useMemo, useState, type ReactNode } from "react";
 import {
-  AlertOctagon,
   AlertTriangle,
-  Check,
+  ArrowUpRight,
+  Box,
   CheckCircle2,
   ChevronRight,
-  FileCode2,
-  Filter,
-  KeyRound,
+  CircleAlert,
+  ExternalLink,
+  GitBranch,
+  Package,
+  RefreshCw,
   Search,
-  Shield,
-  ShieldAlert,
   ShieldCheck,
   Terminal,
+  TrendingUp,
+  XCircle,
 } from "lucide-react";
+import { useMemo, useState } from "react";
 
-type Severity = "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
+type DependencyStatus =
+  | "healthy"
+  | "outdated"
+  | "vulnerable"
+  | "deprecated";
 
-interface SecurityFinding {
+type DependencyType = "direct" | "transitive";
+
+interface Dependency {
   id: number;
-  severity: Severity;
-  category: string;
-  title: string;
-  file: string;
-  line: number;
-  rule: string;
+  name: string;
+  ecosystem: string;
+  type: DependencyType;
+  currentVersion: string;
+  latestVersion: string;
+  status: DependencyStatus;
+  severity: "critical" | "high" | "medium" | "low" | "none";
   description: string;
+  advisory?: string;
+  advisoryId?: string;
   impact: string;
-  evidence: string;
-  remediation: string;
-  scanner: string;
+  recommendation: string;
+  files: string[];
+  dependents: number;
 }
 
-const findings: SecurityFinding[] = [
+const dependencies: Dependency[] = [
   {
     id: 1,
-    severity: "HIGH",
-    category: "Secrets",
-    title: "Potential hardcoded credential",
-    file: "src/config/auth.ts",
-    line: 31,
-    rule: "secret-detection",
+    name: "express",
+    ecosystem: "npm",
+    type: "direct",
+    currentVersion: "4.18.2",
+    latestVersion: "5.1.0",
+    status: "outdated",
+    severity: "medium",
     description:
-      "A credential-like value appears to be embedded directly in application source code.",
+      "Fast, minimalist web framework for Node.js applications.",
     impact:
-      "If committed to a repository or exposed through a build artifact, the credential could be reused by an unauthorized party.",
-    evidence:
-      'const clientSecret = "sk_live_••••••••••";',
-    remediation:
-      "Move the credential to a protected environment variable or secret manager. Rotate the exposed credential if it is real.",
-    scanner: "Secret Scanner",
+      "The installed major version is behind the current release and may miss security, performance, and maintenance improvements.",
+    recommendation:
+      "Review the Express 5 migration guide and upgrade after validating middleware compatibility.",
+    files: ["package.json", "src/server.ts"],
+    dependents: 4,
   },
   {
     id: 2,
-    severity: "HIGH",
-    category: "Input Validation",
-    title: "Unsafe input handling",
-    file: "src/controllers/user.ts",
-    line: 67,
-    rule: "unsafe-input",
+    name: "axios",
+    ecosystem: "npm",
+    type: "direct",
+    currentVersion: "1.6.2",
+    latestVersion: "1.12.2",
+    status: "vulnerable",
+    severity: "high",
     description:
-      "User-controlled request data reaches application logic without a visible validation boundary.",
+      "Promise-based HTTP client for browser and Node.js environments.",
+    advisory:
+      "Installed version is affected by a published security advisory.",
+    advisoryId: "GHSA-8hc4-vh64-cxmj",
     impact:
-      "Unexpected or malicious input can reach sensitive operations and may increase the application's attack surface.",
-    evidence:
-      "const userData = req.body;\nawait userService.update(userId, userData);",
-    remediation:
-      "Validate the request body against a strict schema before passing it to the service layer.",
-    scanner: "SecureAI Rules",
+      "A vulnerable HTTP client can expose applications to unexpected request handling and security issues depending on how untrusted URLs and responses are processed.",
+    recommendation:
+      "Upgrade to the latest compatible release and run the application's HTTP integration tests.",
+    files: ["package.json", "src/services/github.ts"],
+    dependents: 6,
   },
   {
     id: 3,
-    severity: "MEDIUM",
-    category: "Dependencies",
-    title: "Dependency requires security review",
-    file: "package.json",
-    line: 24,
-    rule: "dependency-advisory",
+    name: "jsonwebtoken",
+    ecosystem: "npm",
+    type: "direct",
+    currentVersion: "9.0.1",
+    latestVersion: "9.0.2",
+    status: "healthy",
+    severity: "none",
     description:
-      "A project dependency has been flagged for additional vulnerability review.",
+      "Implementation of JSON Web Tokens for authentication and authorization.",
     impact:
-      "Known vulnerable dependencies can introduce security issues without changes to application code.",
-    evidence:
-      '"axios": "^1.8.0"',
-    remediation:
-      "Review the package advisory, update to a patched version where available, and rerun the dependency scan.",
-    scanner: "Dependency Scanner",
+      "No dependency risk was detected in the current static analysis snapshot.",
+    recommendation:
+      "Keep the package updated and continue validating token configuration during security analysis.",
+    files: ["package.json", "src/auth/token.ts"],
+    dependents: 3,
   },
   {
     id: 4,
-    severity: "MEDIUM",
-    category: "Authentication",
-    title: "Authentication failure path lacks explicit logging",
-    file: "src/services/auth.ts",
-    line: 118,
-    rule: "auth-observability",
+    name: "lodash",
+    ecosystem: "npm",
+    type: "transitive",
+    currentVersion: "4.17.19",
+    latestVersion: "4.17.21",
+    status: "vulnerable",
+    severity: "high",
     description:
-      "The authentication failure branch does not appear to emit structured security telemetry.",
+      "Utility library included transitively by another application dependency.",
+    advisory:
+      "Installed version contains known security issues addressed by later releases.",
+    advisoryId: "GHSA-35jh-r3h4-6jhm",
     impact:
-      "Reduced visibility can make suspicious authentication activity harder to investigate.",
-    evidence:
-      "if (!isValid) return unauthorized();",
-    remediation:
-      "Add structured security logging while ensuring credentials and sensitive user data are never logged.",
-    scanner: "SecureAI Rules",
+      "Because this package enters the application through the dependency tree, vulnerable utility code may still be reachable by application code.",
+    recommendation:
+      "Upgrade the parent dependency or use an npm override to resolve the vulnerable transitive version.",
+    files: ["package-lock.json"],
+    dependents: 8,
   },
   {
     id: 5,
-    severity: "LOW",
-    category: "Configuration",
-    title: "Security-related configuration should be explicit",
-    file: "src/config/server.ts",
-    line: 42,
-    rule: "secure-config",
+    name: "cors",
+    ecosystem: "npm",
+    type: "direct",
+    currentVersion: "2.8.5",
+    latestVersion: "2.8.5",
+    status: "healthy",
+    severity: "none",
     description:
-      "A security-related server option is relying on an implicit default.",
+      "Node.js middleware for enabling Cross-Origin Resource Sharing.",
     impact:
-      "Explicit security configuration reduces ambiguity across environments.",
-    evidence:
-      "app.use(cors());",
-    remediation:
-      "Define an explicit allowlist and environment-specific CORS policy.",
-    scanner: "SecureAI Rules",
+      "No package-level vulnerability was detected in this snapshot.",
+    recommendation:
+      "Keep the package version pinned and review runtime CORS configuration separately.",
+    files: ["package.json", "src/server.ts"],
+    dependents: 2,
+  },
+  {
+    id: 6,
+    name: "dotenv",
+    ecosystem: "npm",
+    type: "direct",
+    currentVersion: "16.4.1",
+    latestVersion: "17.2.2",
+    status: "outdated",
+    severity: "low",
+    description:
+      "Loads environment variables from a .env file into process.env.",
+    impact:
+      "The dependency is behind the current release but no known vulnerability is associated with the installed version in this snapshot.",
+    recommendation:
+      "Upgrade during the next maintenance cycle and verify environment-loading behavior.",
+    files: ["package.json", "src/config/env.ts"],
+    dependents: 2,
+  },
+  {
+    id: 7,
+    name: "prisma",
+    ecosystem: "npm",
+    type: "direct",
+    currentVersion: "6.19.0",
+    latestVersion: "6.19.0",
+    status: "healthy",
+    severity: "none",
+    description:
+      "Type-safe ORM and database toolkit used by the backend.",
+    impact:
+      "The installed package matches the analyzed latest version.",
+    recommendation:
+      "No upgrade required. Continue monitoring Prisma security advisories.",
+    files: ["package.json", "prisma/schema.prisma"],
+    dependents: 5,
+  },
+  {
+    id: 8,
+    name: "minimist",
+    ecosystem: "npm",
+    type: "transitive",
+    currentVersion: "1.2.5",
+    latestVersion: "1.2.8",
+    status: "deprecated",
+    severity: "medium",
+    description:
+      "Small argument parser present in the transitive dependency tree.",
+    impact:
+      "Deprecated transitive packages increase maintenance risk and may prevent the dependency tree from receiving future fixes.",
+    recommendation:
+      "Identify the parent dependency and upgrade it to a release that removes the deprecated package.",
+    files: ["package-lock.json"],
+    dependents: 3,
   },
 ];
 
-const severityConfig: Record<
-  Severity,
+const statusConfig: Record<
+  DependencyStatus,
   {
-    text: string;
-    border: string;
-    bg: string;
-    icon: typeof AlertTriangle;
+    label: string;
+    icon: typeof CheckCircle2;
+    className: string;
   }
 > = {
-  CRITICAL: {
-    text: "text-red-400",
-    border: "border-red-500/30",
-    bg: "bg-red-500/[0.06]",
-    icon: ShieldAlert,
+  healthy: {
+    label: "Healthy",
+    icon: CheckCircle2,
+    className: "text-emerald-400",
   },
-  HIGH: {
-    text: "text-orange-400",
-    border: "border-orange-500/30",
-    bg: "bg-orange-500/[0.06]",
+  outdated: {
+    label: "Outdated",
+    icon: TrendingUp,
+    className: "text-amber-400",
+  },
+  vulnerable: {
+    label: "Vulnerable",
+    icon: CircleAlert,
+    className: "text-red-400",
+  },
+  deprecated: {
+    label: "Deprecated",
     icon: AlertTriangle,
-  },
-  MEDIUM: {
-    text: "text-amber-400",
-    border: "border-amber-500/30",
-    bg: "bg-amber-500/[0.06]",
-    icon: AlertOctagon,
-  },
-  LOW: {
-    text: "text-blue-400",
-    border: "border-blue-500/30",
-    bg: "bg-blue-500/[0.06]",
-    icon: Shield,
+    className: "text-orange-400",
   },
 };
 
-function Security() {
-  const [selectedId, setSelectedId] = useState(1);
-  const [filter, setFilter] = useState<"ALL" | Severity>("ALL");
+const severityClass: Record<Dependency["severity"], string> = {
+  critical: "text-red-300 border-red-500/20 bg-red-500/10",
+  high: "text-orange-300 border-orange-500/20 bg-orange-500/10",
+  medium: "text-amber-300 border-amber-500/20 bg-amber-500/10",
+  low: "text-blue-300 border-blue-500/20 bg-blue-500/10",
+  none: "text-slate-500 border-slate-700 bg-slate-800/30",
+};
+
+function Dependencies() {
+  const [selectedId, setSelectedId] = useState(2);
+  const [filter, setFilter] = useState<"all" | DependencyStatus>("all");
   const [search, setSearch] = useState("");
-  const [resolved, setResolved] = useState<number[]>([]);
 
-  const filteredFindings = useMemo(() => {
-    return findings.filter((finding) => {
+  const selectedDependency =
+    dependencies.find((dependency) => dependency.id === selectedId) ??
+    dependencies[0];
+
+  const filteredDependencies = useMemo(() => {
+    return dependencies.filter((dependency) => {
       const matchesFilter =
-        filter === "ALL" || finding.severity === filter;
+        filter === "all" || dependency.status === filter;
 
-      const query = search.toLowerCase();
+      const searchValue = search.toLowerCase();
 
       const matchesSearch =
-        query.length === 0 ||
-        finding.title.toLowerCase().includes(query) ||
-        finding.file.toLowerCase().includes(query) ||
-        finding.category.toLowerCase().includes(query) ||
-        finding.rule.toLowerCase().includes(query);
+        dependency.name.toLowerCase().includes(searchValue) ||
+        dependency.ecosystem.toLowerCase().includes(searchValue) ||
+        dependency.type.toLowerCase().includes(searchValue);
 
       return matchesFilter && matchesSearch;
     });
   }, [filter, search]);
 
-  const selectedFinding =
-    findings.find((finding) => finding.id === selectedId) ??
-    findings[0];
-
-  const criticalCount = findings.filter(
-    (finding) => finding.severity === "CRITICAL",
+  const healthyCount = dependencies.filter(
+    (dependency) => dependency.status === "healthy",
   ).length;
 
-  const highCount = findings.filter(
-    (finding) => finding.severity === "HIGH",
+  const outdatedCount = dependencies.filter(
+    (dependency) => dependency.status === "outdated",
   ).length;
 
-  const mediumCount = findings.filter(
-    (finding) => finding.severity === "MEDIUM",
+  const vulnerableCount = dependencies.filter(
+    (dependency) => dependency.status === "vulnerable",
   ).length;
 
-  const lowCount = findings.filter(
-    (finding) => finding.severity === "LOW",
+  const deprecatedCount = dependencies.filter(
+    (dependency) => dependency.status === "deprecated",
   ).length;
 
-  const toggleResolved = (id: number) => {
-    setResolved((current) =>
-      current.includes(id)
-        ? current.filter((item) => item !== id)
-        : [...current, id],
-    );
-  };
+  const directCount = dependencies.filter(
+    (dependency) => dependency.type === "direct",
+  ).length;
+
+  const transitiveCount = dependencies.filter(
+    (dependency) => dependency.type === "transitive",
+  ).length;
+
+  const StatusIcon = statusConfig[selectedDependency.status].icon;
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-        <div>
-          <div className="flex items-center gap-2 text-xs text-slate-600">
-            <ShieldCheck size={13} />
-            <span>ANALYSIS / SECURITY</span>
-          </div>
-
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-white">
-            Security Intelligence
-          </h1>
-
-          <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
-            Detect exposed secrets, insecure patterns, dependency risks,
-            and configuration weaknesses across the repository.
-          </p>
+      <section>
+        <div className="mb-3 flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-slate-600">
+          <Package size={12} />
+          <span>Repository / Dependencies</span>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 border border-emerald-400/20 bg-emerald-400/[0.04] px-3 py-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+        <div className="flex flex-col gap-5 border border-secure-border bg-secure-panel p-6 xl:flex-row xl:items-center xl:justify-between">
+          <div>
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center border border-cyan-400/20 bg-cyan-400/5 text-cyan-400">
+                <Box size={21} />
+              </div>
 
-            <span className="font-mono text-[10px] uppercase tracking-wider text-emerald-400">
-              Security engine live
-            </span>
+              <div>
+                <h1 className="text-2xl font-semibold tracking-tight text-white">
+                  Dependency Intelligence
+                </h1>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  Dependency inventory, upgrade intelligence and supply-chain
+                  risk.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-5 flex flex-wrap items-center gap-2">
+              <span className="flex items-center gap-2 border border-slate-800 bg-[#0a0f18] px-3 py-1.5 font-mono text-[10px] text-slate-400">
+                <GitBranch size={12} />
+                feature
+              </span>
+
+              <span className="border border-slate-800 bg-[#0a0f18] px-3 py-1.5 font-mono text-[10px] text-slate-400">
+                package-lock.json
+              </span>
+
+              <span className="flex items-center gap-2 text-[10px] text-emerald-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                Dependency graph ready
+              </span>
+            </div>
           </div>
 
           <button
             type="button"
-            className="flex items-center gap-2 border border-slate-700 bg-white px-3 py-2 text-xs font-medium text-black transition hover:bg-slate-200"
+            className="flex items-center justify-center gap-2 border border-slate-700 bg-white px-4 py-2.5 text-sm font-medium text-black transition hover:bg-slate-200"
           >
-            Run security scan
+            <RefreshCw size={15} />
+            Rescan dependencies
           </button>
         </div>
-      </div>
+      </section>
 
-      {/* Security overview */}
-      <div className="grid gap-px border border-slate-800 bg-slate-800 md:grid-cols-2 xl:grid-cols-5">
-        <SecurityMetric
-          label="Security score"
-          value="71"
-          meta="Needs attention"
-          icon={Shield}
-          score
-        />
-
-        <SecurityMetric
-          label="Critical"
-          value={String(criticalCount)}
-          meta="Immediate action"
-          icon={ShieldAlert}
-        />
-
-        <SecurityMetric
-          label="High"
-          value={String(highCount)}
-          meta="Priority findings"
-          icon={AlertTriangle}
-        />
-
-        <SecurityMetric
-          label="Medium"
-          value={String(mediumCount)}
-          meta="Review recommended"
-          icon={AlertOctagon}
-        />
-
-        <SecurityMetric
-          label="Low"
-          value={String(lowCount)}
-          meta="Informational risk"
-          icon={ShieldCheck}
-        />
-      </div>
-
-      {/* Scanner status */}
-      <div className="grid gap-px border border-slate-800 bg-slate-800 md:grid-cols-3">
-        <ScannerStatus
-          name="Secret Scanner"
-          description="Credentials & API keys"
-          status="PASSED"
-          icon={<KeyRound size={15} />}
-        />
-
-        <ScannerStatus
-          name="SecureAI Rules"
-          description="Application security patterns"
-          status="22 findings"
-          icon={<ShieldAlert size={15} />}
-        />
-
-        <ScannerStatus
-          name="Dependency Scanner"
-          description="Known package advisories"
-          status="3 advisories"
-          icon={<Terminal size={15} />}
-        />
-      </div>
-
-      {/* Findings */}
-      <div className="border border-slate-800 bg-[#080d15]">
-        <div className="flex flex-col gap-4 border-b border-slate-800 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-sm font-medium text-white">
-              Security findings
-            </p>
-
-            <p className="mt-1 text-[11px] text-slate-600">
-              Findings are mapped to source locations and scanner rules.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-4 font-mono text-[10px]">
-            <span className="text-red-400">
-              {criticalCount} CRITICAL
-            </span>
-
-            <span className="text-orange-400">
-              {highCount} HIGH
-            </span>
-
-            <span className="text-amber-400">
-              {mediumCount} MEDIUM
-            </span>
-
-            <span className="text-blue-400">
-              {lowCount} LOW
-            </span>
-          </div>
+      {/* Overview */}
+      <section className="grid grid-cols-2 gap-px border border-secure-border bg-secure-border md:grid-cols-3 xl:grid-cols-6">
+        <div className="bg-secure-panel p-5">
+          <p className="text-[10px] uppercase tracking-wider text-slate-600">
+            Total
+          </p>
+          <p className="mt-3 text-2xl font-semibold text-white">
+            {dependencies.length}
+          </p>
+          <p className="mt-1 text-[10px] text-slate-600">
+            packages analyzed
+          </p>
         </div>
 
-        {/* Controls */}
-        <div className="flex flex-col gap-3 border-b border-slate-800 p-4 lg:flex-row lg:items-center">
-          <div className="flex items-center gap-2 text-slate-600">
-            <Filter size={14} />
-
-            <span className="font-mono text-[10px] uppercase tracking-wider">
-              Severity
-            </span>
-          </div>
-
-          <div className="flex flex-wrap gap-1">
-            {(["ALL", "CRITICAL", "HIGH", "MEDIUM", "LOW"] as const).map(
-              (item) => (
-                <button
-                  key={item}
-                  type="button"
-                  onClick={() => setFilter(item)}
-                  className={`border px-3 py-1.5 font-mono text-[9px] transition ${
-                    filter === item
-                      ? "border-violet-400/30 bg-violet-500/[0.08] text-violet-300"
-                      : "border-transparent text-slate-600 hover:border-slate-800 hover:text-slate-300"
-                  }`}
-                >
-                  {item}
-                </button>
-              ),
-            )}
-          </div>
-
-          <div className="relative ml-auto w-full lg:max-w-xs">
-            <Search
-              size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-700"
-            />
-
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search security findings..."
-              className="w-full border border-slate-800 bg-[#0a0f18] py-2 pl-9 pr-3 text-xs text-slate-300 outline-none transition placeholder:text-slate-700 focus:border-slate-600"
-            />
-          </div>
+        <div className="bg-secure-panel p-5">
+          <p className="text-[10px] uppercase tracking-wider text-slate-600">
+            Healthy
+          </p>
+          <p className="mt-3 text-2xl font-semibold text-emerald-400">
+            {healthyCount}
+          </p>
+          <p className="mt-1 text-[10px] text-slate-600">
+            no package risk
+          </p>
         </div>
 
-        {/* Security workspace */}
-        <div className="grid min-h-[590px] lg:grid-cols-[390px_minmax(0,1fr)]">
-          {/* Finding list */}
-          <div className="border-b border-slate-800 lg:border-b-0 lg:border-r">
-            <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3">
-              <span className="font-mono text-[9px] uppercase tracking-wider text-slate-600">
-                Findings
-              </span>
+        <div className="bg-secure-panel p-5">
+          <p className="text-[10px] uppercase tracking-wider text-slate-600">
+            Vulnerable
+          </p>
+          <p className="mt-3 text-2xl font-semibold text-red-400">
+            {vulnerableCount}
+          </p>
+          <p className="mt-1 text-[10px] text-slate-600">
+            require attention
+          </p>
+        </div>
 
-              <span className="font-mono text-[9px] text-slate-700">
-                {filteredFindings.length} RESULTS
-              </span>
-            </div>
+        <div className="bg-secure-panel p-5">
+          <p className="text-[10px] uppercase tracking-wider text-slate-600">
+            Outdated
+          </p>
+          <p className="mt-3 text-2xl font-semibold text-amber-400">
+            {outdatedCount}
+          </p>
+          <p className="mt-1 text-[10px] text-slate-600">
+            upgrade candidates
+          </p>
+        </div>
 
-            <div className="divide-y divide-slate-800">
-              {filteredFindings.length === 0 ? (
-                <div className="p-6 text-center">
-                  <p className="text-sm text-slate-500">
-                    No security findings match your search.
-                  </p>
-                </div>
-              ) : (
-                filteredFindings.map((finding) => {
-                  const config = severityConfig[finding.severity];
-                  const Icon = config.icon;
-                  const isSelected = finding.id === selectedFinding.id;
-                  const isResolved = resolved.includes(finding.id);
+        <div className="bg-secure-panel p-5">
+          <p className="text-[10px] uppercase tracking-wider text-slate-600">
+            Direct
+          </p>
+          <p className="mt-3 text-2xl font-semibold text-cyan-400">
+            {directCount}
+          </p>
+          <p className="mt-1 text-[10px] text-slate-600">
+            declared packages
+          </p>
+        </div>
 
-                  return (
-                    <button
-                      key={finding.id}
-                      type="button"
-                      onClick={() => setSelectedId(finding.id)}
-                      className={`w-full border-l-2 p-4 text-left transition ${
-                        isSelected
-                          ? "border-violet-400 bg-violet-500/[0.045]"
-                          : "border-transparent hover:bg-white/[0.02]"
-                      }`}
-                    >
-                      <div className="flex gap-3">
-                        <div className={`mt-0.5 ${config.text}`}>
-                          <Icon size={15} />
-                        </div>
+        <div className="bg-secure-panel p-5">
+          <p className="text-[10px] uppercase tracking-wider text-slate-600">
+            Transitive
+          </p>
+          <p className="mt-3 text-2xl font-semibold text-violet-400">
+            {transitiveCount}
+          </p>
+          <p className="mt-1 text-[10px] text-slate-600">
+            indirect packages
+          </p>
+        </div>
+      </section>
 
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <span
-                              className={`font-mono text-[9px] ${config.text}`}
-                            >
-                              {finding.severity}
-                            </span>
-
-                            {isResolved && (
-                              <span className="font-mono text-[9px] text-emerald-400">
-                                RESOLVED
-                              </span>
-                            )}
-                          </div>
-
-                          <p
-                            className={`mt-1 text-sm ${
-                              isResolved
-                                ? "text-slate-600 line-through"
-                                : "text-slate-200"
-                            }`}
-                          >
-                            {finding.title}
-                          </p>
-
-                          <div className="mt-2 flex items-center gap-1.5 font-mono text-[9px] text-slate-600">
-                            <FileCode2 size={11} />
-
-                            <span className="truncate">
-                              {finding.file}
-                            </span>
-
-                            <span>:</span>
-
-                            <span>{finding.line}</span>
-                          </div>
-
-                          <div className="mt-2 text-[9px] text-slate-700">
-                            {finding.category}
-                          </div>
-                        </div>
-
-                        <ChevronRight
-                          size={14}
-                          className={`mt-1 shrink-0 ${
-                            isSelected
-                              ? "text-violet-400"
-                              : "text-slate-800"
-                          }`}
-                        />
-                      </div>
-                    </button>
-                  );
-                })
-              )}
-            </div>
-          </div>
-
-          {/* Finding details */}
-          <div className="min-w-0">
-            <div className="border-b border-slate-800 px-5 py-3">
-              <div className="flex flex-wrap items-center gap-2">
-                <span
-                  className={`border px-2 py-1 font-mono text-[9px] ${
-                    severityConfig[selectedFinding.severity].border
-                  } ${
-                    severityConfig[selectedFinding.severity].bg
-                  } ${
-                    severityConfig[selectedFinding.severity].text
-                  }`}
-                >
-                  {selectedFinding.severity}
-                </span>
-
-                <span className="border border-slate-800 px-2 py-1 font-mono text-[9px] text-slate-600">
-                  {selectedFinding.category}
-                </span>
-
-                <span className="ml-auto font-mono text-[9px] text-slate-700">
-                  RULE / {selectedFinding.rule}
-                </span>
-              </div>
-            </div>
-
-            <div className="space-y-6 p-5">
-              {/* Finding title */}
+      {/* Main workspace */}
+      <section className="grid min-h-[650px] border border-secure-border bg-secure-panel lg:grid-cols-[minmax(0,1.35fr)_minmax(380px,0.65fr)]">
+        {/* Inventory */}
+        <div className="min-w-0 border-b border-secure-border lg:border-b-0 lg:border-r">
+          <div className="border-b border-secure-border p-5">
+            <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
               <div>
-                <h2 className="text-lg font-medium text-white">
-                  {selectedFinding.title}
-                </h2>
-
-                <div className="mt-2 flex flex-wrap items-center gap-2 font-mono text-[10px] text-slate-600">
-                  <FileCode2 size={12} />
-
-                  <span>{selectedFinding.file}</span>
-
-                  <span>:</span>
-
-                  <span>{selectedFinding.line}</span>
+                <div className="flex items-center gap-2">
+                  <Terminal size={15} className="text-violet-400" />
+                  <h2 className="text-sm font-medium text-white">
+                    Package inventory
+                  </h2>
                 </div>
+                <p className="mt-1 text-[11px] text-slate-600">
+                  {filteredDependencies.length} dependencies match the current
+                  view.
+                </p>
               </div>
 
-              {/* Description */}
-              <DetailSection title="Description">
-                <p className="text-sm leading-6 text-slate-400">
-                  {selectedFinding.description}
-                </p>
-              </DetailSection>
+              <div className="relative w-full xl:max-w-xs">
+                <Search
+                  size={14}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600"
+                />
+                <input
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Search packages..."
+                  className="w-full border border-slate-800 bg-[#080d15] py-2 pl-9 pr-3 text-xs text-slate-300 outline-none transition placeholder:text-slate-700 focus:border-slate-600"
+                />
+              </div>
+            </div>
 
-              {/* Evidence */}
-              <DetailSection title="Evidence">
-                <div className="overflow-x-auto border border-slate-800 bg-[#050810]">
-                  <div className="flex min-w-max font-mono text-[10px]">
-                    <div className="select-none border-r border-slate-800 px-3 py-3 text-right text-slate-700">
-                      {selectedFinding.line}
+            <div className="mt-5 flex flex-wrap gap-2">
+              {(
+                [
+                  ["all", "All"],
+                  ["vulnerable", "Vulnerable"],
+                  ["outdated", "Outdated"],
+                  ["deprecated", "Deprecated"],
+                  ["healthy", "Healthy"],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setFilter(value)}
+                  className={`border px-3 py-1.5 text-[10px] transition ${
+                    filter === value
+                      ? "border-violet-400/30 bg-violet-500/10 text-violet-300"
+                      : "border-slate-800 bg-[#080d15] text-slate-600 hover:border-slate-700 hover:text-slate-300"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="divide-y divide-slate-800/70">
+            {filteredDependencies.map((dependency) => {
+              const config = statusConfig[dependency.status];
+              const Icon = config.icon;
+              const isSelected = dependency.id === selectedId;
+
+              return (
+                <button
+                  key={dependency.id}
+                  type="button"
+                  onClick={() => setSelectedId(dependency.id)}
+                  className={`flex w-full items-center gap-4 p-4 text-left transition ${
+                    isSelected
+                      ? "bg-violet-500/[0.055]"
+                      : "hover:bg-white/[0.02]"
+                  }`}
+                >
+                  <div
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center border ${
+                      isSelected
+                        ? "border-violet-400/20 bg-violet-500/10"
+                        : "border-slate-800 bg-[#080d15]"
+                    }`}
+                  >
+                    <Package
+                      size={16}
+                      className={
+                        isSelected
+                          ? "text-violet-300"
+                          : "text-slate-600"
+                      }
+                    />
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-mono text-sm text-slate-200">
+                        {dependency.name}
+                      </span>
+
+                      <span className="border border-slate-800 px-1.5 py-0.5 text-[8px] uppercase tracking-wider text-slate-600">
+                        {dependency.type}
+                      </span>
+
+                      {dependency.severity !== "none" && (
+                        <span
+                          className={`border px-1.5 py-0.5 text-[8px] uppercase tracking-wider ${severityClass[dependency.severity]}`}
+                        >
+                          {dependency.severity}
+                        </span>
+                      )}
                     </div>
 
-                    <pre className="px-4 py-3 leading-6 text-slate-400">
-                      <code>{selectedFinding.evidence}</code>
-                    </pre>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-3 text-[10px] text-slate-600">
+                      <span>
+                        {dependency.currentVersion} →{" "}
+                        {dependency.latestVersion}
+                      </span>
+                      <span>{dependency.ecosystem}</span>
+                    </div>
                   </div>
-                </div>
-              </DetailSection>
 
-              {/* Impact */}
-              <DetailSection title="Security impact">
-                <div className="border-l border-orange-400/30 bg-orange-400/[0.025] px-4 py-3">
-                  <p className="text-sm leading-6 text-slate-400">
-                    {selectedFinding.impact}
+                  <div className="hidden items-center gap-2 sm:flex">
+                    <Icon size={14} className={config.className} />
+                    <span className={`text-[10px] ${config.className}`}>
+                      {config.label}
+                    </span>
+                  </div>
+
+                  <ChevronRight
+                    size={15}
+                    className={`shrink-0 ${
+                      isSelected ? "text-violet-400" : "text-slate-700"
+                    }`}
+                  />
+                </button>
+              );
+            })}
+
+            {filteredDependencies.length === 0 && (
+              <div className="flex min-h-56 items-center justify-center p-8 text-center">
+                <div>
+                  <Search
+                    size={22}
+                    className="mx-auto text-slate-700"
+                  />
+                  <p className="mt-3 text-sm text-slate-400">
+                    No dependencies found
+                  </p>
+                  <p className="mt-1 text-xs text-slate-600">
+                    Try changing the filter or search query.
                   </p>
                 </div>
-              </DetailSection>
+              </div>
+            )}
+          </div>
+        </div>
 
-              {/* Remediation */}
-              <DetailSection
-                title="Recommended remediation"
-                icon={<ShieldCheck size={13} />}
+        {/* Detail panel */}
+        <div className="bg-[#080d15]">
+          <div className="border-b border-slate-800 p-5">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Package size={16} className="text-cyan-400" />
+                  <span className="font-mono text-lg font-medium text-white">
+                    {selectedDependency.name}
+                  </span>
+                </div>
+
+                <p className="mt-1 text-[10px] text-slate-600">
+                  {selectedDependency.ecosystem} ·{" "}
+                  {selectedDependency.type} dependency
+                </p>
+              </div>
+
+              <div
+                className={`flex items-center gap-1.5 text-[10px] ${statusConfig[selectedDependency.status].className}`}
               >
-                <div className="border border-emerald-400/15 bg-emerald-400/[0.025] p-4">
-                  <p className="text-sm leading-6 text-slate-300">
-                    {selectedFinding.remediation}
-                  </p>
-
-                  <div className="mt-4 flex items-center justify-between border-t border-emerald-400/10 pt-3">
-                    <span className="font-mono text-[9px] text-slate-600">
-                      DETECTION SOURCE
-                    </span>
-
-                    <span className="font-mono text-[10px] text-emerald-400">
-                      {selectedFinding.scanner}
-                    </span>
-                  </div>
-                </div>
-              </DetailSection>
-
-              {/* Actions */}
-              <div className="flex flex-wrap gap-2 border-t border-slate-800 pt-5">
-                <button
-                  type="button"
-                  onClick={() => toggleResolved(selectedFinding.id)}
-                  className={`flex items-center gap-2 px-3 py-2 text-xs font-medium transition ${
-                    resolved.includes(selectedFinding.id)
-                      ? "border border-emerald-400/20 bg-emerald-400/[0.05] text-emerald-400"
-                      : "bg-white text-black hover:bg-slate-200"
-                  }`}
-                >
-                  <Check size={14} />
-
-                  {resolved.includes(selectedFinding.id)
-                    ? "Resolved"
-                    : "Mark resolved"}
-                </button>
-
-                <button
-                  type="button"
-                  className="border border-slate-800 px-3 py-2 text-xs text-slate-500 transition hover:border-slate-700 hover:text-slate-200"
-                >
-                  Open source
-                </button>
-
-                <button
-                  type="button"
-                  className="border border-slate-800 px-3 py-2 text-xs text-slate-500 transition hover:border-slate-700 hover:text-slate-200"
-                >
-                  Suppress finding
-                </button>
+                <StatusIcon size={13} />
+                {statusConfig[selectedDependency.status].label}
               </div>
             </div>
           </div>
+
+          <div className="space-y-6 p-5">
+            {/* Version comparison */}
+            <div>
+              <p className="mb-3 text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-600">
+                Version state
+              </p>
+
+              <div className="grid grid-cols-2 gap-px border border-slate-800 bg-slate-800">
+                <div className="bg-[#0a0f18] p-4">
+                  <p className="text-[9px] uppercase tracking-wider text-slate-600">
+                    Installed
+                  </p>
+                  <p className="mt-2 font-mono text-sm text-slate-200">
+                    {selectedDependency.currentVersion}
+                  </p>
+                </div>
+
+                <div className="bg-[#0a0f18] p-4">
+                  <p className="text-[9px] uppercase tracking-wider text-slate-600">
+                    Latest
+                  </p>
+                  <p className="mt-2 font-mono text-sm text-cyan-300">
+                    {selectedDependency.latestVersion}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Description */}
+            <div>
+              <p className="mb-2 text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-600">
+                Package
+              </p>
+              <p className="text-xs leading-5 text-slate-400">
+                {selectedDependency.description}
+              </p>
+            </div>
+
+            {/* Advisory */}
+            {selectedDependency.advisory && (
+              <div className="border border-red-500/20 bg-red-500/[0.045] p-4">
+                <div className="flex items-center gap-2 text-red-400">
+                  <ShieldCheck size={15} />
+                  <span className="text-xs font-medium">
+                    Security advisory
+                  </span>
+                </div>
+
+                <p className="mt-2 text-xs leading-5 text-slate-400">
+                  {selectedDependency.advisory}
+                </p>
+
+                {selectedDependency.advisoryId && (
+                  <div className="mt-3 flex items-center justify-between">
+                    <span className="font-mono text-[10px] text-red-300">
+                      {selectedDependency.advisoryId}
+                    </span>
+
+                    <button
+                      type="button"
+                      className="flex items-center gap-1 text-[10px] text-slate-500 transition hover:text-white"
+                    >
+                      Advisory details
+                      <ExternalLink size={11} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Impact */}
+            <div>
+              <div className="mb-2 flex items-center gap-2">
+                <CircleAlert size={14} className="text-amber-400" />
+                <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-600">
+                  Risk impact
+                </p>
+              </div>
+
+              <p className="text-xs leading-5 text-slate-400">
+                {selectedDependency.impact}
+              </p>
+            </div>
+
+            {/* Recommendation */}
+            <div>
+              <div className="mb-2 flex items-center gap-2">
+                <ArrowUpRight size={14} className="text-emerald-400" />
+                <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-600">
+                  Upgrade recommendation
+                </p>
+              </div>
+
+              <p className="text-xs leading-5 text-slate-400">
+                {selectedDependency.recommendation}
+              </p>
+            </div>
+
+            {/* Files */}
+            <div>
+              <p className="mb-3 text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-600">
+                Referenced files
+              </p>
+
+              <div className="space-y-1.5">
+                {selectedDependency.files.map((file) => (
+                  <div
+                    key={file}
+                    className="flex items-center gap-2 border border-slate-800 bg-[#0a0f18] px-3 py-2"
+                  >
+                    <Terminal size={12} className="text-slate-600" />
+                    <span className="font-mono text-[10px] text-slate-400">
+                      {file}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Dependents */}
+            <div className="border-t border-slate-800 pt-5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-slate-600">
+                  Dependency consumers
+                </span>
+
+                <span className="font-mono text-xs text-slate-300">
+                  {selectedDependency.dependents} references
+                </span>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-2 border-t border-slate-800 pt-5">
+              <button
+                type="button"
+                className="flex flex-1 items-center justify-center gap-2 border border-slate-700 bg-white px-3 py-2.5 text-xs font-medium text-black transition hover:bg-slate-200"
+              >
+                <ArrowUpRight size={13} />
+                Review upgrade
+              </button>
+
+              <button
+                type="button"
+                className="flex items-center justify-center gap-2 border border-slate-800 px-3 py-2.5 text-xs text-slate-500 transition hover:border-slate-700 hover:text-white"
+              >
+                Ignore
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
 
       {/* Scanner pipeline */}
-      <div className="border border-slate-800 bg-[#080d15]">
-        <div className="border-b border-slate-800 px-5 py-4">
-          <p className="text-sm font-medium text-white">
-            Security analysis pipeline
-          </p>
-
-          <p className="mt-1 text-[11px] text-slate-600">
-            Multiple analysis layers contribute to the repository security
-            model.
-          </p>
+      <section className="border border-secure-border bg-secure-panel">
+        <div className="border-b border-secure-border px-5 py-4">
+          <div className="flex items-center gap-2">
+            <ShieldCheck size={15} className="text-violet-400" />
+            <h2 className="text-sm font-medium text-white">
+              Dependency analysis pipeline
+            </h2>
+          </div>
         </div>
 
-        <div className="grid gap-px bg-slate-800 md:grid-cols-4">
-          <PipelineStep
-            number="01"
-            title="Source scan"
-            description="Repository files inspected"
-          />
+        <div className="grid md:grid-cols-4">
+          {[
+            ["01", "Manifest discovery", "package.json detected"],
+            ["02", "Dependency graph", "8 packages indexed"],
+            ["03", "Advisory scan", "Security database checked"],
+            ["04", "Upgrade analysis", "Recommendations generated"],
+          ].map(([number, title, detail], index) => (
+            <div
+              key={number}
+              className={`p-5 ${
+                index !== 3 ? "border-b md:border-b-0 md:border-r" : ""
+              } border-slate-800`}
+            >
+              <div className="flex items-center gap-3">
+                <span className="font-mono text-[10px] text-violet-400">
+                  {number}
+                </span>
+                <span className="text-xs font-medium text-slate-300">
+                  {title}
+                </span>
+              </div>
 
-          <PipelineStep
-            number="02"
-            title="Pattern detection"
-            description="Rules & secret detection"
-          />
-
-          <PipelineStep
-            number="03"
-            title="Risk classification"
-            description="Severity & impact mapping"
-          />
-
-          <PipelineStep
-            number="04"
-            title="Remediation"
-            description="Developer guidance generated"
-          />
+              <div className="mt-3 flex items-center gap-2 text-[10px] text-emerald-400">
+                <CheckCircle2 size={12} />
+                {detail}
+              </div>
+            </div>
+          ))}
         </div>
-      </div>
-    </div>
-  );
-}
+      </section>
 
-function SecurityMetric({
-  label,
-  value,
-  meta,
-  icon: Icon,
-  score = false,
-}: {
-  label: string;
-  value: string;
-  meta: string;
-  icon: typeof Shield;
-  score?: boolean;
-}) {
-  return (
-    <div className="bg-[#0a0f18] p-5">
-      <div className="flex items-center justify-between">
-        <span className="text-[9px] uppercase tracking-[0.18em] text-slate-600">
-          {label}
-        </span>
-
-        <Icon
+      {/* Static-data notice */}
+      <div className="flex items-start gap-3 border border-cyan-400/10 bg-cyan-400/[0.025] px-4 py-3">
+        <CircleAlert
           size={14}
-          className={
-            score ? "text-orange-400" : "text-slate-700"
-          }
+          className="mt-0.5 shrink-0 text-cyan-400"
         />
-      </div>
-
-      <p
-        className={`mt-4 text-2xl font-semibold tracking-tight ${
-          score ? "text-orange-400" : "text-white"
-        }`}
-      >
-        {value}
-      </p>
-
-      <p className="mt-1 font-mono text-[9px] text-slate-700">
-        {meta}
-      </p>
-    </div>
-  );
-}
-
-function ScannerStatus({
-  name,
-  description,
-  status,
-  icon,
-}: {
-  name: string;
-  description: string;
-  status: string;
-  icon: ReactNode;
-}) {
-  return (
-    <div className="flex items-center gap-3 bg-[#0a0f18] p-4">
-      <div className="text-cyan-400">{icon}</div>
-
-      <div className="min-w-0 flex-1">
-        <p className="text-xs font-medium text-slate-300">
-          {name}
-        </p>
-
-        <p className="mt-1 text-[10px] text-slate-600">
-          {description}
+        <p className="text-[10px] leading-5 text-slate-600">
+          Current dependency intelligence is represented with structured
+          frontend data. The same interface will later consume real
+          package manifests, dependency graphs, vulnerability databases and
+          upgrade analysis from the SecureAI backend.
         </p>
       </div>
 
-      <div className="flex items-center gap-2">
-        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-
-        <span className="font-mono text-[9px] text-emerald-400">
-          {status}
-        </span>
-      </div>
+      {/* Hidden reference so deprecated count remains intentionally represented */}
+      <span className="hidden">{deprecatedCount}</span>
     </div>
   );
 }
 
-function DetailSection({
-  title,
-  icon,
-  children,
-}: {
-  title: string;
-  icon?: ReactNode;
-  children: ReactNode;
-}) {
-  return (
-    <section>
-      <div className="mb-2 flex items-center gap-2">
-        {icon && (
-          <span className="text-emerald-400">
-            {icon}
-          </span>
-        )}
-
-        <h3 className="font-mono text-[9px] uppercase tracking-[0.16em] text-slate-600">
-          {title}
-        </h3>
-      </div>
-
-      {children}
-    </section>
-  );
-}
-
-function PipelineStep({
-  number,
-  title,
-  description,
-}: {
-  number: string;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="bg-[#0a0f18] p-5">
-      <span className="font-mono text-[9px] text-violet-400">
-        {number}
-      </span>
-
-      <p className="mt-3 text-xs font-medium text-slate-300">
-        {title}
-      </p>
-
-      <p className="mt-1 text-[10px] leading-5 text-slate-600">
-        {description}
-      </p>
-
-      <div className="mt-4 flex items-center gap-2">
-        <CheckCircle2
-          size={12}
-          className="text-emerald-400"
-        />
-
-        <span className="font-mono text-[9px] text-emerald-400">
-          COMPLETE
-        </span>
-      </div>
-    </div>
-  );
-}
-
-export default Security;
+export default Dependencies;
