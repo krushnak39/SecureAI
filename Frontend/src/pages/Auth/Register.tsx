@@ -8,9 +8,137 @@ import {
   ScanSearch,
   ShieldCheck,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
+
+import { useAuth } from "../../contexts/AuthContext";
 
 function Register() {
+  const navigate = useNavigate();
+
+  const {
+    register,
+    isAuthenticated,
+    loading: authLoading,
+  } = useAuth();
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [authLoading, isAuthenticated, navigate]);
+
+  const passwordStrength = useMemo(() => {
+    if (!password) {
+      return {
+        width: "0%",
+        label: "Use at least 8 characters",
+      };
+    }
+
+    if (password.length < 8) {
+      return {
+        width: "33%",
+        label: "Too short",
+      };
+    }
+
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSpecial = /[^A-Za-z0-9]/.test(password);
+
+    const score = [
+      password.length >= 8,
+      hasUppercase,
+      hasNumber,
+      hasSpecial,
+    ].filter(Boolean).length;
+
+    if (score <= 1) {
+      return {
+        width: "33%",
+        label: "Weak password",
+      };
+    }
+
+    if (score <= 2) {
+      return {
+        width: "66%",
+        label: "Moderate password",
+      };
+    }
+
+    return {
+      width: "100%",
+      label: "Strong password",
+    };
+  }, [password]);
+
+  async function handleSubmit(
+    event: FormEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault();
+
+    setError("");
+
+    if (!name.trim()) {
+      setError("Please enter your full name.");
+      return;
+    }
+
+    if (!email.trim()) {
+      setError("Please enter your email address.");
+      return;
+    }
+
+    if (password.length < 8) {
+      setError("Password must contain at least 8 characters.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    if (!acceptedTerms) {
+      setError(
+        "Please accept the Terms of Service and Privacy Policy.",
+      );
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      await register(
+        name.trim(),
+        email.trim(),
+        password,
+      );
+
+      navigate("/dashboard", { replace: true });
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Unable to create your account. Please try again.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#050810] text-white">
       <div className="grid min-h-screen lg:grid-cols-[0.9fr_1fr]">
@@ -28,7 +156,10 @@ function Register() {
             <div className="mb-8 lg:hidden">
               <div className="flex items-center gap-3">
                 <div className="flex h-9 w-9 items-center justify-center border border-violet-500/30 bg-violet-500/10">
-                  <ScanSearch size={19} className="text-violet-400" />
+                  <ScanSearch
+                    size={19}
+                    className="text-violet-400"
+                  />
                 </div>
 
                 <p className="text-sm font-semibold tracking-[0.18em]">
@@ -39,7 +170,10 @@ function Register() {
 
             <div>
               <div className="mb-6 flex h-11 w-11 items-center justify-center border border-slate-700 bg-[#090e18]">
-                <LockKeyhole size={19} className="text-violet-400" />
+                <LockKeyhole
+                  size={19}
+                  className="text-violet-400"
+                />
               </div>
 
               <h1 className="text-3xl font-semibold tracking-tight">
@@ -53,7 +187,7 @@ function Register() {
 
             <form
               className="mt-8 space-y-5"
-              onSubmit={(event) => event.preventDefault()}
+              onSubmit={handleSubmit}
             >
               <div>
                 <label
@@ -66,8 +200,14 @@ function Register() {
                 <input
                   id="name"
                   type="text"
+                  value={name}
+                  onChange={(event) =>
+                    setName(event.target.value)
+                  }
                   placeholder="Your name"
-                  className="w-full border border-slate-700 bg-[#090e18] px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-700 focus:border-violet-500/60"
+                  autoComplete="name"
+                  disabled={submitting}
+                  className="w-full border border-slate-700 bg-[#090e18] px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-700 focus:border-violet-500/60 disabled:cursor-not-allowed disabled:opacity-60"
                 />
               </div>
 
@@ -82,8 +222,14 @@ function Register() {
                 <input
                   id="register-email"
                   type="email"
+                  value={email}
+                  onChange={(event) =>
+                    setEmail(event.target.value)
+                  }
                   placeholder="you@example.com"
-                  className="w-full border border-slate-700 bg-[#090e18] px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-700 focus:border-violet-500/60"
+                  autoComplete="email"
+                  disabled={submitting}
+                  className="w-full border border-slate-700 bg-[#090e18] px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-700 focus:border-violet-500/60 disabled:cursor-not-allowed disabled:opacity-60"
                 />
               </div>
 
@@ -98,15 +244,27 @@ function Register() {
                 <input
                   id="register-password"
                   type="password"
+                  value={password}
+                  onChange={(event) =>
+                    setPassword(event.target.value)
+                  }
                   placeholder="Create a strong password"
-                  className="w-full border border-slate-700 bg-[#090e18] px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-700 focus:border-violet-500/60"
+                  autoComplete="new-password"
+                  disabled={submitting}
+                  className="w-full border border-slate-700 bg-[#090e18] px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-700 focus:border-violet-500/60 disabled:cursor-not-allowed disabled:opacity-60"
                 />
 
                 <div className="mt-2 flex items-center gap-2 text-[10px] text-slate-600">
                   <span className="h-1 flex-1 bg-slate-800">
-                    <span className="block h-full w-1/3 bg-violet-500/60" />
+                    <span
+                      className="block h-full bg-violet-500/60 transition-all duration-300"
+                      style={{
+                        width: passwordStrength.width,
+                      }}
+                    />
                   </span>
-                  Use at least 8 characters
+
+                  {passwordStrength.label}
                 </div>
               </div>
 
@@ -121,15 +279,47 @@ function Register() {
                 <input
                   id="confirm-password"
                   type="password"
+                  value={confirmPassword}
+                  onChange={(event) =>
+                    setConfirmPassword(event.target.value)
+                  }
                   placeholder="Repeat your password"
-                  className="w-full border border-slate-700 bg-[#090e18] px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-700 focus:border-violet-500/60"
+                  autoComplete="new-password"
+                  disabled={submitting}
+                  className="w-full border border-slate-700 bg-[#090e18] px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-700 focus:border-violet-500/60 disabled:cursor-not-allowed disabled:opacity-60"
                 />
+
+                {confirmPassword &&
+                  password !== confirmPassword && (
+                    <p className="mt-2 text-[10px] text-red-400">
+                      Passwords do not match.
+                    </p>
+                  )}
               </div>
 
               <label className="flex cursor-pointer items-start gap-3 text-xs leading-5 text-slate-500">
-                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center border border-slate-700 bg-[#090e18]">
-                  <Check size={11} className="text-transparent" />
-                </span>
+                <button
+                  type="button"
+                  role="checkbox"
+                  aria-checked={acceptedTerms}
+                  onClick={() =>
+                    setAcceptedTerms((current) => !current)
+                  }
+                  className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center border transition ${
+                    acceptedTerms
+                      ? "border-violet-500/50 bg-violet-500/10"
+                      : "border-slate-700 bg-[#090e18]"
+                  }`}
+                >
+                  <Check
+                    size={11}
+                    className={
+                      acceptedTerms
+                        ? "text-violet-400"
+                        : "text-transparent"
+                    }
+                  />
+                </button>
 
                 <span>
                   I agree to the{" "}
@@ -150,23 +340,39 @@ function Register() {
                 </span>
               </label>
 
+              {error && (
+                <div className="border border-red-500/20 bg-red-500/5 px-4 py-3 text-xs leading-5 text-red-400">
+                  {error}
+                </div>
+              )}
+
               <button
                 type="submit"
-                className="group flex w-full items-center justify-center gap-2 bg-white px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-200"
+                disabled={submitting}
+                className="group flex w-full items-center justify-center gap-2 bg-white px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Create workspace
-                <ArrowRight
-                  size={16}
-                  className="transition-transform group-hover:translate-x-1"
-                />
+                {submitting ? (
+                  "Creating workspace..."
+                ) : (
+                  <>
+                    Create workspace
+
+                    <ArrowRight
+                      size={16}
+                      className="transition-transform group-hover:translate-x-1"
+                    />
+                  </>
+                )}
               </button>
             </form>
 
             <div className="my-7 flex items-center gap-4">
               <div className="h-px flex-1 bg-slate-800" />
+
               <span className="text-[10px] tracking-wider text-slate-700">
                 OR SIGN UP WITH
               </span>
+
               <div className="h-px flex-1 bg-slate-800" />
             </div>
 
@@ -189,7 +395,10 @@ function Register() {
             </div>
 
             <div className="mt-7 flex items-center justify-center gap-2 text-xs text-slate-600">
-              <ShieldCheck size={14} className="text-emerald-500" />
+              <ShieldCheck
+                size={14}
+                className="text-emerald-500"
+              />
               Secure authentication
             </div>
 
@@ -216,7 +425,9 @@ function Register() {
                 className="text-xs text-slate-600 transition hover:text-slate-300"
               >
                 Already registered?
-                <span className="ml-2 text-violet-400">Sign in →</span>
+                <span className="ml-2 text-violet-400">
+                  Sign in →
+                </span>
               </Link>
             </div>
 
@@ -263,13 +474,17 @@ function Register() {
                     className="flex gap-4 border border-slate-800 bg-[#090e18] p-4"
                   >
                     <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center border border-violet-500/20 bg-violet-500/5">
-                      <Check size={13} className="text-violet-400" />
+                      <Check
+                        size={13}
+                        className="text-violet-400"
+                      />
                     </div>
 
                     <div>
                       <p className="text-xs font-medium text-slate-300">
                         {title}
                       </p>
+
                       <p className="mt-1 text-[11px] leading-5 text-slate-600">
                         {description}
                       </p>
