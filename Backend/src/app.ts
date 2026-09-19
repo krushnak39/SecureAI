@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-
+import projectRoutes from "./routes/project.routes.js";
 import healthRoutes from "./routes/health.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 
@@ -22,6 +22,7 @@ app.use(cookieParser());
 /* API Routes */
 app.use("/api/health", healthRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/projects", projectRoutes);
 
 /* Root endpoint */
 app.get("/", (_req, res) => {

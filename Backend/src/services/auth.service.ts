@@ -4,6 +4,14 @@ import bcrypt from "bcryptjs";
 
 import { prisma } from "../lib/prisma.js";
 
+export interface AuthUser {
+  id: string;
+  name: string;
+  email: string;
+  avatarUrl: string | null;
+  createdAt?: Date;
+}
+
 const SESSION_DURATION_DAYS = 7;
 
 function hashSessionToken(token: string): string {
