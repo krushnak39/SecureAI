@@ -5,7 +5,7 @@ import {
   GitBranch,
   Search,
 } from "lucide-react";
-
+import UserMenu from "../auth/UserMenu";
 function CommandBar() {
   return (
     <header className="sticky top-0 z-30 h-16 border-b border-slate-800/80 bg-[#070b12]/95 backdrop-blur">
@@ -91,7 +91,7 @@ function CommandBar() {
             className="flex items-center gap-2"
           >
             <div className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-700 bg-slate-800 font-mono text-xs text-slate-300">
-              D
+              <UserMenu />
             </div>
 
             <ChevronDown
