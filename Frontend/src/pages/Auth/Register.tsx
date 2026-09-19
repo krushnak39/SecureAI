@@ -2,13 +2,20 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
+  Eye,
+  EyeOff,
   GitFork,
   Globe2,
   LockKeyhole,
   ScanSearch,
   ShieldCheck,
 } from "lucide-react";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type FormEvent,
+} from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../contexts/AuthContext";
@@ -25,9 +32,17 @@ function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] =
+    useState("");
 
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [showPassword, setShowPassword] =
+    useState(false);
+
+  const [showConfirmPassword, setShowConfirmPassword] =
+    useState(false);
+
+  const [acceptedTerms, setAcceptedTerms] =
+    useState(false);
 
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -102,7 +117,9 @@ function Register() {
     }
 
     if (password.length < 8) {
-      setError("Password must contain at least 8 characters.");
+      setError(
+        "Password must contain at least 8 characters.",
+      );
       return;
     }
 
@@ -189,6 +206,7 @@ function Register() {
               className="mt-8 space-y-5"
               onSubmit={handleSubmit}
             >
+              {/* Name */}
               <div>
                 <label
                   htmlFor="name"
@@ -211,6 +229,7 @@ function Register() {
                 />
               </div>
 
+              {/* Email */}
               <div>
                 <label
                   htmlFor="register-email"
@@ -233,6 +252,7 @@ function Register() {
                 />
               </div>
 
+              {/* Password */}
               <div>
                 <label
                   htmlFor="register-password"
@@ -241,18 +261,45 @@ function Register() {
                   Password
                 </label>
 
-                <input
-                  id="register-password"
-                  type="password"
-                  value={password}
-                  onChange={(event) =>
-                    setPassword(event.target.value)
-                  }
-                  placeholder="Create a strong password"
-                  autoComplete="new-password"
-                  disabled={submitting}
-                  className="w-full border border-slate-700 bg-[#090e18] px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-700 focus:border-violet-500/60 disabled:cursor-not-allowed disabled:opacity-60"
-                />
+                <div className="relative">
+                  <input
+                    id="register-password"
+                    type={
+                      showPassword
+                        ? "text"
+                        : "password"
+                    }
+                    value={password}
+                    onChange={(event) =>
+                      setPassword(event.target.value)
+                    }
+                    placeholder="Create a strong password"
+                    autoComplete="new-password"
+                    disabled={submitting}
+                    className="w-full border border-slate-700 bg-[#090e18] px-4 py-3 pr-12 text-sm text-white outline-none transition placeholder:text-slate-700 focus:border-violet-500/60 disabled:cursor-not-allowed disabled:opacity-60"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowPassword(
+                        (current) => !current,
+                      )
+                    }
+                    aria-label={
+                      showPassword
+                        ? "Hide password"
+                        : "Show password"
+                    }
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 transition hover:text-slate-300"
+                  >
+                    {showPassword ? (
+                      <EyeOff size={17} />
+                    ) : (
+                      <Eye size={17} />
+                    )}
+                  </button>
+                </div>
 
                 <div className="mt-2 flex items-center gap-2 text-[10px] text-slate-600">
                   <span className="h-1 flex-1 bg-slate-800">
@@ -268,6 +315,7 @@ function Register() {
                 </div>
               </div>
 
+              {/* Confirm password */}
               <div>
                 <label
                   htmlFor="confirm-password"
@@ -276,18 +324,47 @@ function Register() {
                   Confirm password
                 </label>
 
-                <input
-                  id="confirm-password"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(event) =>
-                    setConfirmPassword(event.target.value)
-                  }
-                  placeholder="Repeat your password"
-                  autoComplete="new-password"
-                  disabled={submitting}
-                  className="w-full border border-slate-700 bg-[#090e18] px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-700 focus:border-violet-500/60 disabled:cursor-not-allowed disabled:opacity-60"
-                />
+                <div className="relative">
+                  <input
+                    id="confirm-password"
+                    type={
+                      showConfirmPassword
+                        ? "text"
+                        : "password"
+                    }
+                    value={confirmPassword}
+                    onChange={(event) =>
+                      setConfirmPassword(
+                        event.target.value,
+                      )
+                    }
+                    placeholder="Repeat your password"
+                    autoComplete="new-password"
+                    disabled={submitting}
+                    className="w-full border border-slate-700 bg-[#090e18] px-4 py-3 pr-12 text-sm text-white outline-none transition placeholder:text-slate-700 focus:border-violet-500/60 disabled:cursor-not-allowed disabled:opacity-60"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowConfirmPassword(
+                        (current) => !current,
+                      )
+                    }
+                    aria-label={
+                      showConfirmPassword
+                        ? "Hide confirm password"
+                        : "Show confirm password"
+                    }
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 transition hover:text-slate-300"
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff size={17} />
+                    ) : (
+                      <Eye size={17} />
+                    )}
+                  </button>
+                </div>
 
                 {confirmPassword &&
                   password !== confirmPassword && (
@@ -297,13 +374,16 @@ function Register() {
                   )}
               </div>
 
+              {/* Terms */}
               <label className="flex cursor-pointer items-start gap-3 text-xs leading-5 text-slate-500">
                 <button
                   type="button"
                   role="checkbox"
                   aria-checked={acceptedTerms}
                   onClick={() =>
-                    setAcceptedTerms((current) => !current)
+                    setAcceptedTerms(
+                      (current) => !current,
+                    )
                   }
                   className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center border transition ${
                     acceptedTerms
@@ -340,12 +420,14 @@ function Register() {
                 </span>
               </label>
 
+              {/* Error */}
               {error && (
                 <div className="border border-red-500/20 bg-red-500/5 px-4 py-3 text-xs leading-5 text-red-400">
                   {error}
                 </div>
               )}
 
+              {/* Submit */}
               <button
                 type="submit"
                 disabled={submitting}
@@ -366,6 +448,7 @@ function Register() {
               </button>
             </form>
 
+            {/* OAuth */}
             <div className="my-7 flex items-center gap-4">
               <div className="h-px flex-1 bg-slate-800" />
 

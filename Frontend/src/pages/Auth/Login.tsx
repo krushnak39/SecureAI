@@ -1,13 +1,15 @@
 import {
   ArrowLeft,
   ArrowRight,
+  Eye,
+  EyeOff,
   GitFork,
   Globe2,
   LockKeyhole,
   ScanSearch,
   ShieldCheck,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../contexts/AuthContext";
@@ -24,6 +26,8 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  const [showPassword, setShowPassword] = useState(false);
+
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -34,14 +38,19 @@ function Login() {
   }, [authLoading, isAuthenticated, navigate]);
 
   async function handleSubmit(
-    event: React.FormEvent<HTMLFormElement>,
+    event: FormEvent<HTMLFormElement>,
   ) {
     event.preventDefault();
 
     setError("");
 
-    if (!email.trim() || !password) {
-      setError("Please enter your email and password.");
+    if (!email.trim()) {
+      setError("Please enter your email address.");
+      return;
+    }
+
+    if (!password) {
+      setError("Please enter your password.");
       return;
     }
 
@@ -182,6 +191,7 @@ function Login() {
               className="mt-8 space-y-5"
               onSubmit={handleSubmit}
             >
+              {/* Email */}
               <div>
                 <label
                   htmlFor="email"
@@ -204,6 +214,7 @@ function Login() {
                 />
               </div>
 
+              {/* Password */}
               <div>
                 <div className="mb-2 flex items-center justify-between">
                   <label
@@ -221,26 +232,55 @@ function Login() {
                   </button>
                 </div>
 
-                <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(event) =>
-                    setPassword(event.target.value)
-                  }
-                  placeholder="Enter your password"
-                  autoComplete="current-password"
-                  disabled={submitting}
-                  className="w-full border border-slate-700 bg-[#090e18] px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-700 focus:border-violet-500/60 disabled:cursor-not-allowed disabled:opacity-60"
-                />
+                <div className="relative">
+                  <input
+                    id="password"
+                    type={
+                      showPassword
+                        ? "text"
+                        : "password"
+                    }
+                    value={password}
+                    onChange={(event) =>
+                      setPassword(event.target.value)
+                    }
+                    placeholder="Enter your password"
+                    autoComplete="current-password"
+                    disabled={submitting}
+                    className="w-full border border-slate-700 bg-[#090e18] px-4 py-3 pr-12 text-sm text-white outline-none transition placeholder:text-slate-700 focus:border-violet-500/60 disabled:cursor-not-allowed disabled:opacity-60"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowPassword(
+                        (current) => !current,
+                      )
+                    }
+                    aria-label={
+                      showPassword
+                        ? "Hide password"
+                        : "Show password"
+                    }
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 transition hover:text-slate-300"
+                  >
+                    {showPassword ? (
+                      <EyeOff size={17} />
+                    ) : (
+                      <Eye size={17} />
+                    )}
+                  </button>
+                </div>
               </div>
 
+              {/* Error */}
               {error && (
                 <div className="border border-red-500/20 bg-red-500/5 px-4 py-3 text-xs leading-5 text-red-400">
                   {error}
                 </div>
               )}
 
+              {/* Submit */}
               <button
                 type="submit"
                 disabled={submitting}
@@ -261,6 +301,7 @@ function Login() {
               </button>
             </form>
 
+            {/* OAuth */}
             <div className="my-7 flex items-center gap-4">
               <div className="h-px flex-1 bg-slate-800" />
 
