@@ -1,61 +1,127 @@
-import express from "express";
+import "dotenv/config";
+
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import projectRoutes from "./routes/project.routes.js";
+import express from "express";
+
 import healthRoutes from "./routes/health.routes.js";
 import authRoutes from "./routes/auth.routes.js";
+import projectRoutes from "./routes/project.routes.js";
 import githubRoutes from "./routes/github.routes.js";
+import analysisRoutes from "./routes/analysis.routes.js";
 
 const app = express();
 
-/* Middleware */
+const allowedOrigins = new Set([
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+]);
+
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: (origin, callback) => {
+      /*
+       * Allow requests without an Origin header.
+       * This is useful for direct server/API requests.
+       */
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+
+      if (allowedOrigins.has(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(
+        new Error(
+          `CORS blocked origin: ${origin}`,
+        ),
+      );
+    },
+
     credentials: true,
+
+    methods: [
+      "GET",
+      "HEAD",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "OPTIONS",
+    ],
+
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+    ],
+
+    optionsSuccessStatus: 204,
   }),
 );
 
-app.use(express.json());
-
 app.use(cookieParser());
 
-/* API Routes */
-app.use("/api/health", healthRoutes);
-app.use("/api/auth", authRoutes);
-app.use("/api/projects", projectRoutes);
-app.use("/api/github", githubRoutes);
+app.use(express.json());
 
-/* Root endpoint */
-app.get("/", (_req, res) => {
-  res.status(200).json({
-    success: true,
-    service: "SecureAI Backend",
-    message: "SecureAI API is running",
-  });
-});
+app.use(express.urlencoded({
+  extended: true,
+}));
 
-/* 404 handler */
-app.use((_req, res) => {
-  res.status(404).json({
-    success: false,
-    message: "Route not found",
-  });
-});
+/*
+ * API routes
+ */
+app.use(
+  "/api/health",
+  healthRoutes,
+);
 
-/* Error handler */
+app.use(
+  "/api/auth",
+  authRoutes,
+);
+
+app.use(
+  "/api/projects",
+  projectRoutes,
+);
+
+app.use(
+  "/api/github",
+  githubRoutes,
+);
+
+app.use(
+  "/api/analysis",
+  analysisRoutes,
+);
+
+/*
+ * Global error handler
+ */
 app.use(
   (
-    err: unknown,
+    error: unknown,
     _req: express.Request,
     res: express.Response,
     _next: express.NextFunction,
   ) => {
-    console.error(err);
+    console.error(error);
+
+    if (res.headersSent) {
+      return;
+    }
+
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Internal server error.";
 
     res.status(500).json({
       success: false,
-      message: "Internal server error",
+      message,
     });
   },
 );

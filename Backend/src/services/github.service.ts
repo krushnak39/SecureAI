@@ -109,15 +109,14 @@ export function buildGitHubInstallationUrl(
 }
 
 export function createGitHubAppJwt() {
-  const { clientId, privateKey } =
-    getGitHubConfig();
+  const { appId, privateKey } = getGitHubConfig();
 
   const now = Math.floor(Date.now() / 1000);
 
   const payload = {
-    iat: now - 60,
-    exp: now + 9 * 60,
-    iss: clientId,
+    iat: now - 60,       // Issued 60 seconds in the past to account for clock drift
+    exp: now + 8 * 60,   // Expires 8 minutes in the future (total lifetime 9 mins < 10 mins limit)
+    iss: appId,          // GitHub App ID
   };
 
   const encodedHeader =
@@ -151,8 +150,16 @@ export function createGitHubAppJwt() {
 
 export async function getInstallationAccessToken(
   installationId: number,
+  repositoryIds?: number[],
 ) {
   const jwt = createGitHubAppJwt();
+
+  const body =
+    repositoryIds && repositoryIds.length > 0
+      ? JSON.stringify({
+          repository_ids: repositoryIds,
+        })
+      : undefined;
 
   const response =
     await githubRequest<{
@@ -170,11 +177,98 @@ export async function getInstallationAccessToken(
         method: "POST",
         headers: {
           Authorization: `Bearer ${jwt}`,
+          ...(body
+            ? {
+                "Content-Type":
+                  "application/json",
+              }
+            : {}),
         },
+        body,
       },
     );
 
   return response;
+}
+
+export async function getGitHubBranchCommit(
+  accessToken: string,
+  fullName: string,
+  branch: string,
+) {
+  const encodedBranch =
+    encodeURIComponent(branch);
+
+  return githubRequest<{
+    name: string;
+    commit: {
+      sha: string;
+      url: string;
+    };
+  }>(
+    `/repos/${fullName}/branches/${encodedBranch}`,
+    accessToken,
+  );
+}
+
+export async function downloadGitHubRepositoryArchive(
+  accessToken: string,
+  fullName: string,
+  branch: string,
+) {
+  const encodedBranch =
+    encodeURIComponent(branch);
+
+  const response = await fetch(
+    `${GITHUB_API_URL}/repos/${fullName}/zipball/${encodedBranch}`,
+    {
+      headers: {
+        Accept:
+          "application/vnd.github+json",
+        Authorization: `Bearer ${accessToken}`,
+        "X-GitHub-Api-Version":
+          GITHUB_API_VERSION,
+      },
+      redirect: "manual",
+    },
+  );
+
+  const location =
+    response.headers.get("location");
+
+  if (
+    response.status >= 300 &&
+    response.status < 400 &&
+    location
+  ) {
+    const archiveResponse =
+      await fetch(location);
+
+    if (!archiveResponse.ok) {
+      throw new Error(
+        `Unable to download repository archive: ${archiveResponse.status}`,
+      );
+    }
+
+    return Buffer.from(
+      await archiveResponse.arrayBuffer(),
+    );
+  }
+
+  if (!response.ok) {
+    const data =
+      await response.json().catch(() => null);
+
+    throw new Error(
+      typeof data?.message === "string"
+        ? data.message
+        : `Unable to download repository archive: ${response.status}`,
+    );
+  }
+
+  return Buffer.from(
+    await response.arrayBuffer(),
+  );
 }
 
 export async function exchangeCodeForUserToken(

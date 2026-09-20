@@ -14,6 +14,7 @@ import {
   GitCommitHorizontal,
   GitFork,
   Layers3,
+  Loader2,
   MessageSquare,
   Network,
   Play,
@@ -55,6 +56,8 @@ interface ProjectAnalysis {
   startedAt: string | null;
   completedAt: string | null;
   createdAt: string;
+
+  errorMessage?: string | null;
 }
 
 interface ProjectRepository {
@@ -88,6 +91,23 @@ interface Project {
 interface ProjectResponse {
   success: boolean;
   project: Project;
+}
+
+interface RunAnalysisResponse {
+  success: boolean;
+  message: string;
+  analysis: ProjectAnalysis;
+  summary: {
+    filesAnalyzed: number;
+    linesAnalyzed: number;
+    skippedFiles: number;
+    archiveBytes: number;
+    languages: Array<{
+      language: string;
+      files: number;
+      lines: number;
+    }>;
+  };
 }
 
 const modules: {
@@ -199,15 +219,26 @@ function ProjectDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const [project, setProject] = useState<Project | null>(
-    null,
-  );
+  const [project, setProject] =
+    useState<Project | null>(null);
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState("");
 
   const [refreshing, setRefreshing] =
     useState(false);
+
+  const [runningAnalysis, setRunningAnalysis] =
+    useState(false);
+
+  const [analysisMessage, setAnalysisMessage] =
+    useState("");
+
+  const [analysisError, setAnalysisError] =
+    useState("");
 
   async function loadProject(
     showRefreshState = false,
@@ -245,11 +276,56 @@ function ProjectDetails() {
     }
   }
 
+  async function handleRunAnalysis() {
+    if (!id) {
+      setAnalysisError(
+        "Project ID is missing.",
+      );
+      return;
+    }
+
+    if (!project?.repository) {
+      setAnalysisError(
+        "Connect a GitHub repository before running an analysis.",
+      );
+      return;
+    }
+
+    try {
+      setRunningAnalysis(true);
+      setAnalysisMessage("");
+      setAnalysisError("");
+
+      const response =
+        await apiRequest<RunAnalysisResponse>(
+          `/analysis/projects/${id}/analyze`,
+          {
+            method: "POST",
+          },
+        );
+
+      setAnalysisMessage(
+        `Analysis completed: ${response.summary.filesAnalyzed.toLocaleString()} files and ${response.summary.linesAnalyzed.toLocaleString()} lines analyzed.`,
+      );
+
+      await loadProject(true);
+    } catch (err) {
+      setAnalysisError(
+        err instanceof Error
+          ? err.message
+          : "Unable to run repository analysis.",
+      );
+    } finally {
+      setRunningAnalysis(false);
+    }
+  }
+
   useEffect(() => {
     loadProject();
   }, [id]);
 
-  const analysis = project?.repository?.latestAnalysis;
+  const analysis =
+    project?.repository?.latestAnalysis;
 
   const metrics = useMemo(
     () => [
@@ -429,7 +505,10 @@ function ProjectDetails() {
               onClick={() =>
                 loadProject(true)
               }
-              disabled={refreshing}
+              disabled={
+                refreshing ||
+                runningAnalysis
+              }
               className="flex items-center gap-2 border border-slate-700 bg-[#090e18] px-4 py-2.5 text-sm text-slate-300 transition hover:border-slate-500 hover:text-white disabled:opacity-50"
             >
               <RefreshCw
@@ -445,14 +524,77 @@ function ProjectDetails() {
 
             <button
               type="button"
-              className="flex items-center gap-2 bg-white px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-slate-200"
+              onClick={handleRunAnalysis}
+              disabled={
+                runningAnalysis ||
+                !repository
+              }
+              title={
+                !repository
+                  ? "Connect a GitHub repository first"
+                  : undefined
+              }
+              className="flex items-center gap-2 bg-white px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <Play size={15} />
-              Run analysis
+              {runningAnalysis ? (
+                <Loader2
+                  size={15}
+                  className="animate-spin"
+                />
+              ) : (
+                <Play size={15} />
+              )}
+
+              {runningAnalysis
+                ? "Analyzing..."
+                : "Run analysis"}
             </button>
           </div>
         </div>
       </div>
+
+      {/* Analysis feedback */}
+      {analysisMessage && (
+        <section className="mt-6 border border-emerald-500/20 bg-emerald-500/5 p-4">
+          <div className="flex items-start gap-3">
+            <CheckCircle2
+              size={17}
+              className="mt-0.5 text-emerald-400"
+            />
+
+            <div>
+              <p className="text-sm font-medium text-emerald-300">
+                Analysis completed
+              </p>
+
+              <p className="mt-1 text-xs leading-5 text-emerald-400/70">
+                {analysisMessage}
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {analysisError && (
+        <section className="mt-6 border border-red-500/20 bg-red-500/5 p-4">
+          <div className="flex items-start gap-3">
+            <ShieldAlert
+              size={17}
+              className="mt-0.5 text-red-400"
+            />
+
+            <div>
+              <p className="text-sm font-medium text-red-300">
+                Analysis failed
+              </p>
+
+              <p className="mt-1 text-xs leading-5 text-red-400/70">
+                {analysisError}
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Repository connection status */}
       {!repository && (
@@ -470,9 +612,9 @@ function ProjectDetails() {
 
               <p className="mt-1 max-w-2xl text-xs leading-5 text-amber-400/70">
                 This project exists in SecureAI, but it
-                is not connected to a repository yet. GitHub
-                repository connection will be available
-                during the GitHub integration phase.
+                is not connected to a repository yet. Connect
+                a GitHub repository from the Projects workspace
+                before running analysis.
               </p>
             </div>
           </div>
@@ -489,7 +631,7 @@ function ProjectDetails() {
 
             <p className="mt-1 text-xs text-slate-600">
               Scores appear here after SecureAI completes
-              a real analysis.
+              the corresponding analysis engines.
             </p>
           </div>
 
@@ -507,7 +649,9 @@ function ProjectDetails() {
             <div
               key={item.label}
               className={`border-b border-slate-800 p-5 ${
-                index < 4 ? "lg:border-r" : ""
+                index < 4
+                  ? "lg:border-r"
+                  : ""
               }`}
             >
               <p className="text-[9px] tracking-[0.14em] text-slate-600">
@@ -640,14 +784,19 @@ function ProjectDetails() {
 
             <InfoRow
               label="Trigger"
-              value={analysis?.trigger ?? "—"}
+              value={
+                analysis?.trigger ?? "—"
+              }
             />
 
             <InfoRow
               label="Commit"
               value={
                 analysis?.commitSha
-                  ? analysis.commitSha.slice(0, 8)
+                  ? analysis.commitSha.slice(
+                      0,
+                      8,
+                    )
                   : "—"
               }
             />
@@ -662,6 +811,15 @@ function ProjectDetails() {
                   : "—"
               }
             />
+
+            {analysis?.errorMessage && (
+              <InfoRow
+                label="Error"
+                value={
+                  analysis.errorMessage
+                }
+              />
+            )}
           </div>
         </section>
 
@@ -689,7 +847,10 @@ function ProjectDetails() {
             />
 
             <Signal
-              active={Boolean(analysis)}
+              active={
+                analysis?.status ===
+                "COMPLETED"
+              }
               text="Analysis results available"
             />
           </div>
@@ -778,11 +939,20 @@ function ProjectDetails() {
 
         <div className="grid md:grid-cols-5">
           {pipelineSteps.map(
-            ({ step, title, icon: Icon }, index) => (
+            (
+              {
+                step,
+                title,
+                icon: Icon,
+              },
+              index,
+            ) => (
               <div
                 key={title}
                 className={`relative border-b border-slate-800 p-5 ${
-                  index < 4 ? "md:border-r" : ""
+                  index < 4
+                    ? "md:border-r"
+                    : ""
                 }`}
               >
                 <span className="text-[9px] tracking-[0.15em] text-slate-700">
@@ -874,23 +1044,32 @@ function ProjectDetails() {
 
             <StateRow
               icon={
-                analysis
+                analysis?.status ===
+                "COMPLETED"
                   ? CheckCircle2
                   : Clock3
               }
               label={
-                analysis
-                  ? "Analysis results available"
-                  : "Analysis not yet performed"
+                runningAnalysis
+                  ? "Analysis currently running"
+                  : analysis
+                    ? `Analysis status: ${analysis.status}`
+                    : "Analysis not yet performed"
               }
-              active={Boolean(analysis)}
+              active={
+                runningAnalysis ||
+                analysis?.status ===
+                  "COMPLETED"
+              }
             />
 
             <StateRow
               icon={Activity}
               label={
                 analysis
-                  ? `Analysis status: ${analysis.status}`
+                  ? `Latest analysis created ${new Date(
+                      analysis.createdAt,
+                    ).toLocaleString()}`
                   : "Analysis engine ready"
               }
               active
@@ -931,7 +1110,7 @@ function InfoRow({
         {label}
       </span>
 
-      <span className="max-w-[65%] text-right text-slate-400">
+      <span className="max-w-[65%] break-words text-right text-slate-400">
         {value}
       </span>
     </div>

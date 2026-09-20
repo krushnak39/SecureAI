@@ -1,11 +1,12 @@
 import {
   Bell,
-  ChevronDown,
   Command,
   GitBranch,
   Search,
 } from "lucide-react";
+
 import UserMenu from "../auth/UserMenu";
+
 function CommandBar() {
   return (
     <header className="sticky top-0 z-30 h-16 border-b border-slate-800/80 bg-[#070b12]/95 backdrop-blur">
@@ -27,17 +28,24 @@ function CommandBar() {
               SECUREAI
             </span>
 
-            <span className="text-slate-700">/</span>
+            <span className="text-slate-700">
+              /
+            </span>
 
             <span className="text-slate-400">
               krushnak39/SecureAI
             </span>
 
-            <span className="text-slate-700">/</span>
+            <span className="text-slate-700">
+              /
+            </span>
 
             <div className="flex items-center gap-1.5 text-slate-300">
               <GitBranch size={12} />
-              <span className="font-mono">feature</span>
+
+              <span className="font-mono">
+                feature
+              </span>
             </div>
           </div>
         </div>
@@ -48,7 +56,10 @@ function CommandBar() {
           className="hidden w-full max-w-sm items-center justify-between border border-slate-800 bg-[#0a0f18] px-3 py-2 text-left transition hover:border-slate-700 md:flex"
         >
           <div className="flex items-center gap-2">
-            <Search size={15} className="text-slate-600" />
+            <Search
+              size={15}
+              className="text-slate-600"
+            />
 
             <span className="text-xs text-slate-500">
               Search repository, findings, files...
@@ -86,19 +97,10 @@ function CommandBar() {
 
           <div className="h-5 w-px bg-slate-800" />
 
-          <button
-            type="button"
-            className="flex items-center gap-2"
-          >
-            <div className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-700 bg-slate-800 font-mono text-xs text-slate-300">
-              <UserMenu />
-            </div>
-
-            <ChevronDown
-              size={13}
-              className="text-slate-600"
-            />
-          </button>
+          {/* UserMenu already contains its own button */}
+          <div className="flex items-center">
+            <UserMenu />
+          </div>
         </div>
       </div>
     </header>
