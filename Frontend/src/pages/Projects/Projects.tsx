@@ -6,6 +6,7 @@ import {
   Code2,
   GitBranch,
   GitFork,
+  Loader2,
   Plus,
   Search,
   ShieldAlert,
@@ -18,9 +19,16 @@ import {
   useState,
   type FormEvent,
 } from "react";
-import { Link } from "react-router-dom";
+import {
+  Link,
+  useSearchParams,
+} from "react-router-dom";
 
 import { apiRequest } from "../../services/api";
+
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  "http://localhost:5000/api";
 
 interface ProjectRepository {
   id: string;
@@ -71,8 +79,46 @@ interface CreateProjectResponse {
   project: Project;
 }
 
+interface GitHubUser {
+  id: number;
+  login: string;
+  avatarUrl: string;
+  url: string;
+}
+
+interface GitHubStatusResponse {
+  success: boolean;
+  connected: boolean;
+  githubUser: GitHubUser | null;
+  tokenExpiresAt: string | null;
+}
+
+interface GitHubRepository {
+  id: number;
+  name: string;
+  fullName: string;
+  url: string;
+  defaultBranch: string;
+  language: string | null;
+  isPrivate: boolean;
+  description: string | null;
+  owner: string;
+}
+
+interface GitHubRepositoriesResponse {
+  success: boolean;
+  repositories: GitHubRepository[];
+}
+
+interface ConnectGitHubRepositoryResponse {
+  success: boolean;
+  message: string;
+  repository: ProjectRepository;
+}
+
 function Projects() {
   const [projects, setProjects] = useState<Project[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -87,6 +133,51 @@ function Projects() {
 
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
+
+  const [githubConnected, setGithubConnected] =
+    useState(false);
+
+  const [githubUser, setGithubUser] =
+    useState<GitHubUser | null>(null);
+
+  const [githubLoading, setGithubLoading] =
+    useState(true);
+
+  const [githubError, setGithubError] =
+    useState("");
+
+  const [
+    repositoryPickerProject,
+    setRepositoryPickerProject,
+  ] = useState<Project | null>(null);
+
+  const [
+    githubRepositories,
+    setGithubRepositories,
+  ] = useState<GitHubRepository[]>([]);
+
+  const [
+    repositoriesLoading,
+    setRepositoriesLoading,
+  ] = useState(false);
+
+  const [
+    repositoriesError,
+    setRepositoriesError,
+  ] = useState("");
+
+  const [
+    connectingRepositoryId,
+    setConnectingRepositoryId,
+  ] = useState<number | null>(null);
+
+  const [
+    integrationMessage,
+    setIntegrationMessage,
+  ] = useState("");
+
+  const [searchParams, setSearchParams] =
+    useSearchParams();
 
   async function loadProjects() {
     try {
@@ -110,9 +201,68 @@ function Projects() {
     }
   }
 
+  async function loadGitHubStatus() {
+    try {
+      setGithubLoading(true);
+      setGithubError("");
+
+      const response =
+        await apiRequest<GitHubStatusResponse>(
+          "/github/status",
+        );
+
+      setGithubConnected(response.connected);
+      setGithubUser(response.githubUser);
+    } catch (err) {
+      setGithubConnected(false);
+      setGithubUser(null);
+
+      setGithubError(
+        err instanceof Error
+          ? err.message
+          : "Unable to check GitHub connection.",
+      );
+    } finally {
+      setGithubLoading(false);
+    }
+  }
+
   useEffect(() => {
     loadProjects();
+    loadGitHubStatus();
   }, []);
+
+  useEffect(() => {
+    const githubState =
+      searchParams.get("github");
+
+    if (!githubState) {
+      return;
+    }
+
+    if (githubState === "connected") {
+      setIntegrationMessage(
+        "GitHub connected successfully. Your accessible repositories are now available.",
+      );
+
+      loadGitHubStatus();
+    }
+
+    if (githubState === "error") {
+      setIntegrationMessage(
+        "GitHub connection could not be completed. Please try again.",
+      );
+    }
+
+    const nextParams =
+      new URLSearchParams(searchParams);
+
+    nextParams.delete("github");
+
+    setSearchParams(nextParams, {
+      replace: true,
+    });
+  }, [searchParams, setSearchParams]);
 
   async function handleCreateProject(
     event: FormEvent<HTMLFormElement>,
@@ -122,7 +272,9 @@ function Projects() {
     setCreateError("");
 
     if (!projectName.trim()) {
-      setCreateError("Please enter a project name.");
+      setCreateError(
+        "Please enter a project name.",
+      );
       return;
     }
 
@@ -137,7 +289,8 @@ function Projects() {
             body: JSON.stringify({
               name: projectName.trim(),
               description:
-                projectDescription.trim() || undefined,
+                projectDescription.trim() ||
+                undefined,
             }),
           },
         );
@@ -161,8 +314,106 @@ function Projects() {
     }
   }
 
+  function startGitHubConnection(
+    projectId?: string,
+  ) {
+    if (projectId) {
+      localStorage.setItem(
+        "secureai_pending_github_project",
+        projectId,
+      );
+    } else {
+      localStorage.removeItem(
+        "secureai_pending_github_project",
+      );
+    }
+
+    window.location.href =
+      `${API_BASE_URL}/github/connect`;
+  }
+
+  async function openRepositoryPicker(
+    project: Project,
+  ) {
+    if (!githubConnected) {
+      startGitHubConnection(project.id);
+      return;
+    }
+
+    try {
+      setRepositoryPickerProject(project);
+      setRepositoriesLoading(true);
+      setRepositoriesError("");
+      setGithubRepositories([]);
+
+      const response =
+        await apiRequest<GitHubRepositoriesResponse>(
+          "/github/repositories",
+        );
+
+      setGithubRepositories(
+        response.repositories,
+      );
+    } catch (err) {
+      setRepositoriesError(
+        err instanceof Error
+          ? err.message
+          : "Unable to load GitHub repositories.",
+      );
+    } finally {
+      setRepositoriesLoading(false);
+    }
+  }
+
+  async function handleConnectRepository(
+    repository: GitHubRepository,
+  ) {
+    if (!repositoryPickerProject) {
+      return;
+    }
+
+    try {
+      setConnectingRepositoryId(
+        repository.id,
+      );
+      setRepositoriesError("");
+
+      await apiRequest<ConnectGitHubRepositoryResponse>(
+        `/github/projects/${repositoryPickerProject.id}/repositories`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            repositoryId: repository.id,
+          }),
+        },
+      );
+
+      setRepositoryPickerProject(null);
+      setGithubRepositories([]);
+
+      setIntegrationMessage(
+        `${repository.fullName} connected successfully to ${repositoryPickerProject.name}.`,
+      );
+
+      localStorage.removeItem(
+        "secureai_pending_github_project",
+      );
+
+      await loadProjects();
+    } catch (err) {
+      setRepositoriesError(
+        err instanceof Error
+          ? err.message
+          : "Unable to connect repository.",
+      );
+    } finally {
+      setConnectingRepositoryId(null);
+    }
+  }
+
   const filteredProjects = useMemo(() => {
-    const query = search.trim().toLowerCase();
+    const query =
+      search.trim().toLowerCase();
 
     if (!query) {
       return projects;
@@ -170,7 +421,9 @@ function Projects() {
 
     return projects.filter((project) => {
       return (
-        project.name.toLowerCase().includes(query) ||
+        project.name
+          .toLowerCase()
+          .includes(query) ||
         project.description
           ?.toLowerCase()
           .includes(query) ||
@@ -182,25 +435,27 @@ function Projects() {
   }, [projects, search]);
 
   const averageHealth = useMemo(() => {
-    const analyzedProjects = projects.filter(
-      (project) =>
-        project.repository?.latestAnalysis
-          ?.healthScore !== null &&
-        project.repository?.latestAnalysis
-          ?.healthScore !== undefined,
-    );
+    const analyzedProjects =
+      projects.filter(
+        (project) =>
+          project.repository?.latestAnalysis
+            ?.healthScore !== null &&
+          project.repository?.latestAnalysis
+            ?.healthScore !== undefined,
+      );
 
     if (analyzedProjects.length === 0) {
       return 0;
     }
 
-    const total = analyzedProjects.reduce(
-      (sum, project) =>
-        sum +
-        (project.repository?.latestAnalysis
-          ?.healthScore ?? 0),
-      0,
-    );
+    const total =
+      analyzedProjects.reduce(
+        (sum, project) =>
+          sum +
+          (project.repository?.latestAnalysis
+            ?.healthScore ?? 0),
+        0,
+      );
 
     return Math.round(
       total / analyzedProjects.length,
@@ -211,23 +466,24 @@ function Projects() {
     /*
      * The current Project API doesn't return finding
      * counts yet, so we deliberately don't invent them.
-     * This will become real when the Analysis API is added.
      */
     return null;
   }, []);
 
-  const projectsNeedingAttention = useMemo(() => {
-    return projects.filter((project) => {
-      const health =
-        project.repository?.latestAnalysis?.healthScore;
+  const projectsNeedingAttention =
+    useMemo(() => {
+      return projects.filter((project) => {
+        const health =
+          project.repository?.latestAnalysis
+            ?.healthScore;
 
-      return (
-        health !== null &&
-        health !== undefined &&
-        health < 80
-      );
-    }).length;
-  }, [projects]);
+        return (
+          health !== null &&
+          health !== undefined &&
+          health < 80
+        );
+      }).length;
+    }, [projects]);
 
   return (
     <div className="min-h-[calc(100vh-4rem)]">
@@ -244,29 +500,108 @@ function Projects() {
           </h1>
 
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-            Manage projects, inspect repository intelligence, and
-            move into engineering analysis from one workspace.
+            Manage projects, inspect repository
+            intelligence, and move into engineering
+            analysis from one workspace.
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => {
-            setCreateError("");
-            setShowCreateModal(true);
-          }}
-          className="flex items-center justify-center gap-2 bg-white px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-slate-200"
-        >
-          <Plus size={16} />
-          Create project
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() =>
+              startGitHubConnection()
+            }
+            disabled={githubLoading}
+            className={`flex items-center justify-center gap-2 border px-4 py-2.5 text-sm transition ${
+              githubConnected
+                ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-400 hover:border-emerald-500/40"
+                : "border-slate-700 bg-[#090e18] text-slate-300 hover:border-slate-500 hover:text-white"
+            } disabled:opacity-50`}
+          >
+            {githubLoading ? (
+              <Loader2
+                size={15}
+                className="animate-spin"
+              />
+            ) : (
+              <GitFork size={15} />
+            )}
+
+            {githubConnected
+              ? `GitHub · @${githubUser?.login ?? "connected"}`
+              : "Connect GitHub"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setCreateError("");
+              setShowCreateModal(true);
+            }}
+            className="flex items-center justify-center gap-2 bg-white px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-slate-200"
+          >
+            <Plus size={16} />
+            Create project
+          </button>
+        </div>
       </div>
+
+      {/* GitHub / integration message */}
+      {integrationMessage && (
+        <div className="mt-5 flex items-start justify-between gap-4 border border-cyan-500/20 bg-cyan-500/5 px-4 py-3">
+          <div className="flex items-start gap-3">
+            <CheckCircle2
+              size={16}
+              className="mt-0.5 text-cyan-400"
+            />
+
+            <p className="text-xs leading-5 text-cyan-300/90">
+              {integrationMessage}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() =>
+              setIntegrationMessage("")
+            }
+            className="shrink-0 text-slate-600 transition hover:text-white"
+            aria-label="Dismiss integration message"
+          >
+            <X size={15} />
+          </button>
+        </div>
+      )}
+
+      {githubError && !githubConnected && (
+        <div className="mt-5 border border-amber-500/20 bg-amber-500/5 px-4 py-3">
+          <div className="flex items-start gap-3">
+            <ShieldAlert
+              size={16}
+              className="mt-0.5 text-amber-400"
+            />
+
+            <div>
+              <p className="text-xs font-medium text-amber-300">
+                GitHub connection status unavailable
+              </p>
+
+              <p className="mt-1 text-[10px] leading-5 text-amber-400/70">
+                {githubError}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Metrics */}
       <div className="grid border-x border-b border-slate-800/70 sm:grid-cols-2 lg:grid-cols-4">
         <div className="border-b border-slate-800/70 p-5 sm:border-r lg:border-b-0">
           <p className="text-2xl font-semibold">
-            {projects.length.toString().padStart(2, "0")}
+            {projects.length
+              .toString()
+              .padStart(2, "0")}
           </p>
 
           <p className="mt-1 text-[10px] tracking-[0.15em] text-slate-600">
@@ -404,7 +739,7 @@ function Projects() {
             <p className="mx-auto mt-2 max-w-md text-xs leading-5 text-slate-600">
               {search
                 ? "Try a different project or repository search."
-                : "Create your first SecureAI project. Repository connection will be added through the GitHub integration phase."}
+                : "Create your first SecureAI project and connect a GitHub repository to begin building repository intelligence."}
             </p>
 
             {!search && (
@@ -429,7 +764,8 @@ function Projects() {
           <div className="mt-5 grid gap-4 xl:grid-cols-2">
             {filteredProjects.map((project) => {
               const analysis =
-                project.repository?.latestAnalysis;
+                project.repository
+                  ?.latestAnalysis;
 
               const health =
                 analysis?.healthScore ?? null;
@@ -452,9 +788,11 @@ function Projects() {
               const statusClass =
                 projectStatus === "HEALTHY"
                   ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-400"
-                  : projectStatus === "ATTENTION"
+                  : projectStatus ===
+                      "ATTENTION"
                     ? "border-amber-500/20 bg-amber-500/5 text-amber-400"
-                    : projectStatus === "CRITICAL"
+                    : projectStatus ===
+                        "CRITICAL"
                       ? "border-red-500/20 bg-red-500/5 text-red-400"
                       : "border-slate-700 bg-slate-800/20 text-slate-500";
 
@@ -558,14 +896,16 @@ function Projects() {
                               : "Public",
                           ]
                             .filter(Boolean)
-                            .map((technology) => (
-                              <span
-                                key={technology}
-                                className="border border-slate-800 bg-[#050810] px-2.5 py-1.5 text-[9px] text-slate-500"
-                              >
-                                {technology}
-                              </span>
-                            ))}
+                            .map(
+                              (technology) => (
+                                <span
+                                  key={technology}
+                                  className="border border-slate-800 bg-[#050810] px-2.5 py-1.5 text-[9px] text-slate-500"
+                                >
+                                  {technology}
+                                </span>
+                              ),
+                            )}
                         </div>
 
                         <div className="mt-5 grid gap-3 text-xs sm:grid-cols-3">
@@ -573,7 +913,8 @@ function Projects() {
                             <GitBranch size={13} />
 
                             <span>
-                              {project.repository.branch ||
+                              {project.repository
+                                .branch ||
                                 project.repository
                                   .defaultBranch}
                             </span>
@@ -603,7 +944,9 @@ function Projects() {
                               {project.repository
                                 .lastAnalyzed
                                 ? new Date(
-                                    project.repository.lastAnalyzed,
+                                    project
+                                      .repository
+                                      .lastAnalyzed,
                                   ).toLocaleString()
                                 : "Never analyzed"}
                             </span>
@@ -612,22 +955,40 @@ function Projects() {
                       </>
                     ) : (
                       <div className="border border-dashed border-slate-800 p-4">
-                        <div className="flex items-center gap-3">
-                          <GitFork
-                            size={15}
-                            className="text-slate-600"
-                          />
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                          <div className="flex items-center gap-3">
+                            <GitFork
+                              size={15}
+                              className="text-slate-600"
+                            />
 
-                          <div>
-                            <p className="text-xs font-medium text-slate-400">
-                              No repository connected
-                            </p>
+                            <div>
+                              <p className="text-xs font-medium text-slate-400">
+                                No repository connected
+                              </p>
 
-                            <p className="mt-1 text-[10px] text-slate-700">
-                              GitHub repository connection will be
-                              available in the next integration phase.
-                            </p>
+                              <p className="mt-1 text-[10px] text-slate-700">
+                                Connect a GitHub repository to
+                                activate repository intelligence.
+                              </p>
+                            </div>
                           </div>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              openRepositoryPicker(
+                                project,
+                              )
+                            }
+                            className="flex shrink-0 items-center justify-center gap-2 border border-slate-700 px-3 py-2 text-[10px] font-medium text-slate-300 transition hover:border-violet-500/40 hover:text-white"
+                          >
+                            <GitFork size={13} />
+
+                            {githubConnected
+                              ? "Select repository"
+                              : "Connect GitHub"}
+                          </button>
                         </div>
                       </div>
                     )}
@@ -658,10 +1019,20 @@ function Projects() {
       {/* Engine status */}
       <div className="mt-5 flex flex-col gap-3 border border-slate-800 bg-[#090e18] p-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center border border-emerald-500/20 bg-emerald-500/5">
+          <div
+            className={`flex h-8 w-8 items-center justify-center border ${
+              githubConnected
+                ? "border-emerald-500/20 bg-emerald-500/5"
+                : "border-slate-800 bg-[#050810]"
+            }`}
+          >
             <Activity
               size={14}
-              className="text-emerald-400"
+              className={
+                githubConnected
+                  ? "text-emerald-400"
+                  : "text-slate-600"
+              }
             />
           </div>
 
@@ -671,13 +1042,23 @@ function Projects() {
             </p>
 
             <p className="mt-0.5 text-[10px] text-slate-600">
-              Project data is loaded from the SecureAI API.
+              {githubConnected
+                ? `GitHub connected${githubUser?.login ? ` · @${githubUser.login}` : ""}. Repository discovery is available.`
+                : "Project data is loaded from the SecureAI API."}
             </p>
           </div>
         </div>
 
-        <span className="text-[10px] tracking-wider text-emerald-400">
-          API CONNECTED
+        <span
+          className={`text-[10px] tracking-wider ${
+            githubConnected
+              ? "text-emerald-400"
+              : "text-slate-600"
+          }`}
+        >
+          {githubConnected
+            ? "GITHUB CONNECTED"
+            : "API CONNECTED"}
         </span>
       </div>
 
@@ -692,8 +1073,8 @@ function Projects() {
                 </p>
 
                 <p className="mt-1 text-xs text-slate-600">
-                  Create a workspace for a repository you want SecureAI
-                  to analyze.
+                  Create a workspace for a repository you
+                  want SecureAI to analyze.
                 </p>
               </div>
 
@@ -726,7 +1107,9 @@ function Projects() {
                   type="text"
                   value={projectName}
                   onChange={(event) =>
-                    setProjectName(event.target.value)
+                    setProjectName(
+                      event.target.value,
+                    )
                   }
                   placeholder="My SecureAI Project"
                   disabled={creating}
@@ -780,7 +1163,14 @@ function Projects() {
                   disabled={creating}
                   className="flex items-center gap-2 bg-white px-4 py-2.5 text-xs font-semibold text-slate-950 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  <Plus size={14} />
+                  {creating ? (
+                    <Loader2
+                      size={14}
+                      className="animate-spin"
+                    />
+                  ) : (
+                    <Plus size={14} />
+                  )}
 
                   {creating
                     ? "Creating..."
@@ -788,6 +1178,244 @@ function Projects() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* GitHub repository picker */}
+      {repositoryPickerProject && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/70 px-5 backdrop-blur-sm">
+          <div className="flex max-h-[85vh] w-full max-w-2xl flex-col border border-slate-800 bg-[#090e18] shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-800 p-5">
+              <div>
+                <div className="flex items-center gap-2">
+                  <GitFork
+                    size={16}
+                    className="text-violet-400"
+                  />
+
+                  <p className="text-sm font-medium">
+                    Connect GitHub repository
+                  </p>
+                </div>
+
+                <p className="mt-1 text-xs text-slate-600">
+                  Select a repository for{" "}
+                  <span className="text-slate-400">
+                    {repositoryPickerProject.name}
+                  </span>
+                  .
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setRepositoryPickerProject(
+                    null,
+                  );
+                  setGithubRepositories([]);
+                  setRepositoriesError("");
+                }}
+                className="text-slate-600 transition hover:text-white"
+                aria-label="Close repository picker"
+              >
+                <X size={17} />
+              </button>
+            </div>
+
+            <div className="min-h-0 overflow-y-auto">
+              {repositoriesLoading && (
+                <div className="p-12 text-center">
+                  <Loader2
+                    size={20}
+                    className="mx-auto animate-spin text-violet-400"
+                  />
+
+                  <p className="mt-4 text-sm text-slate-400">
+                    Loading GitHub repositories...
+                  </p>
+
+                  <p className="mt-1 text-xs text-slate-700">
+                    Fetching repositories accessible to
+                    SecureAI.
+                  </p>
+                </div>
+              )}
+
+              {!repositoriesLoading &&
+                repositoriesError && (
+                  <div className="p-6">
+                    <div className="border border-red-500/20 bg-red-500/5 p-5">
+                      <div className="flex items-start gap-3">
+                        <ShieldAlert
+                          size={17}
+                          className="mt-0.5 text-red-400"
+                        />
+
+                        <div>
+                          <p className="text-sm font-medium text-red-300">
+                            Unable to load repositories
+                          </p>
+
+                          <p className="mt-1 text-xs leading-5 text-red-400/80">
+                            {repositoriesError}
+                          </p>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              openRepositoryPicker(
+                                repositoryPickerProject,
+                              )
+                            }
+                            className="mt-4 border border-red-500/20 px-3 py-2 text-xs text-red-300 transition hover:bg-red-500/5"
+                          >
+                            Try again
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+              {!repositoriesLoading &&
+                !repositoriesError &&
+                githubRepositories.length === 0 && (
+                  <div className="p-12 text-center">
+                    <GitFork
+                      size={22}
+                      className="mx-auto text-slate-600"
+                    />
+
+                    <p className="mt-4 text-sm text-slate-400">
+                      No accessible repositories
+                    </p>
+
+                    <p className="mx-auto mt-1 max-w-sm text-xs leading-5 text-slate-700">
+                      The installed SecureAI GitHub App does
+                      not currently have access to any repositories.
+                    </p>
+                  </div>
+                )}
+
+              {!repositoriesLoading &&
+                !repositoriesError &&
+                githubRepositories.length > 0 && (
+                  <div className="divide-y divide-slate-800">
+                    {githubRepositories.map(
+                      (repository) => (
+                        <div
+                          key={repository.id}
+                          className="p-5 transition hover:bg-[#0d1422]"
+                        >
+                          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                <GitFork
+                                  size={14}
+                                  className="shrink-0 text-violet-400"
+                                />
+
+                                <p className="truncate text-sm font-medium text-slate-300">
+                                  {repository.fullName}
+                                </p>
+
+                                <span className="shrink-0 border border-slate-800 bg-[#050810] px-2 py-1 text-[8px] text-slate-600">
+                                  {repository.isPrivate
+                                    ? "PRIVATE"
+                                    : "PUBLIC"}
+                                </span>
+                              </div>
+
+                              <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-600">
+                                {repository.description ||
+                                  "No repository description."}
+                              </p>
+
+                              <div className="mt-3 flex flex-wrap items-center gap-4 text-[10px] text-slate-600">
+                                <span className="flex items-center gap-1.5">
+                                  <GitBranch
+                                    size={12}
+                                  />
+                                  {repository.defaultBranch}
+                                </span>
+
+                                {repository.language && (
+                                  <span>
+                                    {repository.language}
+                                  </span>
+                                )}
+
+                                <span>
+                                  {repository.owner}
+                                </span>
+                              </div>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleConnectRepository(
+                                  repository,
+                                )
+                              }
+                              disabled={
+                                connectingRepositoryId !==
+                                  null
+                              }
+                              className="flex shrink-0 items-center justify-center gap-2 bg-white px-4 py-2.5 text-xs font-semibold text-slate-950 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              {connectingRepositoryId ===
+                              repository.id ? (
+                                <>
+                                  <Loader2
+                                    size={13}
+                                    className="animate-spin"
+                                  />
+                                  Connecting...
+                                </>
+                              ) : (
+                                <>
+                                  Connect
+                                  <ArrowRight
+                                    size={13}
+                                  />
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      ),
+                    )}
+                  </div>
+                )}
+            </div>
+
+            <div className="border-t border-slate-800 px-5 py-4">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-[10px] text-slate-700">
+                  Connected as{" "}
+                  <span className="text-slate-500">
+                    @{githubUser?.login ?? "GitHub user"}
+                  </span>
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRepositoryPickerProject(
+                      null,
+                    );
+                    setGithubRepositories([]);
+                    setRepositoriesError("");
+                  }}
+                  className="border border-slate-800 px-3 py-2 text-xs text-slate-400 transition hover:border-slate-600 hover:text-white"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
