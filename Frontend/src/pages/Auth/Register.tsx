@@ -16,12 +16,21 @@ import {
   useState,
   type FormEvent,
 } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import {
+  Link,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 
 import { useAuth } from "../../contexts/AuthContext";
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  "http://localhost:5000/api";
+
 function Register() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const {
     register,
@@ -52,6 +61,30 @@ function Register() {
       navigate("/dashboard", { replace: true });
     }
   }, [authLoading, isAuthenticated, navigate]);
+
+  useEffect(() => {
+    const oauthError = searchParams.get("oauthError");
+
+    if (!oauthError) {
+      return;
+    }
+
+    const messages: Record<string, string> = {
+      google_denied:
+        "Google sign-up was cancelled.",
+      google_failed:
+        "Google sign-up failed. Please try again.",
+      github_denied:
+        "GitHub sign-up was cancelled.",
+      github_failed:
+        "GitHub sign-up failed. Please try again.",
+    };
+
+    setError(
+      messages[oauthError] ||
+        "Social sign-up failed. Please try again.",
+    );
+  }, [searchParams]);
 
   const passwordStrength = useMemo(() => {
     if (!password) {
@@ -154,6 +187,14 @@ function Register() {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function handleGithubLogin() {
+    window.location.href = `${API_BASE_URL}/auth/github`;
+  }
+
+  function handleGoogleLogin() {
+    window.location.href = `${API_BASE_URL}/auth/google`;
   }
 
   return (
@@ -462,7 +503,9 @@ function Register() {
             <div className="grid gap-3 sm:grid-cols-2">
               <button
                 type="button"
-                className="flex items-center justify-center gap-2 border border-slate-700 bg-[#090e18] px-3 py-3 text-sm text-slate-300 transition hover:border-slate-500 hover:text-white"
+                onClick={handleGithubLogin}
+                disabled={submitting}
+                className="flex items-center justify-center gap-2 border border-slate-700 bg-[#090e18] px-3 py-3 text-sm text-slate-300 transition hover:border-slate-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <GitFork size={17} />
                 GitHub
@@ -470,7 +513,9 @@ function Register() {
 
               <button
                 type="button"
-                className="flex items-center justify-center gap-2 border border-slate-700 bg-[#090e18] px-3 py-3 text-sm text-slate-300 transition hover:border-slate-500 hover:text-white"
+                onClick={handleGoogleLogin}
+                disabled={submitting}
+                className="flex items-center justify-center gap-2 border border-slate-700 bg-[#090e18] px-3 py-3 text-sm text-slate-300 transition hover:border-slate-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <Globe2 size={17} />
                 Google
