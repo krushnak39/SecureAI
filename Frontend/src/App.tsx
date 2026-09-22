@@ -7,127 +7,111 @@ import {
 
 import DashboardLayout from "./components/layout/DashboardLayout";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
-
 import { AuthProvider } from "./contexts/AuthContext";
 
 import Home from "./pages/Home/Home";
 import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";
 
+import Dashboard from "./pages/Dashboard/Dashboard";
+import Projects from "./pages/Projects/Projects";
+import ProjectDetails from "./pages/Projects/ProjectDetails";
+import Settings from "./pages/Settings/Settings";
+
 import Architecture from "./pages/Architecture/Architecture";
 import CICD from "./pages/CICD/CICD";
 import CodebaseChat from "./pages/CodebaseChat/CodebaseChat";
 import CodeReview from "./pages/CodeReview/CodeReview";
-import Dashboard from "./pages/Dashboard/Dashboard";
 import Dependencies from "./pages/Dependencies/Dependencies";
 import Documentation from "./pages/Documentation/Documentation";
 import Performance from "./pages/Performance/Performance";
 import Security from "./pages/Security/Security";
-
-import Projects from "./pages/Projects/Projects";
-import ProjectDetails from "./pages/Projects/ProjectDetails";
-import Settings from "./pages/Settings/Settings";
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-
           {/* Public */}
-          <Route
-            path="/"
-            element={<Home />}
-          />
-
-          <Route
-            path="/login"
-            element={<Login />}
-          />
-
-          <Route
-            path="/register"
-            element={<Register />}
-          />
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
           {/* Protected Application */}
           <Route element={<ProtectedRoute />}>
             <Route element={<DashboardLayout />}>
-
+              {/* Global workspace */}
               <Route
                 path="/dashboard"
                 element={<Dashboard />}
               />
 
-              <Route
-                path="/dashboard/review"
-                element={<CodeReview />}
-              />
-
-              <Route
-                path="/dashboard/security"
-                element={<Security />}
-              />
-
-              <Route
-                path="/dashboard/dependencies"
-                element={<Dependencies />}
-              />
-
-              <Route
-                path="/dashboard/architecture"
-                element={<Architecture />}
-              />
-
-              <Route
-                path="/dashboard/performance"
-                element={<Performance />}
-              />
-
-              <Route
-                path="/dashboard/chat"
-                element={<CodebaseChat />}
-              />
-
-              <Route
-                path="/dashboard/documentation"
-                element={<Documentation />}
-              />
-
-              <Route
-                path="/dashboard/cicd"
-                element={<CICD />}
-              />
-
+              {/* Project management */}
               <Route
                 path="/projects"
                 element={<Projects />}
               />
 
+              {/* Project workspace */}
               <Route
                 path="/projects/:id"
                 element={<ProjectDetails />}
               />
 
+              {/* Project-aware intelligence modules */}
+              <Route
+                path="/projects/:id/review"
+                element={<CodeReview />}
+              />
+
+              <Route
+                path="/projects/:id/security"
+                element={<Security />}
+              />
+
+              <Route
+                path="/projects/:id/dependencies"
+                element={<Dependencies />}
+              />
+
+              <Route
+                path="/projects/:id/architecture"
+                element={<Architecture />}
+              />
+
+              <Route
+                path="/projects/:id/performance"
+                element={<Performance />}
+              />
+
+              <Route
+                path="/projects/:id/chat"
+                element={<CodebaseChat />}
+              />
+
+              <Route
+                path="/projects/:id/documentation"
+                element={<Documentation />}
+              />
+
+              <Route
+                path="/projects/:id/cicd"
+                element={<CICD />}
+              />
+
+              {/* System */}
               <Route
                 path="/settings"
                 element={<Settings />}
               />
-
             </Route>
           </Route>
 
           {/* Unknown route */}
           <Route
             path="*"
-            element={
-              <Navigate
-                to="/"
-                replace
-              />
-            }
+            element={<Navigate to="/" replace />}
           />
-
         </Routes>
       </AuthProvider>
     </BrowserRouter>

@@ -116,6 +116,14 @@ function getLanguage(
     ".bash": "Shell",
   };
 
+  if (filePath.endsWith("requirements.txt")) {
+  return "TEXT";
+}
+
+if (filePath.endsWith("pom.xml")) {
+  return "XML";
+}
+
   if (extensionMap[extension]) {
     return extensionMap[extension];
   }

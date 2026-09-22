@@ -19,6 +19,11 @@ import {
   type SecurityScanResult,
 } from "./security-scanner.service.js";
 
+import {
+  analyzeRepositoryDependencies,
+  type DependencyAnalysisSummary,
+} from "./dependency-analyzer.service.js";
+
 interface RepositoryInput {
   id: string;
   fullName: string;
@@ -53,13 +58,15 @@ interface RunRepositoryAnalysisResult {
     maintainability: number | null;
     errorMessage: string | null;
   };
+
   summary: RepositoryAnalysisSummary;
+
   security: SecurityScanResult;
+
+  dependencies: DependencyAnalysisSummary;
 }
 
-function getErrorMessage(
-  error: unknown,
-) {
+function getErrorMessage(error: unknown) {
   if (error instanceof Error) {
     return error.message;
   }
@@ -87,10 +94,7 @@ export async function runRepositoryAnalysis(
   });
 
   try {
-    const account =
-      await getValidGitHubAccount(
-        userId,
-      );
+    const account = await getValidGitHubAccount(userId);
 
     if (!account?.accessToken) {
       throw new Error(
@@ -139,9 +143,7 @@ export async function runRepositoryAnalysis(
     const installationToken =
       await getInstallationAccessToken(
         installation.id,
-        Number.isInteger(
-          numericRepositoryId,
-        )
+        Number.isInteger(numericRepositoryId)
           ? [numericRepositoryId]
           : undefined,
       );
@@ -169,8 +171,11 @@ export async function runRepositoryAnalysis(
      * Extract the repository once.
      *
      * The same extracted file set is then
-     * passed to both the repository analyzer
-     * and the security scanner.
+     * passed to:
+     *
+     * - repository analyzer
+     * - security scanner
+     * - dependency analyzer
      */
     const extracted =
       extractAnalyzableRepositoryFiles(
@@ -184,10 +189,92 @@ export async function runRepositoryAnalysis(
         extracted.archiveBytes,
       );
 
+    /*
+     * Security Intelligence
+     */
     const security =
       scanRepositorySecurity(
         extracted.files,
       );
+
+    /*
+     * Dependency Intelligence
+     *
+     * Detects dependency manifests such as:
+     *
+     * - package.json
+     * - requirements.txt
+     * - pom.xml
+     *
+     * The first layer performs inventory only.
+     * Advisory/latest-version intelligence will
+     * be added as a separate layer.
+     */
+    const dependencyResult =
+      analyzeRepositoryDependencies(
+        extracted.files,
+      );
+
+    /*
+     * Replace the repository's dependency
+     * inventory with the latest analysis result.
+     *
+     * This prevents duplicate dependency rows
+     * every time an analysis is rerun.
+     */
+    await prisma.dependency.deleteMany({
+      where: {
+        repositoryId: repository.id,
+      },
+    });
+
+    if (
+      dependencyResult.dependencies.length > 0
+    ) {
+      await prisma.dependency.createMany({
+        data: dependencyResult.dependencies.map(
+          (dependency) => ({
+            repositoryId: repository.id,
+
+            name: dependency.name,
+            ecosystem: dependency.ecosystem,
+            type: dependency.type,
+
+            currentVersion:
+              dependency.currentVersion,
+
+            latestVersion:
+              dependency.latestVersion,
+
+            status: dependency.status,
+
+            severity:
+              dependency.severity,
+
+            advisoryId:
+              dependency.advisoryId,
+
+            advisory:
+              dependency.advisory,
+
+            description:
+              dependency.description,
+
+            impact:
+              dependency.impact,
+
+            recommendation:
+              dependency.recommendation,
+
+            files:
+              dependency.files,
+
+            dependents:
+              dependency.dependents,
+          }),
+        ),
+      });
+    }
 
     /*
      * Persist security findings.
@@ -252,6 +339,7 @@ export async function runRepositoryAnalysis(
         where: {
           id: analysisId,
         },
+
         data: {
           status:
             "COMPLETED",
@@ -272,7 +360,8 @@ export async function runRepositoryAnalysis(
 
           completedAt,
 
-          errorMessage: null,
+          errorMessage:
+            null,
         },
       });
 
@@ -280,6 +369,7 @@ export async function runRepositoryAnalysis(
       where: {
         id: repository.id,
       },
+
       data: {
         branch,
 
@@ -295,6 +385,9 @@ export async function runRepositoryAnalysis(
       summary,
 
       security,
+
+      dependencies:
+        dependencyResult.summary,
     };
   } catch (error) {
     const message =
@@ -304,6 +397,7 @@ export async function runRepositoryAnalysis(
       where: {
         id: analysisId,
       },
+
       data: {
         status:
           "FAILED",

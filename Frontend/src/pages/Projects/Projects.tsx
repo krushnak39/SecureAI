@@ -388,11 +388,14 @@ function Projects() {
         },
       );
 
+      const connectedProjectName =
+        repositoryPickerProject.name;
+
       setRepositoryPickerProject(null);
       setGithubRepositories([]);
 
       setIntegrationMessage(
-        `${repository.fullName} connected successfully to ${repositoryPickerProject.name}.`,
+        `${repository.fullName} connected successfully to ${connectedProjectName}.`,
       );
 
       localStorage.removeItem(

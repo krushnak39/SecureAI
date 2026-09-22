@@ -9,6 +9,7 @@ import authRoutes from "./routes/auth.routes.js";
 import projectRoutes from "./routes/project.routes.js";
 import githubRoutes from "./routes/github.routes.js";
 import analysisRoutes from "./routes/analysis.routes.js";
+import dependencyRoutes from "./routes/dependency.routes.js";
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.use(
     origin: (origin, callback) => {
       /*
        * Allow requests without an Origin header.
+       *
        * This is useful for direct server/API requests.
        */
       if (!origin) {
@@ -66,13 +68,16 @@ app.use(cookieParser());
 
 app.use(express.json());
 
-app.use(express.urlencoded({
-  extended: true,
-}));
+app.use(
+  express.urlencoded({
+    extended: true,
+  }),
+);
 
 /*
  * API routes
  */
+
 app.use(
   "/api/health",
   healthRoutes,
@@ -98,9 +103,15 @@ app.use(
   analysisRoutes,
 );
 
+app.use(
+  "/api/projects",
+  dependencyRoutes,
+);
+
 /*
  * Global error handler
  */
+
 app.use(
   (
     error: unknown,
