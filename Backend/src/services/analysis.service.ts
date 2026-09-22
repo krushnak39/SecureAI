@@ -1,17 +1,23 @@
 import { prisma } from "../lib/prisma.js";
 
 import {
-  findSecureAIInstallation,
   getInstallationAccessToken,
+  getRepositoryInstallation,
   getValidGitHubAccount,
   getGitHubBranchCommit,
   downloadGitHubRepositoryArchive,
 } from "./github.service.js";
 
 import {
-  analyzeRepositoryArchive,
+  analyzeRepositoryFiles,
+  extractAnalyzableRepositoryFiles,
   type RepositoryAnalysisSummary,
 } from "./repository-analyzer.service.js";
+
+import {
+  scanRepositorySecurity,
+  type SecurityScanResult,
+} from "./security-scanner.service.js";
 
 interface RepositoryInput {
   id: string;
@@ -48,6 +54,7 @@ interface RunRepositoryAnalysisResult {
     errorMessage: string | null;
   };
   summary: RepositoryAnalysisSummary;
+  security: SecurityScanResult;
 }
 
 function getErrorMessage(
@@ -91,14 +98,36 @@ export async function runRepositoryAnalysis(
       );
     }
 
-    const installation =
-      await findSecureAIInstallation(
-        account.accessToken,
+    /*
+     * The GitHub OAuth token is used only
+     * for the user's GitHub identity.
+     *
+     * The GitHub App installation is resolved
+     * directly from the repository using the
+     * GitHub App JWT.
+     *
+     * This avoids the incorrect:
+     *
+     * /user/installations
+     *
+     * request with an OAuth App token.
+     */
+    let installation;
+
+    try {
+      installation =
+        await getRepositoryInstallation(
+          repository.fullName,
+        );
+    } catch {
+      throw new Error(
+        "SecureAI GitHub App installation was not found for this repository.",
       );
+    }
 
     if (!installation) {
       throw new Error(
-        "SecureAI GitHub App installation was not found.",
+        "SecureAI GitHub App installation was not found for this repository.",
       );
     }
 
@@ -136,10 +165,84 @@ export async function runRepositoryAnalysis(
         branch,
       );
 
-    const summary =
-      analyzeRepositoryArchive(
+    /*
+     * Extract the repository once.
+     *
+     * The same extracted file set is then
+     * passed to both the repository analyzer
+     * and the security scanner.
+     */
+    const extracted =
+      extractAnalyzableRepositoryFiles(
         archive,
       );
+
+    const summary =
+      analyzeRepositoryFiles(
+        extracted.files,
+        extracted.skippedFiles,
+        extracted.archiveBytes,
+      );
+
+    const security =
+      scanRepositorySecurity(
+        extracted.files,
+      );
+
+    /*
+     * Persist security findings.
+     */
+    if (security.findings.length > 0) {
+      await prisma.finding.createMany({
+        data: security.findings.map(
+          (finding) => ({
+            analysisId,
+
+            severity:
+              finding.severity,
+
+            status:
+              "OPEN" as const,
+
+            category:
+              "SECURITY" as const,
+
+            title:
+              finding.title,
+
+            description:
+              finding.description,
+
+            impact:
+              finding.impact,
+
+            recommendation:
+              finding.recommendation,
+
+            filePath:
+              finding.filePath,
+
+            lineStart:
+              finding.lineStart,
+
+            lineEnd:
+              finding.lineEnd,
+
+            rule:
+              finding.rule,
+
+            scanner:
+              finding.scanner,
+
+            evidence:
+              finding.evidence,
+
+            confidence:
+              finding.confidence,
+          }),
+        ),
+      });
+    }
 
     const completedAt =
       new Date();
@@ -150,15 +253,25 @@ export async function runRepositoryAnalysis(
           id: analysisId,
         },
         data: {
-          status: "COMPLETED",
+          status:
+            "COMPLETED",
+
           branch,
+
           commitSha:
             branchData.commit.sha,
+
           filesAnalyzed:
             summary.filesAnalyzed,
+
           linesAnalyzed:
             summary.linesAnalyzed,
+
+          securityScore:
+            security.securityScore,
+
           completedAt,
+
           errorMessage: null,
         },
       });
@@ -169,14 +282,19 @@ export async function runRepositoryAnalysis(
       },
       data: {
         branch,
+
         lastAnalyzed:
           completedAt,
       },
     });
 
     return {
-      analysis: updatedAnalysis,
+      analysis:
+        updatedAnalysis,
+
       summary,
+
+      security,
     };
   } catch (error) {
     const message =
@@ -187,8 +305,12 @@ export async function runRepositoryAnalysis(
         id: analysisId,
       },
       data: {
-        status: "FAILED",
-        completedAt: new Date(),
+        status:
+          "FAILED",
+
+        completedAt:
+          new Date(),
+
         errorMessage:
           message.slice(0, 2000),
       },

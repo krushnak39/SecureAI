@@ -1,5 +1,12 @@
 import AdmZip from "adm-zip";
 
+export interface AnalyzableRepositoryFile {
+  path: string;
+  language: string;
+  content: string;
+  lines: number;
+}
+
 export interface RepositoryAnalysisSummary {
   filesAnalyzed: number;
   linesAnalyzed: number;
@@ -113,15 +120,11 @@ function getLanguage(
     return extensionMap[extension];
   }
 
-  if (
-    fileName === "dockerfile"
-  ) {
+  if (fileName === "dockerfile") {
     return "Dockerfile";
   }
 
-  if (
-    fileName === "makefile"
-  ) {
+  if (fileName === "makefile") {
     return "Makefile";
   }
 
@@ -229,9 +232,13 @@ function looksBinary(
   return false;
 }
 
-export function analyzeRepositoryArchive(
+export function extractAnalyzableRepositoryFiles(
   archiveBuffer: Buffer,
-): RepositoryAnalysisSummary {
+): {
+  files: AnalyzableRepositoryFile[];
+  skippedFiles: number;
+  archiveBytes: number;
+} {
   if (
     archiveBuffer.length >
     MAX_ARCHIVE_BYTES
@@ -256,15 +263,10 @@ export function analyzeRepositoryArchive(
     );
   }
 
-  let filesAnalyzed = 0;
-  let linesAnalyzed = 0;
-  let skippedFiles = 0;
+  const files: AnalyzableRepositoryFile[] =
+    [];
 
-  const languageMap =
-    new Map<
-      string,
-      { files: number; lines: number }
-    >();
+  let skippedFiles = 0;
 
   for (const entry of entries) {
     if (entry.isDirectory) {
@@ -312,23 +314,54 @@ export function analyzeRepositoryArchive(
     const content =
       buffer.toString("utf8");
 
-    const lineCount =
-      countLines(content);
+    files.push({
+      path: filePath,
+      language,
+      content,
+      lines: countLines(content),
+    });
+  }
 
+  return {
+    files,
+    skippedFiles,
+    archiveBytes:
+      archiveBuffer.length,
+  };
+}
+
+export function analyzeRepositoryFiles(
+  files: AnalyzableRepositoryFile[],
+  skippedFiles: number,
+  archiveBytes: number,
+): RepositoryAnalysisSummary {
+  let filesAnalyzed = 0;
+  let linesAnalyzed = 0;
+
+  const languageMap =
+    new Map<
+      string,
+      {
+        files: number;
+        lines: number;
+      }
+    >();
+
+  for (const file of files) {
     filesAnalyzed += 1;
-    linesAnalyzed += lineCount;
+    linesAnalyzed += file.lines;
 
     const current =
-      languageMap.get(language) ?? {
+      languageMap.get(file.language) ?? {
         files: 0,
         lines: 0,
       };
 
     current.files += 1;
-    current.lines += lineCount;
+    current.lines += file.lines;
 
     languageMap.set(
-      language,
+      file.language,
       current,
     );
   }
@@ -337,10 +370,7 @@ export function analyzeRepositoryArchive(
     languageMap.entries(),
   )
     .map(
-      ([
-        language,
-        stats,
-      ]) => ({
+      ([language, stats]) => ({
         language,
         files: stats.files,
         lines: stats.lines,
@@ -356,8 +386,22 @@ export function analyzeRepositoryArchive(
     filesAnalyzed,
     linesAnalyzed,
     skippedFiles,
-    archiveBytes:
-      archiveBuffer.length,
+    archiveBytes,
     languages,
   };
+}
+
+export function analyzeRepositoryArchive(
+  archiveBuffer: Buffer,
+): RepositoryAnalysisSummary {
+  const extracted =
+    extractAnalyzableRepositoryFiles(
+      archiveBuffer,
+    );
+
+  return analyzeRepositoryFiles(
+    extracted.files,
+    extracted.skippedFiles,
+    extracted.archiveBytes,
+  );
 }

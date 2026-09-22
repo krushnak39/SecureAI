@@ -436,14 +436,17 @@ export async function authenticateGithubUser(
     );
   }
 
-  const tokenData =
-    (await tokenResponse.json()) as {
-      access_token?: string;
-      token_type?: string;
-      scope?: string;
-      error?: string;
-      error_description?: string;
-    };
+ const tokenData =
+  (await tokenResponse.json()) as {
+    access_token?: string;
+    token_type?: string;
+    scope?: string;
+    expires_in?: number;
+    refresh_token?: string;
+    refresh_token_expires_in?: number;
+    error?: string;
+    error_description?: string;
+  };
 
   if (!tokenData.access_token) {
     throw new Error(
@@ -551,20 +554,39 @@ export async function authenticateGithubUser(
       },
     });
 
-  if (existingGithubAccount) {
-    return {
-      user: {
-        id: existingGithubAccount.user.id,
-        name: existingGithubAccount.user.name,
-        email:
-          existingGithubAccount.user.email,
-        avatarUrl:
-          existingGithubAccount.user.avatarUrl,
-        createdAt:
-          existingGithubAccount.user.createdAt,
-      },
-    };
-  }
+ if (existingGithubAccount) {
+  const expiresAt =
+    tokenData.expires_in
+      ? new Date(
+          Date.now() +
+            tokenData.expires_in * 1000,
+        )
+      : null;
+
+  await prisma.account.update({
+    where: {
+      id: existingGithubAccount.id,
+    },
+    data: {
+      accessToken,
+      refreshToken:
+        tokenData.refresh_token ?? null,
+      expiresAt,
+    },
+  });
+
+  return {
+    user: {
+      id: existingGithubAccount.user.id,
+      name: existingGithubAccount.user.name,
+      email: existingGithubAccount.user.email,
+      avatarUrl:
+        existingGithubAccount.user.avatarUrl,
+      createdAt:
+        existingGithubAccount.user.createdAt,
+    },
+  };
+}
 
   const name =
     githubUser.name?.trim() ||
@@ -606,18 +628,26 @@ export async function authenticateGithubUser(
     });
   }
 
-  await prisma.account.create({
-    data: {
-      userId: user.id,
-      provider: AccountProvider.GITHUB,
-      providerAccountId:
-        githubUserId,
-      accessToken,
-      refreshToken: null,
-      expiresAt: null,
-    },
-  });
+  const expiresAt =
+  tokenData.expires_in
+    ? new Date(
+        Date.now() +
+          tokenData.expires_in * 1000,
+      )
+    : null;
 
+await prisma.account.create({
+  data: {
+    userId: user.id,
+    provider: AccountProvider.GITHUB,
+    providerAccountId:
+      githubUserId,
+    accessToken,
+    refreshToken:
+      tokenData.refresh_token ?? null,
+    expiresAt,
+  },
+});
   const updatedUser =
     await prisma.user.findUnique({
       where: {

@@ -50,11 +50,6 @@ export interface GitHubRepository {
   };
 }
 
-interface GitHubRepositoryListResponse {
-  total_count: number;
-  repositories: GitHubRepository[];
-}
-
 async function githubRequest<T>(
   endpoint: string,
   accessToken?: string,
@@ -70,7 +65,8 @@ async function githubRequest<T>(
           GITHUB_API_VERSION,
         ...(accessToken
           ? {
-              Authorization: `Bearer ${accessToken}`,
+              Authorization:
+                `Bearer ${accessToken}`,
             }
           : {}),
         ...(options.headers ?? {}),
@@ -78,7 +74,8 @@ async function githubRequest<T>(
     },
   );
 
-  const data = await response.json().catch(() => null);
+  const data =
+    await response.json().catch(() => null);
 
   if (!response.ok) {
     const message =
@@ -97,26 +94,32 @@ async function githubRequest<T>(
 export function buildGitHubInstallationUrl(
   state: string,
 ) {
-  const { appSlug } = getGitHubConfig();
+  const { appSlug } =
+    getGitHubConfig();
 
   const url = new URL(
     `https://github.com/apps/${appSlug}/installations/new`,
   );
 
-  url.searchParams.set("state", state);
+  url.searchParams.set(
+    "state",
+    state,
+  );
 
   return url.toString();
 }
 
 export function createGitHubAppJwt() {
-  const { appId, privateKey } = getGitHubConfig();
+  const { appId, privateKey } =
+    getGitHubConfig();
 
-  const now = Math.floor(Date.now() / 1000);
+  const now =
+    Math.floor(Date.now() / 1000);
 
   const payload = {
-    iat: now - 60,       // Issued 60 seconds in the past to account for clock drift
-    exp: now + 8 * 60,   // Expires 8 minutes in the future (total lifetime 9 mins < 10 mins limit)
-    iss: appId,          // GitHub App ID
+    iat: now - 60,
+    exp: now + 8 * 60,
+    iss: appId,
   };
 
   const encodedHeader =
@@ -125,8 +128,7 @@ export function createGitHubAppJwt() {
         alg: "RS256",
         typ: "JWT",
       }),
-    )
-      .toString("base64url");
+    ).toString("base64url");
 
   const encodedPayload =
     Buffer.from(
@@ -136,14 +138,16 @@ export function createGitHubAppJwt() {
   const unsignedToken =
     `${encodedHeader}.${encodedPayload}`;
 
-  const signer = createSign("RSA-SHA256");
+  const signer =
+    createSign("RSA-SHA256");
 
   signer.update(unsignedToken);
   signer.end();
 
-  const signature = signer
-    .sign(privateKey)
-    .toString("base64url");
+  const signature =
+    signer
+      .sign(privateKey)
+      .toString("base64url");
 
   return `${unsignedToken}.${signature}`;
 }
@@ -152,43 +156,47 @@ export async function getInstallationAccessToken(
   installationId: number,
   repositoryIds?: number[],
 ) {
-  const jwt = createGitHubAppJwt();
+  const jwt =
+    createGitHubAppJwt();
 
   const body =
-    repositoryIds && repositoryIds.length > 0
+    repositoryIds &&
+    repositoryIds.length > 0
       ? JSON.stringify({
-          repository_ids: repositoryIds,
+          repository_ids:
+            repositoryIds,
         })
       : undefined;
 
-  const response =
-    await githubRequest<{
-      token: string;
-      expires_at: string;
-      permissions: Record<string, string>;
-      repositories?: Array<{
-        id: number;
-        full_name: string;
-      }>;
-    }>(
-      `/app/installations/${installationId}/access_tokens`,
-      undefined,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${jwt}`,
-          ...(body
-            ? {
-                "Content-Type":
-                  "application/json",
-              }
-            : {}),
-        },
-        body,
+  return githubRequest<{
+    token: string;
+    expires_at: string;
+    permissions: Record<
+      string,
+      string
+    >;
+    repositories?: Array<{
+      id: number;
+      full_name: string;
+    }>;
+  }>(
+    `/app/installations/${installationId}/access_tokens`,
+    undefined,
+    {
+      method: "POST",
+      headers: {
+        Authorization:
+          `Bearer ${jwt}`,
+        ...(body
+          ? {
+              "Content-Type":
+                "application/json",
+            }
+          : {}),
       },
-    );
-
-  return response;
+      body,
+    },
+  );
 }
 
 export async function getGitHubBranchCommit(
@@ -219,22 +227,26 @@ export async function downloadGitHubRepositoryArchive(
   const encodedBranch =
     encodeURIComponent(branch);
 
-  const response = await fetch(
-    `${GITHUB_API_URL}/repos/${fullName}/zipball/${encodedBranch}`,
-    {
-      headers: {
-        Accept:
-          "application/vnd.github+json",
-        Authorization: `Bearer ${accessToken}`,
-        "X-GitHub-Api-Version":
-          GITHUB_API_VERSION,
+  const response =
+    await fetch(
+      `${GITHUB_API_URL}/repos/${fullName}/zipball/${encodedBranch}`,
+      {
+        headers: {
+          Accept:
+            "application/vnd.github+json",
+          Authorization:
+            `Bearer ${accessToken}`,
+          "X-GitHub-Api-Version":
+            GITHUB_API_VERSION,
+        },
+        redirect: "manual",
       },
-      redirect: "manual",
-    },
-  );
+    );
 
   const location =
-    response.headers.get("location");
+    response.headers.get(
+      "location",
+    );
 
   if (
     response.status >= 300 &&
@@ -257,10 +269,13 @@ export async function downloadGitHubRepositoryArchive(
 
   if (!response.ok) {
     const data =
-      await response.json().catch(() => null);
+      await response
+        .json()
+        .catch(() => null);
 
     throw new Error(
-      typeof data?.message === "string"
+      typeof data?.message ===
+        "string"
         ? data.message
         : `Unable to download repository archive: ${response.status}`,
     );
@@ -279,22 +294,25 @@ export async function exchangeCodeForUserToken(
     clientSecret,
   } = getGitHubConfig();
 
-  const params = new URLSearchParams({
-    client_id: clientId,
-    client_secret: clientSecret,
-    code,
-  });
+  const params =
+    new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      code,
+    });
 
-  const response = await fetch(
-    "https://github.com/login/oauth/access_token",
-    {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
+  const response =
+    await fetch(
+      "https://github.com/login/oauth/access_token",
+      {
+        method: "POST",
+        headers: {
+          Accept:
+            "application/json",
+        },
+        body: params,
       },
-      body: params,
-    },
-  );
+    );
 
   const data =
     (await response.json()) as GitHubTokenResponse;
@@ -321,23 +339,28 @@ export async function refreshGitHubUserToken(
     clientSecret,
   } = getGitHubConfig();
 
-  const params = new URLSearchParams({
-    client_id: clientId,
-    client_secret: clientSecret,
-    grant_type: "refresh_token",
-    refresh_token: refreshToken,
-  });
+  const params =
+    new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      grant_type:
+        "refresh_token",
+      refresh_token:
+        refreshToken,
+    });
 
-  const response = await fetch(
-    "https://github.com/login/oauth/access_token",
-    {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
+  const response =
+    await fetch(
+      "https://github.com/login/oauth/access_token",
+      {
+        method: "POST",
+        headers: {
+          Accept:
+            "application/json",
+        },
+        body: params,
       },
-      body: params,
-    },
-  );
+    );
 
   const data =
     (await response.json()) as GitHubTokenResponse;
@@ -365,30 +388,37 @@ export async function getAuthenticatedGitHubUser(
   );
 }
 
-async function getUserInstallations(
+/**
+ * Lists repositories accessible to the
+ * authenticated GitHub user.
+ *
+ * This uses the GitHub OAuth user token.
+ * It does NOT require GitHub App
+ * installation permissions.
+ */
+export async function getGitHubUserRepositories(
   accessToken: string,
 ) {
-  const installations: GitHubInstallation[] =
+  const repositories: GitHubRepository[] =
     [];
 
   let page = 1;
 
   while (true) {
     const response =
-      await githubRequest<{
-        total_count: number;
-        installations: GitHubInstallation[];
-      }>(
-        `/user/installations?per_page=100&page=${page}`,
+      await githubRequest<
+        GitHubRepository[]
+      >(
+        `/user/repos?visibility=all&affiliation=owner,collaborator,organization_member&per_page=100&page=${page}&sort=updated`,
         accessToken,
       );
 
-    installations.push(
-      ...response.installations,
+    repositories.push(
+      ...response,
     );
 
     if (
-      response.installations.length < 100
+      response.length < 100
     ) {
       break;
     }
@@ -396,25 +426,41 @@ async function getUserInstallations(
     page += 1;
   }
 
-  return installations;
+  return repositories;
 }
 
-export async function findSecureAIInstallation(
-  accessToken: string,
+/**
+ * Finds the SecureAI GitHub App
+ * installation for a specific repository.
+ *
+ * This is authenticated as the GitHub App
+ * using an App JWT, so it does not depend
+ * on /user/installations.
+ */
+export async function getRepositoryInstallation(
+  fullName: string,
 ) {
-  const { appId } = getGitHubConfig();
+  const jwt =
+    createGitHubAppJwt();
 
-  const installations =
-    await getUserInstallations(
-      accessToken,
-    );
+  const encodedFullName =
+    fullName
+      .split("/")
+      .map(
+        (part) =>
+          encodeURIComponent(part),
+      )
+      .join("/");
 
-  return (
-    installations.find(
-      (installation) =>
-        String(installation.app_id) ===
-        String(appId),
-    ) ?? null
+  return githubRequest<GitHubInstallation>(
+    `/repos/${encodedFullName}/installation`,
+    undefined,
+    {
+      headers: {
+        Authorization:
+          `Bearer ${jwt}`,
+      },
+    },
   );
 }
 
@@ -429,7 +475,10 @@ export async function listGitHubRepositories(
 
   while (true) {
     const response =
-      await githubRequest<GitHubRepositoryListResponse>(
+      await githubRequest<{
+        total_count: number;
+        repositories: GitHubRepository[];
+      }>(
         `/user/installations/${installationId}/repositories?per_page=100&page=${page}`,
         accessToken,
       );
@@ -439,7 +488,8 @@ export async function listGitHubRepositories(
     );
 
     if (
-      response.repositories.length < 100
+      response.repositories.length <
+      100
     ) {
       break;
     }
@@ -465,9 +515,7 @@ export async function getValidGitHubAccount(
     return null;
   }
 
-  if (
-    !account.accessToken
-  ) {
+  if (!account.accessToken) {
     return null;
   }
 
@@ -480,22 +528,22 @@ export async function getValidGitHubAccount(
     shouldRefresh &&
     account.refreshToken
   ) {
-    const refreshed =
-      await refreshGitHubUserToken(
-        account.refreshToken,
-      );
+    try {
+      const refreshed =
+        await refreshGitHubUserToken(
+          account.refreshToken,
+        );
 
-    const expiresAt =
-      refreshed.expires_in
-        ? new Date(
-            Date.now() +
-              refreshed.expires_in *
-                1000,
-          )
-        : null;
+      const expiresAt =
+        refreshed.expires_in
+          ? new Date(
+              Date.now() +
+                refreshed.expires_in *
+                  1000,
+            )
+          : null;
 
-    const updated =
-      await prisma.account.update({
+      return await prisma.account.update({
         where: {
           id: account.id,
         },
@@ -508,8 +556,11 @@ export async function getValidGitHubAccount(
           expiresAt,
         },
       });
-
-    return updated;
+    } catch {
+      throw new Error(
+        "GitHub authorization has expired. Please reconnect GitHub.",
+      );
+    }
   }
 
   if (

@@ -14,15 +14,17 @@ import {
 import {
   buildGitHubInstallationUrl,
   exchangeCodeForUserToken,
-  findSecureAIInstallation,
   getAuthenticatedGitHubUser,
+  getGitHubUserRepositories,
+  getRepositoryInstallation,
   getValidGitHubAccount,
-  listGitHubRepositories,
 } from "../services/github.service.js";
 
 import {
   connectGitHubRepositorySchema,
 } from "../utils/github.validation.js";
+
+import { getGitHubConfig } from "../config/github.js";
 
 import { prisma } from "../lib/prisma.js";
 
@@ -65,7 +67,9 @@ export function connectGitHub(
       state,
     );
 
-  res.redirect(installationUrl);
+  res.redirect(
+    installationUrl,
+  );
 }
 
 export async function githubCallback(
@@ -148,16 +152,15 @@ export async function githubCallback(
         token.access_token,
       );
 
-    const installation =
-      await findSecureAIInstallation(
-        token.access_token,
-      );
-
-    if (!installation) {
-      throw new Error(
-        "SecureAI GitHub App installation could not be found for this GitHub account",
-      );
-    }
+    /*
+     * Do not call /user/installations here.
+     *
+     * The OAuth token is used only to
+     * authenticate the GitHub user.
+     *
+     * Repository/App access is checked
+     * later through the GitHub App itself.
+     */
 
     const expiresAt =
       token.expires_in
@@ -277,16 +280,9 @@ export async function githubStatus(
         account.accessToken!,
       );
 
-    const installation =
-      await findSecureAIInstallation(
-        account.accessToken!,
-      );
-
     res.status(200).json({
       success: true,
-      connected: Boolean(
-        installation,
-      ),
+      connected: true,
       githubUser: {
         id: githubUser.id,
         login: githubUser.login,
@@ -326,7 +322,7 @@ export async function getGitHubRepositories(
         userId,
       );
 
-    if (!account) {
+    if (!account?.accessToken) {
       res.status(400).json({
         success: false,
         message:
@@ -336,31 +332,47 @@ export async function getGitHubRepositories(
       return;
     }
 
-    const installation =
-      await findSecureAIInstallation(
-        account.accessToken!,
-      );
-
-    if (!installation) {
-      res.status(400).json({
-        success: false,
-        message:
-          "SecureAI GitHub App installation not found",
-      });
-
-      return;
-    }
-
     const repositories =
-      await listGitHubRepositories(
-        account.accessToken!,
-        installation.id,
+      await getGitHubUserRepositories(
+        account.accessToken,
       );
+
+    const { appId } =
+      getGitHubConfig();
+
+    const accessibleRepositories =
+      [];
+
+    for (const repository of repositories) {
+      try {
+        const installation =
+          await getRepositoryInstallation(
+            repository.full_name,
+          );
+
+        if (
+          String(
+            installation.app_id,
+          ) !== String(appId)
+        ) {
+          continue;
+        }
+
+        accessibleRepositories.push(
+          repository,
+        );
+      } catch {
+        /*
+         * SecureAI GitHub App is not
+         * installed for this repository.
+         */
+      }
+    }
 
     res.status(200).json({
       success: true,
       repositories:
-        repositories.map(
+        accessibleRepositories.map(
           (repository) => ({
             id: repository.id,
             name: repository.name,
@@ -451,7 +463,7 @@ export async function connectGitHubRepository(
         userId,
       );
 
-    if (!account) {
+    if (!account?.accessToken) {
       res.status(400).json({
         success: false,
         message:
@@ -461,25 +473,15 @@ export async function connectGitHubRepository(
       return;
     }
 
-    const installation =
-      await findSecureAIInstallation(
-        account.accessToken!,
-      );
-
-    if (!installation) {
-      res.status(400).json({
-        success: false,
-        message:
-          "SecureAI GitHub App installation not found",
-      });
-
-      return;
-    }
-
+    /*
+     * Get the user's repositories using
+     * the GitHub OAuth token.
+     *
+     * We do NOT use /user/installations.
+     */
     const repositories =
-      await listGitHubRepositories(
-        account.accessToken!,
-        installation.id,
+      await getGitHubUserRepositories(
+        account.accessToken,
       );
 
     const repository =
@@ -493,7 +495,45 @@ export async function connectGitHubRepository(
       res.status(404).json({
         success: false,
         message:
-          "Repository is not accessible through the connected GitHub App",
+          "Repository was not found in your accessible GitHub repositories",
+      });
+
+      return;
+    }
+
+    /*
+     * Verify that the SecureAI GitHub App
+     * is actually installed for this
+     * repository.
+     */
+    let installation;
+
+    try {
+      installation =
+        await getRepositoryInstallation(
+          repository.full_name,
+        );
+    } catch {
+      res.status(403).json({
+        success: false,
+        message:
+          "SecureAI GitHub App is not installed or does not have access to this repository",
+      });
+
+      return;
+    }
+
+    const { appId } =
+      getGitHubConfig();
+
+    if (
+      String(installation.app_id) !==
+      String(appId)
+    ) {
+      res.status(403).json({
+        success: false,
+        message:
+          "This repository is not connected to the SecureAI GitHub App",
       });
 
       return;
@@ -504,10 +544,12 @@ export async function connectGitHubRepository(
         req.params.projectId,
         userId,
         {
-          name: repository.name,
+          name:
+            repository.name,
           fullName:
             repository.full_name,
-          url: repository.html_url,
+          url:
+            repository.html_url,
           externalId:
             String(repository.id),
           defaultBranch:
