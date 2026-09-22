@@ -21,6 +21,10 @@ dist/
 build/
 .vite/
 
+# Private Key
+Backend/keys/
+*.pem
+
 # IDE
 .vscode/*
 !.vscode/extensions.json
