@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: secureai-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: secureai
+      POSTGRES_PASSWORD: secureai_dev_password
+      POSTGRES_DB: secureai
+
+    ports:
+      - "5433:5432"
+
+    volumes:
+      - secureai_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  secureai_postgres_data:
