@@ -11,7 +11,7 @@ import {
 const router = Router();
 
 router.get(
-  "/projects/:projectId/dependencies",
+  "/:projectId/dependencies",
   requireAuth,
   getProjectDependencies,
 );

@@ -163,9 +163,7 @@ function formatEcosystem(ecosystem: string) {
 }
 
 function Dependencies() {
-  const { projectId } = useParams<{
-    projectId: string;
-  }>();
+  const { id: projectId } = useParams();
 
   const [dependencies, setDependencies] =
     useState<Dependency[]>([]);

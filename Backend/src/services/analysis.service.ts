@@ -1,4 +1,29 @@
+import {
+  enrichDependenciesWithIntelligence,
+} from "./dependency-intelligence.service.js";
+
+import {
+  analyzeRepositoryPerformance,
+  type PerformanceAnalysisResult,
+} from "./performance-analyzer.service.js";
+
+import {
+  reviewRepositoryCode,
+} from "./code-review.service.js";
+
+import {
+  reviewFindingWithAI,
+} from "./ai-code-review.service.js";
+
+import {
+  enrichDependenciesWithVulnerabilities,
+} from "./vulnerability-intelligence.service.js";
+
 import { prisma } from "../lib/prisma.js";
+
+import {
+  FindingCategory,
+} from "../generated/prisma/enums.js";
 
 import {
   getInstallationAccessToken,
@@ -23,6 +48,11 @@ import {
   analyzeRepositoryDependencies,
   type DependencyAnalysisSummary,
 } from "./dependency-analyzer.service.js";
+
+import {
+  analyzeArchitecture,
+  type ArchitectureAnalysisResult,
+} from "./architecture-analyzer.service.js";
 
 interface RepositoryInput {
   id: string;
@@ -64,15 +94,712 @@ interface RunRepositoryAnalysisResult {
   security: SecurityScanResult;
 
   dependencies: DependencyAnalysisSummary;
+
+  performance: PerformanceAnalysisResult;
 }
 
-function getErrorMessage(error: unknown) {
+/* -------------------------------------------------------------------------- */
+/* Helpers                                                                    */
+/* -------------------------------------------------------------------------- */
+
+function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {
     return error.message;
   }
 
   return "Repository analysis failed.";
 }
+
+/**
+ * Extract a focused section of source code around a finding.
+ *
+ * We intentionally do not send the entire repository file
+ * to the local LLM. A bounded context keeps AI requests
+ * smaller and faster while still giving Qwen enough context.
+ */
+function getRelevantCodeContext(
+  content: string,
+  lineStart: number,
+  lineEnd: number,
+): string {
+  const lines = content.split(/\r?\n/);
+
+  const contextBefore = 8;
+  const contextAfter = 16;
+
+  const startIndex = Math.max(
+    0,
+    lineStart - 1 - contextBefore,
+  );
+
+  const endIndex = Math.min(
+    lines.length,
+    Math.max(lineEnd, lineStart) + contextAfter,
+  );
+
+  return lines
+    .slice(startIndex, endIndex)
+    .map(
+      (line, index) =>
+        `${startIndex + index + 1}: ${line}`,
+    )
+    .join("\n");
+}
+
+/**
+ * Convert the code-review category into the Prisma
+ * FindingCategory enum.
+ */
+function getFindingCategory(
+  category: string,
+): FindingCategory {
+  if (category === "CODE_QUALITY") {
+    return FindingCategory.CODE_QUALITY;
+  }
+
+  if (category === "PERFORMANCE") {
+    return FindingCategory.PERFORMANCE;
+  }
+
+  return FindingCategory.MAINTAINABILITY;
+}
+
+/**
+ * Convert architecture component health into
+ * a numeric component health value.
+ */
+function getArchitectureComponentHealth(
+  health: string,
+): number {
+  switch (health) {
+    case "healthy":
+      return 100;
+
+    case "warning":
+      return 70;
+
+    case "risk":
+      return 40;
+
+    default:
+      return 100;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Architecture persistence                                                   */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Persist the architecture graph generated from the repository.
+ *
+ * Architecture analysis is deterministic/static.
+ * No LLM is involved here.
+ */
+async function persistArchitectureAnalysis(
+  analysisId: string,
+  architecture: ArchitectureAnalysisResult,
+): Promise<void> {
+  /*
+   * Remove any existing architecture graph for this
+   * analysis so retries remain idempotent.
+   */
+  await prisma.architectureComponent.deleteMany({
+    where: {
+      analysisId,
+    },
+  });
+
+  /*
+   * Create components first because relationships
+   * reference component IDs.
+   */
+  const componentIdByKey =
+    new Map<string, string>();
+
+  for (const component of architecture.components) {
+    const created =
+      await prisma.architectureComponent.create({
+        data: {
+          analysisId,
+
+          name:
+            component.name,
+
+          type:
+            component.type,
+
+          technology:
+            component.technology,
+
+          description:
+            component.description,
+
+          files:
+            component.files,
+
+          health:
+            getArchitectureComponentHealth(
+              component.health,
+            ),
+        },
+      });
+
+    componentIdByKey.set(
+      component.key,
+      created.id,
+    );
+  }
+
+  /*
+   * Create architecture relationships.
+   */
+  for (
+    const relationship of architecture.relationships
+  ) {
+    const sourceId =
+      componentIdByKey.get(
+        relationship.sourceKey,
+      );
+
+    const targetId =
+      componentIdByKey.get(
+        relationship.targetKey,
+      );
+
+    if (!sourceId || !targetId) {
+      continue;
+    }
+
+    await prisma.architectureRelationship.create({
+      data: {
+        sourceId,
+
+        targetId,
+
+        relation:
+          relationship.relation,
+
+        metadata:
+          relationship.metadata,
+      },
+    });
+  }
+
+  /*
+   * Convert architecture findings into the shared
+   * Finding model.
+   */
+  const architectureFindings =
+    architecture.findings.map(
+      (finding) => ({
+        analysisId,
+
+        severity:
+          finding.severity,
+
+        status:
+          "OPEN" as const,
+
+        category:
+          FindingCategory.ARCHITECTURE,
+
+        title:
+          finding.title,
+
+        description:
+          finding.description,
+
+        impact:
+          finding.impact,
+
+        recommendation:
+          finding.recommendation,
+
+        filePath:
+          null,
+
+        lineStart:
+          null,
+
+        lineEnd:
+          null,
+
+        functionName:
+          null,
+
+        rule:
+          "ARCHITECTURE_ANALYZER",
+
+        scanner:
+          "SecureAI Architecture Analyzer",
+
+        evidence:
+          `Component: ${finding.component}`,
+
+        confidence:
+          95,
+      }),
+    );
+
+  if (
+    architectureFindings.length > 0
+  ) {
+    await prisma.finding.createMany({
+      data:
+        architectureFindings,
+    });
+  }
+
+  /*
+   * Store architecture health on the Analysis.
+   */
+  await prisma.analysis.update({
+    where: {
+      id: analysisId,
+    },
+
+    data: {
+      architecture:
+        architecture.metrics
+          .architectureHealth,
+    },
+  });
+
+  console.log(
+    `[SecureAI Architecture] ${architecture.metrics.componentCount} components, ${architecture.metrics.relationshipCount} relationships, ${architecture.metrics.findingCount} findings, score=${architecture.metrics.architectureHealth}`,
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Performance persistence                                                    */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Persist deterministic performance-analysis results.
+ *
+ * Performance issues use the dedicated PerformanceIssue model
+ * rather than the general Finding model.
+ */
+async function persistPerformanceAnalysis(
+  analysisId: string,
+  performance: PerformanceAnalysisResult,
+): Promise<void> {
+  /*
+   * Remove any existing performance issues for this
+   * analysis so retries remain idempotent.
+   */
+  await prisma.performanceIssue.deleteMany({
+    where: {
+      analysisId,
+    },
+  });
+
+  /*
+   * Persist performance issues.
+   */
+  if (performance.issues.length > 0) {
+    await prisma.performanceIssue.createMany({
+      data: performance.issues.map(
+        (issue) => ({
+          analysisId,
+
+          severity:
+            issue.severity,
+
+          category:
+            issue.category,
+
+          title:
+            issue.title,
+
+          description:
+            issue.description,
+
+          impact:
+            issue.impact,
+
+          recommendation:
+            issue.recommendation,
+
+          filePath:
+            issue.filePath,
+
+          line:
+            issue.line,
+
+          metric:
+            issue.metric,
+
+          currentValue:
+            issue.currentValue,
+
+          expectedValue:
+            issue.expectedValue,
+
+          evidence:
+            issue.evidence,
+        }),
+      ),
+    });
+  }
+
+  /*
+   * Store the calculated performance score
+   * directly on the Analysis record.
+   */
+  await prisma.analysis.update({
+    where: {
+      id: analysisId,
+    },
+
+    data: {
+      performance:
+        performance.metrics
+          .performanceHealth,
+    },
+  });
+
+  console.log(
+    `[SecureAI Performance] ${performance.metrics.issueCount} issues, ${performance.metrics.highSeverityCount} high severity, ${performance.metrics.mediumSeverityCount} medium severity, ${performance.metrics.lowSeverityCount} low severity, score=${performance.metrics.performanceHealth}`,
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* AI Review                                                                  */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Run the local AI review layer after static Finding
+ * rows have already been persisted.
+ *
+ * Static findings remain the source of truth.
+ * AI only enriches selected findings.
+ */
+async function runAIReviewLayer(
+  analysisId: string,
+  codeReviewFindings: ReturnType<
+    typeof reviewRepositoryCode
+  >,
+  repositoryFiles: ReturnType<
+    typeof extractAnalyzableRepositoryFiles
+  >["files"],
+): Promise<void> {
+  const configuredConcurrency = Number(
+    process.env.AI_REVIEW_CONCURRENCY || "2",
+  );
+
+  const concurrency = Math.max(
+    1,
+    Math.min(
+      Number.isFinite(configuredConcurrency)
+        ? Math.floor(configuredConcurrency)
+        : 2,
+      2,
+    ),
+  );
+
+  const MAX_AI_REVIEWS = 20;
+
+  /*
+   * Prioritize findings that benefit most from AI review.
+   */
+  const prioritizedFindings =
+    [...codeReviewFindings]
+      .sort((a, b) => {
+        const severityScore: Record<
+          string,
+          number
+        > = {
+          CRITICAL: 100,
+          HIGH: 80,
+          MEDIUM: 50,
+          LOW: 20,
+        };
+
+        const getSecurityScore = (
+          finding: typeof a,
+        ): number => {
+          const text = [
+            finding.category,
+            finding.title,
+            finding.rule,
+          ]
+            .join(" ")
+            .toUpperCase();
+
+          if (
+            text.includes("SECURITY") ||
+            text.includes("SECRET") ||
+            text.includes("EVAL") ||
+            text.includes("INJECTION") ||
+            text.includes("AUTH") ||
+            text.includes("XSS") ||
+            text.includes("SQL")
+          ) {
+            return 30;
+          }
+
+          return 0;
+        };
+
+        const getRepetitionPenalty = (
+          finding: typeof a,
+        ): number => {
+          const text = [
+            finding.title,
+            finding.rule,
+          ]
+            .join(" ")
+            .toUpperCase();
+
+          if (
+            text.includes("LONG_FUNCTION") ||
+            text.includes("LARGE FUNCTION")
+          ) {
+            return -25;
+          }
+
+          return 0;
+        };
+
+        const scoreA =
+          (severityScore[a.severity] ?? 0) +
+          getSecurityScore(a) +
+          getRepetitionPenalty(a);
+
+        const scoreB =
+          (severityScore[b.severity] ?? 0) +
+          getSecurityScore(b) +
+          getRepetitionPenalty(b);
+
+        return scoreB - scoreA;
+      })
+      .slice(0, MAX_AI_REVIEWS);
+
+  console.log(
+    `[SecureAI AI] Selected ${prioritizedFindings.length}/${codeReviewFindings.length} findings for AI review.`,
+  );
+
+  let nextIndex = 0;
+  let completedReviews = 0;
+  let failedReviews = 0;
+
+  const fileMap = new Map(
+    repositoryFiles.map((file) => [
+      file.path,
+      file,
+    ]),
+  );
+
+  async function worker(
+    workerId: number,
+  ): Promise<void> {
+    while (true) {
+      const currentIndex =
+        nextIndex++;
+
+      if (
+        currentIndex >=
+        prioritizedFindings.length
+      ) {
+        return;
+      }
+
+      const finding =
+        prioritizedFindings[currentIndex];
+
+      const repositoryFile =
+        fileMap.get(
+          finding.filePath,
+        );
+
+      if (!repositoryFile) {
+        console.warn(
+          `[SecureAI AI] Worker ${workerId}: source file not found: ${finding.filePath}`,
+        );
+
+        failedReviews++;
+        continue;
+      }
+
+      const persistedFinding =
+        await prisma.finding.findFirst({
+          where: {
+            analysisId,
+
+            category:
+              getFindingCategory(
+                finding.category,
+              ),
+
+            title:
+              finding.title,
+
+            filePath:
+              finding.filePath,
+
+            lineStart:
+              finding.lineStart,
+
+            lineEnd:
+              finding.lineEnd,
+
+            functionName:
+              finding.functionName,
+
+            rule:
+              finding.rule,
+          },
+        });
+
+      if (!persistedFinding) {
+        console.warn(
+          `[SecureAI AI] Worker ${workerId}: persisted finding not found for ${finding.filePath}:${finding.lineStart}`,
+        );
+
+        failedReviews++;
+        continue;
+      }
+
+      const relevantCode =
+        getRelevantCodeContext(
+          repositoryFile.content,
+          finding.lineStart,
+          finding.lineEnd,
+        );
+
+      try {
+        console.log(
+          `[SecureAI AI] Worker ${workerId} reviewing ${currentIndex + 1}/${prioritizedFindings.length}: ${finding.filePath}:${finding.lineStart} - ${finding.title}`,
+        );
+
+        const result =
+          await reviewFindingWithAI({
+            filePath:
+              finding.filePath,
+
+            language:
+              repositoryFile.language,
+
+            code:
+              relevantCode,
+
+            finding: {
+              severity:
+                finding.severity,
+
+              category:
+                finding.category,
+
+              title:
+                finding.title,
+
+              description:
+                finding.description,
+
+              impact:
+                finding.impact,
+
+              recommendation:
+                finding.recommendation,
+
+              lineStart:
+                finding.lineStart,
+
+              lineEnd:
+                finding.lineEnd,
+
+              functionName:
+                finding.functionName,
+
+              rule:
+                finding.rule,
+
+              evidence:
+                finding.evidence,
+            },
+          });
+
+        await prisma.finding.update({
+          where: {
+            id:
+              persistedFinding.id,
+          },
+
+          data: {
+            aiExplanation:
+              result.explanation,
+
+            aiRootCause:
+              result.rootCause,
+
+            aiImpact:
+              result.impact,
+
+            aiRecommendation:
+              result.recommendation,
+
+            aiSuggestedFix:
+              result.suggestedFix,
+
+            aiConfidence:
+              result.confidence,
+
+            aiModel:
+              process.env.OLLAMA_MODEL ||
+              "qwen2.5-coder:7b",
+
+            aiReviewedAt:
+              new Date(),
+          },
+        });
+
+        completedReviews++;
+
+        console.log(
+          `[SecureAI AI] Worker ${workerId} completed ${finding.filePath}:${finding.lineStart} | confidence=${result.confidence}% | progress=${completedReviews}/${prioritizedFindings.length}`,
+        );
+      } catch (error) {
+        failedReviews++;
+
+        console.error(
+          `[SecureAI AI] Worker ${workerId} failed ${finding.filePath}:${finding.lineStart}`,
+          error,
+        );
+      }
+    }
+  }
+
+  console.log(
+    `[SecureAI AI] Starting ${prioritizedFindings.length} AI reviews with concurrency=${concurrency}`,
+  );
+
+  await Promise.all(
+    Array.from(
+      {
+        length: Math.min(
+          concurrency,
+          prioritizedFindings.length,
+        ),
+      },
+      (_, index) =>
+        worker(index + 1),
+    ),
+  );
+
+  console.log(
+    `[SecureAI AI] AI review layer finished: ${completedReviews}/${prioritizedFindings.length} completed, ${failedReviews} failed.`,
+  );
+
+  console.log(
+    `[SecureAI AI] Static findings retained: ${codeReviewFindings.length}. AI-reviewed: ${completedReviews}.`,
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Main repository analysis                                                   */
+/* -------------------------------------------------------------------------- */
 
 export async function runRepositoryAnalysis(
   input: RunRepositoryAnalysisInput,
@@ -87,14 +814,19 @@ export async function runRepositoryAnalysis(
     where: {
       id: analysisId,
     },
+
     data: {
-      status: "RUNNING",
-      startedAt: new Date(),
+      status:
+        "RUNNING",
+
+      startedAt:
+        new Date(),
     },
   });
 
   try {
-    const account = await getValidGitHubAccount(userId);
+    const account =
+      await getValidGitHubAccount(userId);
 
     if (!account?.accessToken) {
       throw new Error(
@@ -103,18 +835,8 @@ export async function runRepositoryAnalysis(
     }
 
     /*
-     * The GitHub OAuth token is used only
-     * for the user's GitHub identity.
-     *
-     * The GitHub App installation is resolved
-     * directly from the repository using the
-     * GitHub App JWT.
-     *
-     * This avoids the incorrect:
-     *
-     * /user/installations
-     *
-     * request with an OAuth App token.
+     * Resolve the GitHub App installation for
+     * this repository.
      */
     let installation;
 
@@ -143,7 +865,10 @@ export async function runRepositoryAnalysis(
     const installationToken =
       await getInstallationAccessToken(
         installation.id,
-        Number.isInteger(numericRepositoryId)
+
+        Number.isInteger(
+          numericRepositoryId,
+        )
           ? [numericRepositoryId]
           : undefined,
       );
@@ -170,12 +895,15 @@ export async function runRepositoryAnalysis(
     /*
      * Extract the repository once.
      *
-     * The same extracted file set is then
-     * passed to:
+     * The same extracted file set is passed to:
      *
      * - repository analyzer
      * - security scanner
+     * - code review engine
      * - dependency analyzer
+     * - architecture analyzer
+     * - performance analyzer
+     * - AI code review
      */
     const extracted =
       extractAnalyzableRepositoryFiles(
@@ -189,147 +917,349 @@ export async function runRepositoryAnalysis(
         extracted.archiveBytes,
       );
 
-    /*
-     * Security Intelligence
-     */
+    /* -------------------------------------------------------------------- */
+    /* Security Intelligence                                                */
+    /* -------------------------------------------------------------------- */
+
     const security =
       scanRepositorySecurity(
         extracted.files,
       );
 
-    /*
-     * Dependency Intelligence
-     *
-     * Detects dependency manifests such as:
-     *
-     * - package.json
-     * - requirements.txt
-     * - pom.xml
-     *
-     * The first layer performs inventory only.
-     * Advisory/latest-version intelligence will
-     * be added as a separate layer.
-     */
+    /* -------------------------------------------------------------------- */
+    /* Code Review Intelligence                                             */
+    /* -------------------------------------------------------------------- */
+
+    const codeReviewFindings =
+      reviewRepositoryCode(
+        extracted.files,
+      );
+
+    /* -------------------------------------------------------------------- */
+    /* Dependency Intelligence                                              */
+    /* -------------------------------------------------------------------- */
+
     const dependencyResult =
       analyzeRepositoryDependencies(
         extracted.files,
       );
 
+    const enrichedDependencies =
+      await enrichDependenciesWithIntelligence(
+        dependencyResult.dependencies,
+      );
+
+    const vulnerabilityResults =
+      await enrichDependenciesWithVulnerabilities(
+        dependencyResult.dependencies,
+      );
+
     /*
-     * Replace the repository's dependency
-     * inventory with the latest analysis result.
+     * Merge vulnerability intelligence into
+     * dependency intelligence.
      *
-     * This prevents duplicate dependency rows
-     * every time an analysis is rerun.
+     * Vulnerability lookup is ecosystem-aware.
+     */
+    const finalDependencies =
+      enrichedDependencies.map(
+        (dependency) => {
+          const vulnerability =
+            vulnerabilityResults.get(
+              `${dependency.ecosystem}:${dependency.name}`,
+            );
+
+          if (!vulnerability) {
+            return dependency;
+          }
+
+          return {
+            ...dependency,
+
+            status:
+              vulnerability.status,
+
+            severity:
+              vulnerability.severity,
+
+            advisoryId:
+              vulnerability.advisoryId,
+
+            advisory:
+              vulnerability.advisory,
+
+            description:
+              vulnerability.description,
+
+            impact:
+              vulnerability.impact,
+
+            recommendation:
+              vulnerability.recommendation,
+          };
+        },
+      );
+
+    const enrichedDependencyResult = {
+      ...dependencyResult,
+
+      dependencies:
+        finalDependencies,
+    };
+
+    /*
+     * Replace the repository dependency inventory
+     * with the latest analysis result.
      */
     await prisma.dependency.deleteMany({
       where: {
-        repositoryId: repository.id,
+        repositoryId:
+          repository.id,
       },
     });
 
     if (
-      dependencyResult.dependencies.length > 0
+      enrichedDependencyResult
+        .dependencies.length > 0
     ) {
       await prisma.dependency.createMany({
-        data: dependencyResult.dependencies.map(
-          (dependency) => ({
-            repositoryId: repository.id,
+        data:
+          enrichedDependencyResult.dependencies.map(
+            (dependency) => ({
+              repositoryId:
+                repository.id,
 
-            name: dependency.name,
-            ecosystem: dependency.ecosystem,
-            type: dependency.type,
+              name:
+                dependency.name,
 
-            currentVersion:
-              dependency.currentVersion,
+              ecosystem:
+                dependency.ecosystem,
 
-            latestVersion:
-              dependency.latestVersion,
+              type:
+                dependency.type,
 
-            status: dependency.status,
+              currentVersion:
+                dependency.currentVersion,
 
-            severity:
-              dependency.severity,
+              latestVersion:
+                dependency.latestVersion,
 
-            advisoryId:
-              dependency.advisoryId,
+              status:
+                dependency.status,
 
-            advisory:
-              dependency.advisory,
+              severity:
+                dependency.severity,
 
-            description:
-              dependency.description,
+              advisoryId:
+                dependency.advisoryId,
 
-            impact:
-              dependency.impact,
+              advisory:
+                dependency.advisory,
 
-            recommendation:
-              dependency.recommendation,
+              description:
+                dependency.description,
 
-            files:
-              dependency.files,
+              impact:
+                dependency.impact,
 
-            dependents:
-              dependency.dependents,
-          }),
-        ),
+              recommendation:
+                dependency.recommendation,
+
+              files:
+                dependency.files,
+
+              dependents:
+                dependency.dependents,
+            }),
+          ),
       });
     }
+
+    /* -------------------------------------------------------------------- */
+    /* Remove old findings for this analysis                                */
+    /* -------------------------------------------------------------------- */
+
+    await prisma.finding.deleteMany({
+      where: {
+        analysisId,
+      },
+    });
+
+    /* -------------------------------------------------------------------- */
+    /* Architecture Intelligence                                            */
+    /* -------------------------------------------------------------------- */
+
+    console.log(
+      `[SecureAI Architecture] Analyzing architecture for ${extracted.files.length} repository files...`,
+    );
+
+    const architecture =
+      analyzeArchitecture(
+        extracted.files,
+      );
+
+    await persistArchitectureAnalysis(
+      analysisId,
+      architecture,
+    );
+
+    /* -------------------------------------------------------------------- */
+    /* Performance Intelligence                                             */
+    /* -------------------------------------------------------------------- */
+
+    console.log(
+      `[SecureAI Performance] Analyzing performance for ${extracted.files.length} repository files...`,
+    );
+
+    const performance =
+      analyzeRepositoryPerformance(
+        extracted.files,
+      );
+
+    await persistPerformanceAnalysis(
+      analysisId,
+      performance,
+    );
+
+    /* -------------------------------------------------------------------- */
+    /* Build static findings                                                 */
+    /* -------------------------------------------------------------------- */
+
+    const allFindings = [
+      /*
+       * Security findings
+       */
+      ...security.findings.map(
+        (finding) => ({
+          analysisId,
+
+          severity:
+            finding.severity,
+
+          status:
+            "OPEN" as const,
+
+          category:
+            "SECURITY" as const,
+
+          title:
+            finding.title,
+
+          description:
+            finding.description,
+
+          impact:
+            finding.impact,
+
+          recommendation:
+            finding.recommendation,
+
+          filePath:
+            finding.filePath,
+
+          lineStart:
+            finding.lineStart,
+
+          lineEnd:
+            finding.lineEnd,
+
+          rule:
+            finding.rule,
+
+          scanner:
+            finding.scanner,
+
+          evidence:
+            finding.evidence,
+
+          confidence:
+            finding.confidence,
+        }),
+      ),
+
+      /*
+       * Code review findings
+       */
+      ...codeReviewFindings.map(
+        (finding) => ({
+          analysisId,
+
+          severity:
+            finding.severity,
+
+          status:
+            "OPEN" as const,
+
+          category:
+            getFindingCategory(
+              finding.category,
+            ),
+
+          title:
+            finding.title,
+
+          description:
+            finding.description,
+
+          impact:
+            finding.impact,
+
+          recommendation:
+            finding.recommendation,
+
+          filePath:
+            finding.filePath,
+
+          lineStart:
+            finding.lineStart,
+
+          lineEnd:
+            finding.lineEnd,
+
+          functionName:
+            finding.functionName,
+
+          rule:
+            finding.rule,
+
+          scanner:
+            finding.scanner,
+
+          evidence:
+            finding.evidence,
+
+          confidence:
+            finding.confidence,
+        }),
+      ),
+    ];
 
     /*
-     * Persist security findings.
+     * Architecture findings are already persisted by
+     * persistArchitectureAnalysis().
+     *
+     * Performance issues use PerformanceIssue and
+     * therefore are also not duplicated here.
      */
-    if (security.findings.length > 0) {
+    if (allFindings.length > 0) {
       await prisma.finding.createMany({
-        data: security.findings.map(
-          (finding) => ({
-            analysisId,
-
-            severity:
-              finding.severity,
-
-            status:
-              "OPEN" as const,
-
-            category:
-              "SECURITY" as const,
-
-            title:
-              finding.title,
-
-            description:
-              finding.description,
-
-            impact:
-              finding.impact,
-
-            recommendation:
-              finding.recommendation,
-
-            filePath:
-              finding.filePath,
-
-            lineStart:
-              finding.lineStart,
-
-            lineEnd:
-              finding.lineEnd,
-
-            rule:
-              finding.rule,
-
-            scanner:
-              finding.scanner,
-
-            evidence:
-              finding.evidence,
-
-            confidence:
-              finding.confidence,
-          }),
-        ),
+        data:
+          allFindings,
       });
     }
+
+    /* -------------------------------------------------------------------- */
+    /* AI Code Review                                                        */
+    /* -------------------------------------------------------------------- */
+
+    await runAIReviewLayer(
+      analysisId,
+      codeReviewFindings,
+      extracted.files,
+    );
+
+    /* -------------------------------------------------------------------- */
+    /* Complete analysis                                                     */
+    /* -------------------------------------------------------------------- */
 
     const completedAt =
       new Date();
@@ -357,6 +1287,14 @@ export async function runRepositoryAnalysis(
 
           securityScore:
             security.securityScore,
+
+          architecture:
+            architecture.metrics
+              .architectureHealth,
+
+          performance:
+            performance.metrics
+              .performanceHealth,
 
           completedAt,
 
@@ -387,7 +1325,9 @@ export async function runRepositoryAnalysis(
       security,
 
       dependencies:
-        dependencyResult.summary,
+        enrichedDependencyResult.summary,
+
+      performance,
     };
   } catch (error) {
     const message =
@@ -406,7 +1346,10 @@ export async function runRepositoryAnalysis(
           new Date(),
 
         errorMessage:
-          message.slice(0, 2000),
+          message.slice(
+            0,
+            2000,
+          ),
       },
     });
 

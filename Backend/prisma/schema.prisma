@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client"
-  output = "../src/generated/prisma"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -303,6 +303,23 @@ model Finding {
   evidence   String?
   confidence Int?
 
+  /**
+   * AI Code Review
+   * These fields contain the analysis generated
+   * by the local LLM (Qwen2.5-Coder via Ollama).
+   * They are intentionally separate from the
+   * deterministic/static-analysis fields above.
+   */
+
+  aiExplanation    String?
+  aiRootCause      String?
+  aiImpact         String?
+  aiRecommendation String?
+  aiSuggestedFix   String?
+  aiConfidence     Int?
+  aiModel          String?
+  aiReviewedAt     DateTime?
+
   resolvedAt DateTime?
 
   createdAt DateTime @default(now())
@@ -594,4 +611,3 @@ model PullRequest {
   @@index([repositoryId])
   @@index([status])
 }
-

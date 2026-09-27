@@ -30,12 +30,14 @@ export type FindingAvgAggregateOutputType = {
   lineStart: number | null
   lineEnd: number | null
   confidence: number | null
+  aiConfidence: number | null
 }
 
 export type FindingSumAggregateOutputType = {
   lineStart: number | null
   lineEnd: number | null
   confidence: number | null
+  aiConfidence: number | null
 }
 
 export type FindingMinAggregateOutputType = {
@@ -56,6 +58,14 @@ export type FindingMinAggregateOutputType = {
   scanner: string | null
   evidence: string | null
   confidence: number | null
+  aiExplanation: string | null
+  aiRootCause: string | null
+  aiImpact: string | null
+  aiRecommendation: string | null
+  aiSuggestedFix: string | null
+  aiConfidence: number | null
+  aiModel: string | null
+  aiReviewedAt: Date | null
   resolvedAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -79,6 +89,14 @@ export type FindingMaxAggregateOutputType = {
   scanner: string | null
   evidence: string | null
   confidence: number | null
+  aiExplanation: string | null
+  aiRootCause: string | null
+  aiImpact: string | null
+  aiRecommendation: string | null
+  aiSuggestedFix: string | null
+  aiConfidence: number | null
+  aiModel: string | null
+  aiReviewedAt: Date | null
   resolvedAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -102,6 +120,14 @@ export type FindingCountAggregateOutputType = {
   scanner: number
   evidence: number
   confidence: number
+  aiExplanation: number
+  aiRootCause: number
+  aiImpact: number
+  aiRecommendation: number
+  aiSuggestedFix: number
+  aiConfidence: number
+  aiModel: number
+  aiReviewedAt: number
   resolvedAt: number
   createdAt: number
   updatedAt: number
@@ -113,12 +139,14 @@ export type FindingAvgAggregateInputType = {
   lineStart?: true
   lineEnd?: true
   confidence?: true
+  aiConfidence?: true
 }
 
 export type FindingSumAggregateInputType = {
   lineStart?: true
   lineEnd?: true
   confidence?: true
+  aiConfidence?: true
 }
 
 export type FindingMinAggregateInputType = {
@@ -139,6 +167,14 @@ export type FindingMinAggregateInputType = {
   scanner?: true
   evidence?: true
   confidence?: true
+  aiExplanation?: true
+  aiRootCause?: true
+  aiImpact?: true
+  aiRecommendation?: true
+  aiSuggestedFix?: true
+  aiConfidence?: true
+  aiModel?: true
+  aiReviewedAt?: true
   resolvedAt?: true
   createdAt?: true
   updatedAt?: true
@@ -162,6 +198,14 @@ export type FindingMaxAggregateInputType = {
   scanner?: true
   evidence?: true
   confidence?: true
+  aiExplanation?: true
+  aiRootCause?: true
+  aiImpact?: true
+  aiRecommendation?: true
+  aiSuggestedFix?: true
+  aiConfidence?: true
+  aiModel?: true
+  aiReviewedAt?: true
   resolvedAt?: true
   createdAt?: true
   updatedAt?: true
@@ -185,6 +229,14 @@ export type FindingCountAggregateInputType = {
   scanner?: true
   evidence?: true
   confidence?: true
+  aiExplanation?: true
+  aiRootCause?: true
+  aiImpact?: true
+  aiRecommendation?: true
+  aiSuggestedFix?: true
+  aiConfidence?: true
+  aiModel?: true
+  aiReviewedAt?: true
   resolvedAt?: true
   createdAt?: true
   updatedAt?: true
@@ -295,6 +347,14 @@ export type FindingGroupByOutputType = {
   scanner: string | null
   evidence: string | null
   confidence: number | null
+  aiExplanation: string | null
+  aiRootCause: string | null
+  aiImpact: string | null
+  aiRecommendation: string | null
+  aiSuggestedFix: string | null
+  aiConfidence: number | null
+  aiModel: string | null
+  aiReviewedAt: Date | null
   resolvedAt: Date | null
   createdAt: Date
   updatedAt: Date
@@ -341,6 +401,14 @@ export type FindingWhereInput = {
   scanner?: Prisma.StringNullableFilter<"Finding"> | string | null
   evidence?: Prisma.StringNullableFilter<"Finding"> | string | null
   confidence?: Prisma.IntNullableFilter<"Finding"> | number | null
+  aiExplanation?: Prisma.StringNullableFilter<"Finding"> | string | null
+  aiRootCause?: Prisma.StringNullableFilter<"Finding"> | string | null
+  aiImpact?: Prisma.StringNullableFilter<"Finding"> | string | null
+  aiRecommendation?: Prisma.StringNullableFilter<"Finding"> | string | null
+  aiSuggestedFix?: Prisma.StringNullableFilter<"Finding"> | string | null
+  aiConfidence?: Prisma.IntNullableFilter<"Finding"> | number | null
+  aiModel?: Prisma.StringNullableFilter<"Finding"> | string | null
+  aiReviewedAt?: Prisma.DateTimeNullableFilter<"Finding"> | Date | string | null
   resolvedAt?: Prisma.DateTimeNullableFilter<"Finding"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"Finding"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Finding"> | Date | string
@@ -365,6 +433,14 @@ export type FindingOrderByWithRelationInput = {
   scanner?: Prisma.SortOrderInput | Prisma.SortOrder
   evidence?: Prisma.SortOrderInput | Prisma.SortOrder
   confidence?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiExplanation?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiRootCause?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiImpact?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiRecommendation?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiSuggestedFix?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiConfidence?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiModel?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiReviewedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   resolvedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -392,6 +468,14 @@ export type FindingWhereUniqueInput = Prisma.AtLeast<{
   scanner?: Prisma.StringNullableFilter<"Finding"> | string | null
   evidence?: Prisma.StringNullableFilter<"Finding"> | string | null
   confidence?: Prisma.IntNullableFilter<"Finding"> | number | null
+  aiExplanation?: Prisma.StringNullableFilter<"Finding"> | string | null
+  aiRootCause?: Prisma.StringNullableFilter<"Finding"> | string | null
+  aiImpact?: Prisma.StringNullableFilter<"Finding"> | string | null
+  aiRecommendation?: Prisma.StringNullableFilter<"Finding"> | string | null
+  aiSuggestedFix?: Prisma.StringNullableFilter<"Finding"> | string | null
+  aiConfidence?: Prisma.IntNullableFilter<"Finding"> | number | null
+  aiModel?: Prisma.StringNullableFilter<"Finding"> | string | null
+  aiReviewedAt?: Prisma.DateTimeNullableFilter<"Finding"> | Date | string | null
   resolvedAt?: Prisma.DateTimeNullableFilter<"Finding"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"Finding"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Finding"> | Date | string
@@ -416,6 +500,14 @@ export type FindingOrderByWithAggregationInput = {
   scanner?: Prisma.SortOrderInput | Prisma.SortOrder
   evidence?: Prisma.SortOrderInput | Prisma.SortOrder
   confidence?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiExplanation?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiRootCause?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiImpact?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiRecommendation?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiSuggestedFix?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiConfidence?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiModel?: Prisma.SortOrderInput | Prisma.SortOrder
+  aiReviewedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   resolvedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -447,6 +539,14 @@ export type FindingScalarWhereWithAggregatesInput = {
   scanner?: Prisma.StringNullableWithAggregatesFilter<"Finding"> | string | null
   evidence?: Prisma.StringNullableWithAggregatesFilter<"Finding"> | string | null
   confidence?: Prisma.IntNullableWithAggregatesFilter<"Finding"> | number | null
+  aiExplanation?: Prisma.StringNullableWithAggregatesFilter<"Finding"> | string | null
+  aiRootCause?: Prisma.StringNullableWithAggregatesFilter<"Finding"> | string | null
+  aiImpact?: Prisma.StringNullableWithAggregatesFilter<"Finding"> | string | null
+  aiRecommendation?: Prisma.StringNullableWithAggregatesFilter<"Finding"> | string | null
+  aiSuggestedFix?: Prisma.StringNullableWithAggregatesFilter<"Finding"> | string | null
+  aiConfidence?: Prisma.IntNullableWithAggregatesFilter<"Finding"> | number | null
+  aiModel?: Prisma.StringNullableWithAggregatesFilter<"Finding"> | string | null
+  aiReviewedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Finding"> | Date | string | null
   resolvedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Finding"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Finding"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Finding"> | Date | string
@@ -469,6 +569,14 @@ export type FindingCreateInput = {
   scanner?: string | null
   evidence?: string | null
   confidence?: number | null
+  aiExplanation?: string | null
+  aiRootCause?: string | null
+  aiImpact?: string | null
+  aiRecommendation?: string | null
+  aiSuggestedFix?: string | null
+  aiConfidence?: number | null
+  aiModel?: string | null
+  aiReviewedAt?: Date | string | null
   resolvedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -493,6 +601,14 @@ export type FindingUncheckedCreateInput = {
   scanner?: string | null
   evidence?: string | null
   confidence?: number | null
+  aiExplanation?: string | null
+  aiRootCause?: string | null
+  aiImpact?: string | null
+  aiRecommendation?: string | null
+  aiSuggestedFix?: string | null
+  aiConfidence?: number | null
+  aiModel?: string | null
+  aiReviewedAt?: Date | string | null
   resolvedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -515,6 +631,14 @@ export type FindingUpdateInput = {
   scanner?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   evidence?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   confidence?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  aiExplanation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiRootCause?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiImpact?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiRecommendation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiSuggestedFix?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiConfidence?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -539,6 +663,14 @@ export type FindingUncheckedUpdateInput = {
   scanner?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   evidence?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   confidence?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  aiExplanation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiRootCause?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiImpact?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiRecommendation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiSuggestedFix?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiConfidence?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -562,6 +694,14 @@ export type FindingCreateManyInput = {
   scanner?: string | null
   evidence?: string | null
   confidence?: number | null
+  aiExplanation?: string | null
+  aiRootCause?: string | null
+  aiImpact?: string | null
+  aiRecommendation?: string | null
+  aiSuggestedFix?: string | null
+  aiConfidence?: number | null
+  aiModel?: string | null
+  aiReviewedAt?: Date | string | null
   resolvedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -584,6 +724,14 @@ export type FindingUpdateManyMutationInput = {
   scanner?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   evidence?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   confidence?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  aiExplanation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiRootCause?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiImpact?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiRecommendation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiSuggestedFix?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiConfidence?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -607,6 +755,14 @@ export type FindingUncheckedUpdateManyInput = {
   scanner?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   evidence?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   confidence?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  aiExplanation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiRootCause?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiImpact?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiRecommendation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiSuggestedFix?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiConfidence?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -640,6 +796,14 @@ export type FindingCountOrderByAggregateInput = {
   scanner?: Prisma.SortOrder
   evidence?: Prisma.SortOrder
   confidence?: Prisma.SortOrder
+  aiExplanation?: Prisma.SortOrder
+  aiRootCause?: Prisma.SortOrder
+  aiImpact?: Prisma.SortOrder
+  aiRecommendation?: Prisma.SortOrder
+  aiSuggestedFix?: Prisma.SortOrder
+  aiConfidence?: Prisma.SortOrder
+  aiModel?: Prisma.SortOrder
+  aiReviewedAt?: Prisma.SortOrder
   resolvedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -649,6 +813,7 @@ export type FindingAvgOrderByAggregateInput = {
   lineStart?: Prisma.SortOrder
   lineEnd?: Prisma.SortOrder
   confidence?: Prisma.SortOrder
+  aiConfidence?: Prisma.SortOrder
 }
 
 export type FindingMaxOrderByAggregateInput = {
@@ -669,6 +834,14 @@ export type FindingMaxOrderByAggregateInput = {
   scanner?: Prisma.SortOrder
   evidence?: Prisma.SortOrder
   confidence?: Prisma.SortOrder
+  aiExplanation?: Prisma.SortOrder
+  aiRootCause?: Prisma.SortOrder
+  aiImpact?: Prisma.SortOrder
+  aiRecommendation?: Prisma.SortOrder
+  aiSuggestedFix?: Prisma.SortOrder
+  aiConfidence?: Prisma.SortOrder
+  aiModel?: Prisma.SortOrder
+  aiReviewedAt?: Prisma.SortOrder
   resolvedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -692,6 +865,14 @@ export type FindingMinOrderByAggregateInput = {
   scanner?: Prisma.SortOrder
   evidence?: Prisma.SortOrder
   confidence?: Prisma.SortOrder
+  aiExplanation?: Prisma.SortOrder
+  aiRootCause?: Prisma.SortOrder
+  aiImpact?: Prisma.SortOrder
+  aiRecommendation?: Prisma.SortOrder
+  aiSuggestedFix?: Prisma.SortOrder
+  aiConfidence?: Prisma.SortOrder
+  aiModel?: Prisma.SortOrder
+  aiReviewedAt?: Prisma.SortOrder
   resolvedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -701,6 +882,7 @@ export type FindingSumOrderByAggregateInput = {
   lineStart?: Prisma.SortOrder
   lineEnd?: Prisma.SortOrder
   confidence?: Prisma.SortOrder
+  aiConfidence?: Prisma.SortOrder
 }
 
 export type FindingCreateNestedManyWithoutAnalysisInput = {
@@ -774,6 +956,14 @@ export type FindingCreateWithoutAnalysisInput = {
   scanner?: string | null
   evidence?: string | null
   confidence?: number | null
+  aiExplanation?: string | null
+  aiRootCause?: string | null
+  aiImpact?: string | null
+  aiRecommendation?: string | null
+  aiSuggestedFix?: string | null
+  aiConfidence?: number | null
+  aiModel?: string | null
+  aiReviewedAt?: Date | string | null
   resolvedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -796,6 +986,14 @@ export type FindingUncheckedCreateWithoutAnalysisInput = {
   scanner?: string | null
   evidence?: string | null
   confidence?: number | null
+  aiExplanation?: string | null
+  aiRootCause?: string | null
+  aiImpact?: string | null
+  aiRecommendation?: string | null
+  aiSuggestedFix?: string | null
+  aiConfidence?: number | null
+  aiModel?: string | null
+  aiReviewedAt?: Date | string | null
   resolvedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -848,6 +1046,14 @@ export type FindingScalarWhereInput = {
   scanner?: Prisma.StringNullableFilter<"Finding"> | string | null
   evidence?: Prisma.StringNullableFilter<"Finding"> | string | null
   confidence?: Prisma.IntNullableFilter<"Finding"> | number | null
+  aiExplanation?: Prisma.StringNullableFilter<"Finding"> | string | null
+  aiRootCause?: Prisma.StringNullableFilter<"Finding"> | string | null
+  aiImpact?: Prisma.StringNullableFilter<"Finding"> | string | null
+  aiRecommendation?: Prisma.StringNullableFilter<"Finding"> | string | null
+  aiSuggestedFix?: Prisma.StringNullableFilter<"Finding"> | string | null
+  aiConfidence?: Prisma.IntNullableFilter<"Finding"> | number | null
+  aiModel?: Prisma.StringNullableFilter<"Finding"> | string | null
+  aiReviewedAt?: Prisma.DateTimeNullableFilter<"Finding"> | Date | string | null
   resolvedAt?: Prisma.DateTimeNullableFilter<"Finding"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"Finding"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Finding"> | Date | string
@@ -870,6 +1076,14 @@ export type FindingCreateManyAnalysisInput = {
   scanner?: string | null
   evidence?: string | null
   confidence?: number | null
+  aiExplanation?: string | null
+  aiRootCause?: string | null
+  aiImpact?: string | null
+  aiRecommendation?: string | null
+  aiSuggestedFix?: string | null
+  aiConfidence?: number | null
+  aiModel?: string | null
+  aiReviewedAt?: Date | string | null
   resolvedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -892,6 +1106,14 @@ export type FindingUpdateWithoutAnalysisInput = {
   scanner?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   evidence?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   confidence?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  aiExplanation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiRootCause?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiImpact?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiRecommendation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiSuggestedFix?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiConfidence?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -914,6 +1136,14 @@ export type FindingUncheckedUpdateWithoutAnalysisInput = {
   scanner?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   evidence?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   confidence?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  aiExplanation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiRootCause?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiImpact?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiRecommendation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiSuggestedFix?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiConfidence?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -936,6 +1166,14 @@ export type FindingUncheckedUpdateManyWithoutAnalysisInput = {
   scanner?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   evidence?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   confidence?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  aiExplanation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiRootCause?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiImpact?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiRecommendation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiSuggestedFix?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiConfidence?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiReviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   resolvedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -961,6 +1199,14 @@ export type FindingSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   scanner?: boolean
   evidence?: boolean
   confidence?: boolean
+  aiExplanation?: boolean
+  aiRootCause?: boolean
+  aiImpact?: boolean
+  aiRecommendation?: boolean
+  aiSuggestedFix?: boolean
+  aiConfidence?: boolean
+  aiModel?: boolean
+  aiReviewedAt?: boolean
   resolvedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -985,6 +1231,14 @@ export type FindingSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   scanner?: boolean
   evidence?: boolean
   confidence?: boolean
+  aiExplanation?: boolean
+  aiRootCause?: boolean
+  aiImpact?: boolean
+  aiRecommendation?: boolean
+  aiSuggestedFix?: boolean
+  aiConfidence?: boolean
+  aiModel?: boolean
+  aiReviewedAt?: boolean
   resolvedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1009,6 +1263,14 @@ export type FindingSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   scanner?: boolean
   evidence?: boolean
   confidence?: boolean
+  aiExplanation?: boolean
+  aiRootCause?: boolean
+  aiImpact?: boolean
+  aiRecommendation?: boolean
+  aiSuggestedFix?: boolean
+  aiConfidence?: boolean
+  aiModel?: boolean
+  aiReviewedAt?: boolean
   resolvedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -1033,12 +1295,20 @@ export type FindingSelectScalar = {
   scanner?: boolean
   evidence?: boolean
   confidence?: boolean
+  aiExplanation?: boolean
+  aiRootCause?: boolean
+  aiImpact?: boolean
+  aiRecommendation?: boolean
+  aiSuggestedFix?: boolean
+  aiConfidence?: boolean
+  aiModel?: boolean
+  aiReviewedAt?: boolean
   resolvedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type FindingOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "analysisId" | "severity" | "status" | "category" | "title" | "description" | "impact" | "recommendation" | "filePath" | "lineStart" | "lineEnd" | "functionName" | "rule" | "scanner" | "evidence" | "confidence" | "resolvedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["finding"]>
+export type FindingOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "analysisId" | "severity" | "status" | "category" | "title" | "description" | "impact" | "recommendation" | "filePath" | "lineStart" | "lineEnd" | "functionName" | "rule" | "scanner" | "evidence" | "confidence" | "aiExplanation" | "aiRootCause" | "aiImpact" | "aiRecommendation" | "aiSuggestedFix" | "aiConfidence" | "aiModel" | "aiReviewedAt" | "resolvedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["finding"]>
 export type FindingInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   analysis?: boolean | Prisma.AnalysisDefaultArgs<ExtArgs>
 }
@@ -1072,6 +1342,22 @@ export type $FindingPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     scanner: string | null
     evidence: string | null
     confidence: number | null
+    /**
+     * *
+     *    * AI Code Review
+     *    * These fields contain the analysis generated
+     *    * by the local LLM (Qwen2.5-Coder via Ollama).
+     *    * They are intentionally separate from the
+     *    * deterministic/static-analysis fields above.
+     */
+    aiExplanation: string | null
+    aiRootCause: string | null
+    aiImpact: string | null
+    aiRecommendation: string | null
+    aiSuggestedFix: string | null
+    aiConfidence: number | null
+    aiModel: string | null
+    aiReviewedAt: Date | null
     resolvedAt: Date | null
     createdAt: Date
     updatedAt: Date
@@ -1516,6 +1802,14 @@ export interface FindingFieldRefs {
   readonly scanner: Prisma.FieldRef<"Finding", 'String'>
   readonly evidence: Prisma.FieldRef<"Finding", 'String'>
   readonly confidence: Prisma.FieldRef<"Finding", 'Int'>
+  readonly aiExplanation: Prisma.FieldRef<"Finding", 'String'>
+  readonly aiRootCause: Prisma.FieldRef<"Finding", 'String'>
+  readonly aiImpact: Prisma.FieldRef<"Finding", 'String'>
+  readonly aiRecommendation: Prisma.FieldRef<"Finding", 'String'>
+  readonly aiSuggestedFix: Prisma.FieldRef<"Finding", 'String'>
+  readonly aiConfidence: Prisma.FieldRef<"Finding", 'Int'>
+  readonly aiModel: Prisma.FieldRef<"Finding", 'String'>
+  readonly aiReviewedAt: Prisma.FieldRef<"Finding", 'DateTime'>
   readonly resolvedAt: Prisma.FieldRef<"Finding", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"Finding", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Finding", 'DateTime'>
