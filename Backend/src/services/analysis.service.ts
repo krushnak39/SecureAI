@@ -19,9 +19,14 @@ import {
   enrichDependenciesWithVulnerabilities,
 } from "./vulnerability-intelligence.service.js";
 
+import {
+  understandRepositoryCode,
+} from "./code-understanding.service.js";
+
 import { prisma } from "../lib/prisma.js";
 
 import {
+  CodeChunkLanguage,
   FindingCategory,
 } from "../generated/prisma/enums.js";
 
@@ -184,6 +189,192 @@ function getArchitectureComponentHealth(
     default:
       return 100;
   }
+}
+
+/**
+ * Convert the language reported by the repository
+ * analyzer into the Prisma CodeChunkLanguage enum.
+ *
+ * The Code Understanding Engine works with string
+ * language names, while the database uses a strict
+ * Prisma enum.
+ */
+function mapCodeChunkLanguage(
+  language: string,
+): CodeChunkLanguage {
+  const normalized =
+    language.trim().toLowerCase();
+
+  switch (normalized) {
+    case "typescript":
+    case "tsx":
+      return CodeChunkLanguage.TYPESCRIPT;
+
+    case "javascript":
+    case "jsx":
+      return CodeChunkLanguage.JAVASCRIPT;
+
+    case "python":
+      return CodeChunkLanguage.PYTHON;
+
+    case "java":
+      return CodeChunkLanguage.JAVA;
+
+    case "c#":
+    case "csharp":
+      return CodeChunkLanguage.CSHARP;
+
+    case "go":
+      return CodeChunkLanguage.GO;
+
+    case "rust":
+      return CodeChunkLanguage.RUST;
+
+    case "sql":
+      return CodeChunkLanguage.SQL;
+
+    case "html":
+      return CodeChunkLanguage.HTML;
+
+    case "css":
+      return CodeChunkLanguage.CSS;
+
+    case "json":
+      return CodeChunkLanguage.JSON;
+
+    case "yaml":
+    case "yml":
+      return CodeChunkLanguage.YAML;
+
+    case "markdown":
+    case "md":
+      return CodeChunkLanguage.MARKDOWN;
+
+    default:
+      return CodeChunkLanguage.OTHER;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Code Understanding persistence                                             */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Persist the structured code understanding model.
+ *
+ * The Code Understanding Engine produces:
+ *
+ * - file-level context chunks
+ * - symbol-level context chunks
+ * - imports
+ * - exports
+ * - complexity
+ * - parameters
+ * - parent symbols
+ * - embedding eligibility
+ *
+ * CodeChunk rows are repository-scoped rather than
+ * analysis-scoped, so every new repository analysis
+ * replaces the previous repository chunk inventory.
+ */
+async function persistCodeUnderstanding(
+  repositoryId: string,
+  chunks: ReturnType<
+    typeof understandRepositoryCode
+  >["chunks"],
+): Promise<void> {
+  /*
+   * Remove the previous repository code model.
+   *
+   * This keeps the CodeChunk table idempotent across
+   * repeated repository analyses and prevents duplicate
+   * chunks from accumulating.
+   */
+  await prisma.codeChunk.deleteMany({
+    where: {
+      repositoryId,
+    },
+  });
+
+  if (chunks.length === 0) {
+    console.log(
+      "[SecureAI Code Understanding] No code chunks generated.",
+    );
+
+    return;
+  }
+
+  /*
+   * Persist all generated chunks in one batch.
+   */
+  await prisma.codeChunk.createMany({
+  data: chunks.map(
+    (chunk) => ({
+      repositoryId,
+
+      filePath:
+        chunk.filePath,
+
+      symbolName:
+        chunk.symbolName,
+
+      startLine:
+        chunk.startLine,
+
+      endLine:
+        chunk.endLine,
+
+      language:
+        mapCodeChunkLanguage(
+          chunk.language,
+        ),
+
+      content:
+        chunk.content,
+
+      tokenCount:
+        chunk.tokenCount,
+
+      hash:
+        chunk.hash,
+
+      metadata: JSON.parse(
+        JSON.stringify({
+          ...chunk.metadata,
+
+          contextType:
+            chunk.contextType,
+
+          embeddingEligible:
+            chunk.embeddingEligible,
+        }),
+      ),
+    }),
+  ),
+});
+  const embeddingEligibleCount =
+    chunks.filter(
+      (chunk) =>
+        chunk.embeddingEligible,
+    ).length;
+
+  const fileContextCount =
+    chunks.filter(
+      (chunk) =>
+        chunk.contextType ===
+        "FILE_CONTEXT",
+    ).length;
+
+  const symbolContextCount =
+    chunks.filter(
+      (chunk) =>
+        chunk.contextType ===
+        "SYMBOL_CONTEXT",
+    ).length;
+
+  console.log(
+    `[SecureAI Code Understanding] Persisted ${chunks.length} CodeChunk rows (${fileContextCount} file-context, ${symbolContextCount} symbol-context, ${embeddingEligibleCount} embedding-eligible).`,
+  );
 }
 
 /* -------------------------------------------------------------------------- */
@@ -898,6 +1089,7 @@ export async function runRepositoryAnalysis(
      * The same extracted file set is passed to:
      *
      * - repository analyzer
+     * - code understanding engine
      * - security scanner
      * - code review engine
      * - dependency analyzer
@@ -916,6 +1108,35 @@ export async function runRepositoryAnalysis(
         extracted.skippedFiles,
         extracted.archiveBytes,
       );
+
+    /* -------------------------------------------------------------------- */
+    /* Code Understanding Engine                                           */
+    /* -------------------------------------------------------------------- */
+
+    console.log(
+      `[SecureAI Code Understanding] Understanding ${extracted.files.length} repository files...`,
+    );
+
+    const codeUnderstanding =
+      understandRepositoryCode(
+        extracted.files,
+      );
+
+    console.log(
+      `[SecureAI Code Understanding] ${codeUnderstanding.summary.filesAnalyzed} files analyzed, ${codeUnderstanding.summary.symbolsDetected} symbols detected, ${codeUnderstanding.summary.chunksCreated} chunks created.`,
+    );
+
+    /*
+     * Persist the structured code model.
+     *
+     * This happens immediately after code understanding
+     * so all later analysis layers can rely on the same
+     * repository code model.
+     */
+    await persistCodeUnderstanding(
+      repository.id,
+      codeUnderstanding.chunks,
+    );
 
     /* -------------------------------------------------------------------- */
     /* Security Intelligence                                                */
