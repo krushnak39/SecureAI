@@ -3,6 +3,10 @@ import {
 } from "./dependency-intelligence.service.js";
 
 import {
+  embedRepositoryCodeChunks,
+} from "./code-embedding.service.js";
+
+import {
   analyzeRepositoryPerformance,
   type PerformanceAnalysisResult,
 } from "./performance-analyzer.service.js";
@@ -59,6 +63,19 @@ import {
   type ArchitectureAnalysisResult,
 } from "./architecture-analyzer.service.js";
 
+
+  /*
+   * Generate semantic embeddings for symbol-level chunks.
+   *
+   * File-context chunks are intentionally excluded because
+   * the Code Understanding Engine marks them as
+   * embeddingEligible=false.
+   *
+   * Embedding failures are isolated and do not fail the
+   * repository analysis.
+   */
+  
+
 interface RepositoryInput {
   id: string;
   fullName: string;
@@ -114,6 +131,8 @@ function getErrorMessage(error: unknown): string {
 
   return "Repository analysis failed.";
 }
+
+
 
 /**
  * Extract a focused section of source code around a finding.
@@ -374,6 +393,14 @@ async function persistCodeUnderstanding(
 
   console.log(
     `[SecureAI Code Understanding] Persisted ${chunks.length} CodeChunk rows (${fileContextCount} file-context, ${symbolContextCount} symbol-context, ${embeddingEligibleCount} embedding-eligible).`,
+  );
+  const embeddingResult =
+    await embedRepositoryCodeChunks(
+      repositoryId,
+    );
+
+  console.log(
+    `[SecureAI Embeddings] ${embeddingResult.embedded}/${embeddingResult.eligible} embeddings stored (${embeddingResult.failed} failed).`,
   );
 }
 
