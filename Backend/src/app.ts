@@ -2,6 +2,7 @@ import "dotenv/config";
 import performanceRoutes from "./routes/performance.routes.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import chatRoutes from "./routes/chat.routes.js";
 import express from "express";
 import findingRoutes from "./routes/finding.routes.js";
 import architectureRoutes from "./routes/architecture.routes.js";
@@ -98,6 +99,8 @@ app.use(
   "/api/projects",
   performanceRoutes,
 );
+
+app.use("/api", chatRoutes);
 
 app.use(
   "/api/github",

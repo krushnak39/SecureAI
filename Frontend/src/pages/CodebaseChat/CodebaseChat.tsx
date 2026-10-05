@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useParams } from "react-router-dom";
 import {
   Bot,
   BrainCircuit,
@@ -13,14 +14,32 @@ import {
   Terminal,
   User,
   Zap,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
+import { apiRequest } from "../../services/api";
+
+interface ChatCitation {
+  index: number;
+  filePath: string;
+  symbolName: string | null;
+  startLine: number | null;
+  endLine: number | null;
+  similarity: number;
+}
 
 interface Message {
   id: number;
   role: "user" | "assistant";
   content: string;
-  files?: string[];
-  code?: string;
+  citations?: ChatCitation[];
+}
+
+interface ChatResponse {
+  success: boolean;
+  sessionId: string;
+  answer: string;
+  citations: ChatCitation[];
 }
 
 interface SourceFile {
@@ -28,63 +47,10 @@ interface SourceFile {
   path: string;
   relevance: number;
   type: string;
+  symbolName: string | null;
+  startLine: number | null;
+  endLine: number | null;
 }
-
-const initialMessages: Message[] = [
-  {
-    id: 1,
-    role: "user",
-    content:
-      "How does repository analysis flow through the backend?",
-  },
-  {
-    id: 2,
-    role: "assistant",
-    content:
-      "Repository analysis starts at the analysis route, passes through the orchestrator, collects repository metadata and source files, then sends the code through parsing and analysis stages. Results are persisted so the dashboard can surface findings, architecture relationships, and performance signals.",
-    files: [
-      "src/routes/analysis.ts",
-      "src/services/repository.ts",
-      "src/services/analyzer.ts",
-    ],
-    code: `const repository = await github.getRepository(owner, repo);
-
-const files = await repositoryService.collectFiles(
-  repository
-);
-
-const analysis = await analyzer.run(files);
-
-return analysis;`,
-  },
-];
-
-const sourceFiles: SourceFile[] = [
-  {
-    name: "analysis.ts",
-    path: "src/routes/analysis.ts",
-    relevance: 98,
-    type: "route",
-  },
-  {
-    name: "repository.ts",
-    path: "src/services/repository.ts",
-    relevance: 94,
-    type: "service",
-  },
-  {
-    name: "analyzer.ts",
-    path: "src/services/analyzer.ts",
-    relevance: 91,
-    type: "service",
-  },
-  {
-    name: "github.ts",
-    path: "src/integrations/github.ts",
-    relevance: 86,
-    type: "integration",
-  },
-];
 
 const suggestions = [
   "How does authentication work?",
@@ -93,12 +59,85 @@ const suggestions = [
   "Where are database queries handled?",
 ];
 
+function getFileName(filePath: string) {
+  return filePath.split("/").pop() || filePath;
+}
+
+function getFileType(filePath: string) {
+  if (filePath.includes("/routes/")) {
+    return "route";
+  }
+
+  if (filePath.includes("/controllers/")) {
+    return "controller";
+  }
+
+  if (filePath.includes("/services/")) {
+    return "service";
+  }
+
+  if (filePath.includes("/models/")) {
+    return "model";
+  }
+
+  if (filePath.includes("/pages/")) {
+    return "frontend";
+  }
+
+  if (filePath.includes("/components/")) {
+    return "component";
+  }
+
+  if (filePath.includes("/src/")) {
+    return "source";
+  }
+
+  return "file";
+}
+
 function CodebaseChat() {
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const { id: projectId } = useParams();
+
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [sessionId, setSessionId] = useState<string | undefined>();
   const [selectedSource, setSelectedSource] =
-    useState<SourceFile>(sourceFiles[0]);
+    useState<SourceFile | null>(null);
   const [search, setSearch] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const sourceFiles = useMemo<SourceFile[]>(() => {
+    const sourceMap = new Map<string, SourceFile>();
+
+    for (const message of messages) {
+      if (!message.citations) {
+        continue;
+      }
+
+      for (const citation of message.citations) {
+        if (sourceMap.has(citation.filePath)) {
+          continue;
+        }
+
+        sourceMap.set(citation.filePath, {
+          name: getFileName(citation.filePath),
+          path: citation.filePath,
+          relevance: Math.round(
+            Math.max(0, Math.min(1, citation.similarity)) * 100,
+          ),
+          type: getFileType(citation.filePath),
+          symbolName: citation.symbolName,
+          startLine: citation.startLine,
+          endLine: citation.endLine,
+        });
+      }
+    }
+
+    return Array.from(sourceMap.values()).sort(
+      (a, b) => b.relevance - a.relevance,
+    );
+  }, [messages]);
 
   const filteredSources = useMemo(() => {
     const query = search.toLowerCase().trim();
@@ -111,14 +150,22 @@ function CodebaseChat() {
       (file) =>
         file.name.toLowerCase().includes(query) ||
         file.path.toLowerCase().includes(query) ||
-        file.type.toLowerCase().includes(query),
+        file.type.toLowerCase().includes(query) ||
+        file.symbolName?.toLowerCase().includes(query),
     );
-  }, [search]);
+  }, [search, sourceFiles]);
 
-  const sendMessage = (message?: string) => {
+  const sendMessage = async (message?: string) => {
     const content = (message ?? input).trim();
 
-    if (!content) {
+    if (!content || isLoading) {
+      return;
+    }
+
+    if (!projectId) {
+      setError(
+        "Project ID is missing from the URL. Open Codebase Chat from a project.",
+      );
       return;
     }
 
@@ -130,21 +177,71 @@ function CodebaseChat() {
 
     setMessages((current) => [...current, userMessage]);
     setInput("");
+    setError(null);
+    setIsLoading(true);
 
-    setTimeout(() => {
+    try {
+      const response = await apiRequest<ChatResponse>(
+        `/projects/${projectId}/chat`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            message: content,
+            ...(sessionId ? { sessionId } : {}),
+          }),
+        },
+      );
+
+      if (!response.success) {
+        throw new Error("Codebase Chat request failed.");
+      }
+
+      setSessionId(response.sessionId);
+
       const assistantMessage: Message = {
         id: Date.now() + 1,
         role: "assistant",
-        content:
-          "Based on the indexed repository context, this request would be answered by retrieving the most relevant code chunks, analyzing their relationships, and passing the retrieved context to the AI reasoning layer. The production version will connect this workspace to SecureAI's RAG pipeline.",
-        files: [
-          "src/services/repository.ts",
-          "src/services/analyzer.ts",
-        ],
+        content: response.answer,
+        citations: response.citations ?? [],
       };
 
       setMessages((current) => [...current, assistantMessage]);
-    }, 500);
+
+      if (
+        response.citations &&
+        response.citations.length > 0
+      ) {
+        const firstCitation = response.citations[0];
+
+        setSelectedSource({
+          name: getFileName(firstCitation.filePath),
+          path: firstCitation.filePath,
+          relevance: Math.round(
+            Math.max(0, Math.min(1, firstCitation.similarity)) *
+              100,
+          ),
+          type: getFileType(firstCitation.filePath),
+          symbolName: firstCitation.symbolName,
+          startLine: firstCitation.startLine,
+          endLine: firstCitation.endLine,
+        });
+      }
+    } catch (requestError) {
+      const message =
+        requestError instanceof Error
+          ? requestError.message
+          : "Unable to connect to Codebase Chat.";
+
+      setError(message);
+
+      setMessages((current) =>
+        current.filter(
+          (item) => item.id !== userMessage.id,
+        ),
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -155,7 +252,9 @@ function CodebaseChat() {
           <div className="mb-3 flex items-center gap-2 text-xs text-secure-muted">
             <span>INTELLIGENCE</span>
             <ChevronRight size={13} />
-            <span className="text-slate-300">CODEBASE CHAT</span>
+            <span className="text-slate-300">
+              CODEBASE CHAT
+            </span>
           </div>
 
           <div className="flex items-center gap-3">
@@ -170,8 +269,10 @@ function CodebaseChat() {
               <h1 className="text-2xl font-semibold tracking-tight text-white">
                 Codebase Chat
               </h1>
+
               <p className="mt-1 text-sm text-secure-muted">
-                Ask questions about your repository using indexed code context.
+                Ask questions about your repository using indexed
+                code context.
               </p>
             </div>
           </div>
@@ -184,10 +285,30 @@ function CodebaseChat() {
           </div>
 
           <div className="border border-secure-border bg-secure-panel px-3 py-2 text-xs text-slate-400">
-            1,284 chunks indexed
+            LIVE REPOSITORY CONTEXT
           </div>
         </div>
       </div>
+
+      {/* Error */}
+      {error && (
+        <div className="flex items-start gap-3 border border-red-500/20 bg-red-500/5 px-4 py-3">
+          <AlertCircle
+            size={15}
+            className="mt-0.5 shrink-0 text-red-400"
+          />
+
+          <div>
+            <p className="text-xs font-medium text-red-400">
+              Codebase Chat error
+            </p>
+
+            <p className="mt-1 text-xs leading-5 text-red-300/80">
+              {error}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* RAG pipeline */}
       <div className="border border-secure-border bg-secure-panel">
@@ -196,12 +317,16 @@ function CodebaseChat() {
             <h2 className="text-sm font-medium text-white">
               Retrieval Pipeline
             </h2>
+
             <p className="mt-1 text-xs text-secure-muted">
               How SecureAI builds repository-aware answers.
             </p>
           </div>
 
-          <Sparkles size={16} className="text-violet-400" />
+          <Sparkles
+            size={16}
+            className="text-violet-400"
+          />
         </div>
 
         <div className="overflow-x-auto px-5 py-5">
@@ -252,6 +377,7 @@ function CodebaseChat() {
                           : "text-slate-400"
                       }
                     />
+
                     <span className="whitespace-nowrap text-xs text-slate-300">
                       {step.label}
                     </span>
@@ -277,6 +403,7 @@ function CodebaseChat() {
                 <p className="text-[10px] font-semibold tracking-[0.18em] text-secure-muted">
                   CONVERSATIONS
                 </p>
+
                 <p className="mt-1 text-xs text-slate-400">
                   Repository context
                 </p>
@@ -284,7 +411,14 @@ function CodebaseChat() {
 
               <button
                 type="button"
+                onClick={() => {
+                  setMessages([]);
+                  setSessionId(undefined);
+                  setSelectedSource(null);
+                  setError(null);
+                }}
                 className="border border-secure-border p-1.5 text-slate-400 transition hover:bg-secure-panel-soft hover:text-white"
+                title="New conversation"
               >
                 <MessageSquare size={14} />
               </button>
@@ -292,41 +426,38 @@ function CodebaseChat() {
           </div>
 
           <div className="space-y-1 p-3">
-            <button
-              type="button"
-              className="w-full border border-violet-500/20 bg-violet-500/10 px-3 py-3 text-left"
-            >
-              <p className="truncate text-xs font-medium text-white">
-                Repository analysis flow
-              </p>
-              <p className="mt-1 text-[10px] text-slate-500">
-                2 minutes ago
-              </p>
-            </button>
+            {messages.length === 0 ? (
+              <div className="px-3 py-6 text-center">
+                <MessageSquare
+                  size={18}
+                  className="mx-auto text-slate-700"
+                />
 
-            <button
-              type="button"
-              className="w-full px-3 py-3 text-left transition hover:bg-secure-panel-soft"
-            >
-              <p className="truncate text-xs text-slate-300">
-                Authentication implementation
-              </p>
-              <p className="mt-1 text-[10px] text-slate-600">
-                Yesterday
-              </p>
-            </button>
+                <p className="mt-3 text-xs text-slate-500">
+                  No conversation yet
+                </p>
 
-            <button
-              type="button"
-              className="w-full px-3 py-3 text-left transition hover:bg-secure-panel-soft"
-            >
-              <p className="truncate text-xs text-slate-300">
-                Architecture dependencies
-              </p>
-              <p className="mt-1 text-[10px] text-slate-600">
-                Yesterday
-              </p>
-            </button>
+                <p className="mt-1 text-[10px] leading-4 text-slate-700">
+                  Ask a question about the repository to start.
+                </p>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="w-full border border-violet-500/20 bg-violet-500/10 px-3 py-3 text-left"
+              >
+                <p className="truncate text-xs font-medium text-white">
+                  Current conversation
+                </p>
+
+                <p className="mt-1 text-[10px] text-slate-500">
+                  {messages.length}{" "}
+                  {messages.length === 1
+                    ? "message"
+                    : "messages"}
+                </p>
+              </button>
+            )}
           </div>
         </aside>
 
@@ -335,13 +466,17 @@ function CodebaseChat() {
           <div className="flex items-center justify-between border-b border-secure-border px-5 py-4">
             <div className="flex items-center gap-3">
               <div className="flex h-8 w-8 items-center justify-center border border-violet-500/20 bg-violet-500/10">
-                <Bot size={15} className="text-violet-400" />
+                <Bot
+                  size={15}
+                  className="text-violet-400"
+                />
               </div>
 
               <div>
                 <p className="text-sm font-medium text-white">
                   SecureAI Analyst
                 </p>
+
                 <p className="text-[10px] text-secure-muted">
                   krushnak39/SecureAI · feature
                 </p>
@@ -350,11 +485,36 @@ function CodebaseChat() {
 
             <div className="flex items-center gap-2 text-[10px] text-emerald-400">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-              CONTEXT READY
+              {isLoading
+                ? "RETRIEVING CONTEXT"
+                : "CONTEXT READY"}
             </div>
           </div>
 
           <div className="flex-1 space-y-6 overflow-y-auto p-5">
+            {messages.length === 0 && (
+              <div className="flex min-h-[400px] items-center justify-center">
+                <div className="max-w-md text-center">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center border border-violet-500/20 bg-violet-500/10">
+                    <BrainCircuit
+                      size={25}
+                      className="text-violet-400"
+                    />
+                  </div>
+
+                  <h2 className="mt-5 text-lg font-medium text-white">
+                    Ask your codebase anything
+                  </h2>
+
+                  <p className="mt-2 text-sm leading-6 text-slate-500">
+                    SecureAI will retrieve relevant repository
+                    context and use the AI reasoning layer to
+                    answer your question.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -366,7 +526,10 @@ function CodebaseChat() {
               >
                 {message.role === "assistant" && (
                   <div className="flex h-7 w-7 shrink-0 items-center justify-center border border-violet-500/20 bg-violet-500/10">
-                    <Bot size={14} className="text-violet-400" />
+                    <Bot
+                      size={14}
+                      className="text-violet-400"
+                    />
                   </div>
                 )}
 
@@ -381,7 +544,11 @@ function CodebaseChat() {
                     <div className="mb-2 flex items-center gap-2">
                       {message.role === "user" ? (
                         <>
-                          <User size={12} className="text-slate-500" />
+                          <User
+                            size={12}
+                            className="text-slate-500"
+                          />
+
                           <span className="text-[10px] font-medium uppercase tracking-wider text-slate-500">
                             You
                           </span>
@@ -393,61 +560,121 @@ function CodebaseChat() {
                       )}
                     </div>
 
-                    <p className="text-sm leading-6 text-slate-300">
+                    <p className="whitespace-pre-wrap text-sm leading-6 text-slate-300">
                       {message.content}
                     </p>
 
-                    {message.files && (
-                      <div className="mt-4 space-y-2">
-                        <p className="text-[10px] font-semibold tracking-wider text-secure-muted">
-                          RELEVANT FILES
-                        </p>
+                    {message.citations &&
+                      message.citations.length > 0 && (
+                        <div className="mt-4 space-y-2">
+                          <p className="text-[10px] font-semibold tracking-wider text-secure-muted">
+                            SOURCES
+                          </p>
 
-                        <div className="flex flex-wrap gap-2">
-                          {message.files.map((file) => (
-                            <button
-                              key={file}
-                              type="button"
-                              className="flex items-center gap-2 border border-secure-border bg-secure-panel px-2.5 py-1.5 text-[10px] text-slate-400 transition hover:border-slate-600 hover:text-white"
-                            >
-                              <FileCode2 size={11} />
-                              {file}
-                            </button>
-                          ))}
+                          <div className="space-y-2">
+                            {message.citations.map(
+                              (citation) => {
+                                const fileName =
+                                  getFileName(
+                                    citation.filePath,
+                                  );
+
+                                const relevance = Math.round(
+                                  Math.max(
+                                    0,
+                                    Math.min(
+                                      1,
+                                      citation.similarity,
+                                    ),
+                                  ) * 100,
+                                );
+
+                                return (
+                                  <button
+                                    key={`${citation.index}-${citation.filePath}-${citation.startLine}`}
+                                    type="button"
+                                    onClick={() =>
+                                      setSelectedSource({
+                                        name: fileName,
+                                        path: citation.filePath,
+                                        relevance,
+                                        type: getFileType(
+                                          citation.filePath,
+                                        ),
+                                        symbolName:
+                                          citation.symbolName,
+                                        startLine:
+                                          citation.startLine,
+                                        endLine:
+                                          citation.endLine,
+                                      })
+                                    }
+                                    className="flex w-full items-center gap-2 border border-secure-border bg-secure-panel px-2.5 py-2 text-left transition hover:border-slate-600"
+                                  >
+                                    <FileCode2
+                                      size={11}
+                                      className="shrink-0 text-violet-400"
+                                    />
+
+                                    <span className="min-w-0 flex-1 truncate text-[10px] text-slate-400">
+                                      {citation.filePath}
+                                    </span>
+
+                                    <span className="shrink-0 text-[9px] text-emerald-400">
+                                      {relevance}%
+                                    </span>
+                                  </button>
+                                );
+                              },
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    )}
-
-                    {message.code && (
-                      <div className="mt-4 overflow-hidden border border-secure-border bg-[#050810]">
-                        <div className="flex items-center justify-between border-b border-secure-border px-3 py-2">
-                          <span className="text-[10px] text-slate-500">
-                            repository.ts
-                          </span>
-                          <Code2 size={12} className="text-slate-600" />
-                        </div>
-
-                        <pre className="overflow-x-auto p-4 text-[11px] leading-5 text-slate-400">
-                          <code>{message.code}</code>
-                        </pre>
-                      </div>
-                    )}
+                      )}
                   </div>
                 </div>
 
                 {message.role === "user" && (
                   <div className="flex h-7 w-7 shrink-0 items-center justify-center border border-secure-border bg-secure-panel-soft">
-                    <User size={14} className="text-slate-400" />
+                    <User
+                      size={14}
+                      className="text-slate-400"
+                    />
                   </div>
                 )}
               </div>
             ))}
+
+            {isLoading && (
+              <div className="flex gap-3">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center border border-violet-500/20 bg-violet-500/10">
+                  <Bot
+                    size={14}
+                    className="text-violet-400"
+                  />
+                </div>
+
+                <div className="border border-secure-border bg-secure-panel-soft px-4 py-3">
+                  <div className="flex items-center gap-2 text-xs text-slate-500">
+                    <Loader2
+                      size={13}
+                      className="animate-spin text-violet-400"
+                    />
+                    Retrieving repository context and generating
+                    answer...
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Suggestions */}
           <div className="border-t border-secure-border px-5 py-3">
             <div className="mb-2 flex items-center gap-2">
-              <Zap size={12} className="text-amber-400" />
+              <Zap
+                size={12}
+                className="text-amber-400"
+              />
+
               <span className="text-[10px] font-semibold tracking-wider text-secure-muted">
                 SUGGESTED QUESTIONS
               </span>
@@ -459,7 +686,8 @@ function CodebaseChat() {
                   key={suggestion}
                   type="button"
                   onClick={() => sendMessage(suggestion)}
-                  className="whitespace-nowrap border border-secure-border bg-secure-panel-soft px-3 py-2 text-[10px] text-slate-400 transition hover:border-slate-600 hover:text-white"
+                  disabled={isLoading}
+                  className="whitespace-nowrap border border-secure-border bg-secure-panel-soft px-3 py-2 text-[10px] text-slate-400 transition hover:border-slate-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {suggestion}
                 </button>
@@ -472,7 +700,9 @@ function CodebaseChat() {
             <div className="flex items-end gap-3 border border-secure-border bg-[#050810] p-2 focus-within:border-slate-600">
               <textarea
                 value={input}
-                onChange={(event) => setInput(event.target.value)}
+                onChange={(event) =>
+                  setInput(event.target.value)
+                }
                 onKeyDown={(event) => {
                   if (
                     event.key === "Enter" &&
@@ -484,16 +714,28 @@ function CodebaseChat() {
                 }}
                 placeholder="Ask anything about this codebase..."
                 rows={2}
-                className="min-h-[48px] flex-1 resize-none bg-transparent px-2 py-1 text-sm text-white outline-none placeholder:text-slate-600"
+                disabled={isLoading}
+                className="min-h-[48px] flex-1 resize-none bg-transparent px-2 py-1 text-sm text-white outline-none placeholder:text-slate-600 disabled:opacity-50"
               />
 
               <button
                 type="button"
                 onClick={() => sendMessage()}
-                disabled={!input.trim()}
+                disabled={
+                  !input.trim() ||
+                  isLoading ||
+                  !projectId
+                }
                 className="flex h-9 w-9 shrink-0 items-center justify-center bg-violet-600 text-white transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-30"
               >
-                <Send size={15} />
+                {isLoading ? (
+                  <Loader2
+                    size={15}
+                    className="animate-spin"
+                  />
+                ) : (
+                  <Send size={15} />
+                )}
               </button>
             </div>
 
@@ -509,6 +751,7 @@ function CodebaseChat() {
             <p className="text-[10px] font-semibold tracking-[0.18em] text-secure-muted">
               CODE CONTEXT
             </p>
+
             <p className="mt-1 text-xs text-slate-400">
               Retrieved repository sources
             </p>
@@ -532,96 +775,141 @@ function CodebaseChat() {
             </div>
 
             <div className="mt-4 space-y-1">
-              {filteredSources.map((file) => (
-                <button
-                  key={file.path}
-                  type="button"
-                  onClick={() => setSelectedSource(file)}
-                  className={`w-full border px-3 py-3 text-left transition ${
-                    selectedSource.path === file.path
-                      ? "border-violet-500/20 bg-violet-500/10"
-                      : "border-transparent hover:border-secure-border hover:bg-secure-panel-soft"
-                  }`}
-                >
-                  <div className="flex items-start gap-2">
-                    <FileCode2
-                      size={14}
-                      className={
-                        selectedSource.path === file.path
-                          ? "mt-0.5 text-violet-400"
-                          : "mt-0.5 text-slate-500"
-                      }
-                    />
+              {filteredSources.length === 0 ? (
+                <div className="px-3 py-6 text-center">
+                  <FileCode2
+                    size={17}
+                    className="mx-auto text-slate-700"
+                  />
 
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-xs font-medium text-slate-300">
-                        {file.name}
-                      </p>
+                  <p className="mt-2 text-[10px] text-slate-600">
+                    Sources will appear after a question is
+                    answered.
+                  </p>
+                </div>
+              ) : (
+                filteredSources.map((file) => (
+                  <button
+                    key={file.path}
+                    type="button"
+                    onClick={() => setSelectedSource(file)}
+                    className={`w-full border px-3 py-3 text-left transition ${
+                      selectedSource?.path === file.path
+                        ? "border-violet-500/20 bg-violet-500/10"
+                        : "border-transparent hover:border-secure-border hover:bg-secure-panel-soft"
+                    }`}
+                  >
+                    <div className="flex items-start gap-2">
+                      <FileCode2
+                        size={14}
+                        className={
+                          selectedSource?.path ===
+                          file.path
+                            ? "mt-0.5 text-violet-400"
+                            : "mt-0.5 text-slate-500"
+                        }
+                      />
 
-                      <p className="mt-1 truncate text-[10px] text-slate-600">
-                        {file.path}
-                      </p>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-medium text-slate-300">
+                          {file.name}
+                        </p>
+
+                        <p className="mt-1 truncate text-[10px] text-slate-600">
+                          {file.path}
+                        </p>
+
+                        {file.symbolName && (
+                          <p className="mt-1 truncate text-[9px] text-slate-700">
+                            {file.symbolName}
+                          </p>
+                        )}
+                      </div>
+
+                      <span className="text-[9px] text-emerald-400">
+                        {file.relevance}%
+                      </span>
                     </div>
-
-                    <span className="text-[9px] text-emerald-400">
-                      {file.relevance}%
-                    </span>
-                  </div>
-                </button>
-              ))}
+                  </button>
+                ))
+              )}
             </div>
           </div>
 
-          <div className="mx-4 border-t border-secure-border pt-4">
-            <p className="text-[10px] font-semibold tracking-wider text-secure-muted">
-              SELECTED SOURCE
-            </p>
-
-            <div className="mt-3 border border-secure-border bg-secure-panel-soft p-4">
-              <div className="flex items-center gap-2">
-                <FileCode2
-                  size={15}
-                  className="text-violet-400"
-                />
-
-                <span className="text-xs font-medium text-white">
-                  {selectedSource.name}
-                </span>
-              </div>
-
-              <p className="mt-2 break-all text-[10px] leading-4 text-slate-500">
-                {selectedSource.path}
+          {selectedSource && (
+            <div className="mx-4 border-t border-secure-border pt-4">
+              <p className="text-[10px] font-semibold tracking-wider text-secure-muted">
+                SELECTED SOURCE
               </p>
 
-              <div className="mt-4 grid grid-cols-2 gap-2">
-                <div className="border border-secure-border p-2">
-                  <p className="text-[9px] text-slate-600">
-                    TYPE
-                  </p>
-                  <p className="mt-1 text-[10px] text-slate-300">
-                    {selectedSource.type}
-                  </p>
+              <div className="mt-3 border border-secure-border bg-secure-panel-soft p-4">
+                <div className="flex items-center gap-2">
+                  <FileCode2
+                    size={15}
+                    className="text-violet-400"
+                  />
+
+                  <span className="truncate text-xs font-medium text-white">
+                    {selectedSource.name}
+                  </span>
                 </div>
 
-                <div className="border border-secure-border p-2">
-                  <p className="text-[9px] text-slate-600">
-                    RELEVANCE
-                  </p>
-                  <p className="mt-1 text-[10px] text-emerald-400">
-                    {selectedSource.relevance}%
-                  </p>
+                <p className="mt-2 break-all text-[10px] leading-4 text-slate-500">
+                  {selectedSource.path}
+                </p>
+
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  <div className="border border-secure-border p-2">
+                    <p className="text-[9px] text-slate-600">
+                      TYPE
+                    </p>
+
+                    <p className="mt-1 text-[10px] text-slate-300">
+                      {selectedSource.type}
+                    </p>
+                  </div>
+
+                  <div className="border border-secure-border p-2">
+                    <p className="text-[9px] text-slate-600">
+                      RELEVANCE
+                    </p>
+
+                    <p className="mt-1 text-[10px] text-emerald-400">
+                      {selectedSource.relevance}%
+                    </p>
+                  </div>
                 </div>
+
+                {selectedSource.symbolName && (
+                  <div className="mt-2 border border-secure-border p-2">
+                    <p className="text-[9px] text-slate-600">
+                      SYMBOL
+                    </p>
+
+                    <p className="mt-1 break-all text-[10px] text-slate-300">
+                      {selectedSource.symbolName}
+                    </p>
+                  </div>
+                )}
+
+                {(selectedSource.startLine !== null ||
+                  selectedSource.endLine !== null) && (
+                  <div className="mt-2 border border-secure-border p-2">
+                    <p className="text-[9px] text-slate-600">
+                      LOCATION
+                    </p>
+
+                    <p className="mt-1 text-[10px] text-slate-300">
+                      Lines{" "}
+                      {selectedSource.startLine ?? "?"}
+                      {" – "}
+                      {selectedSource.endLine ?? "?"}
+                    </p>
+                  </div>
+                )}
               </div>
-
-              <button
-                type="button"
-                className="mt-3 flex w-full items-center justify-center gap-2 border border-secure-border py-2 text-[10px] text-slate-400 transition hover:bg-slate-800 hover:text-white"
-              >
-                <Code2 size={12} />
-                Open source
-              </button>
             </div>
-          </div>
+          )}
 
           <div className="mx-4 mt-5 border border-cyan-500/10 bg-cyan-500/5 p-4">
             <div className="flex items-center gap-2">
@@ -629,6 +917,7 @@ function CodebaseChat() {
                 size={14}
                 className="text-cyan-400"
               />
+
               <span className="text-[10px] font-semibold tracking-wider text-cyan-400">
                 CONTEXT WINDOW
               </span>
@@ -639,8 +928,15 @@ function CodebaseChat() {
             </div>
 
             <div className="mt-2 flex justify-between text-[9px] text-slate-600">
-              <span>6,842 tokens</span>
-              <span>42%</span>
+              <span>
+                {messages.length > 0
+                  ? "Active RAG context"
+                  : "Waiting for query"}
+              </span>
+
+              <span>
+                {messages.length > 0 ? "READY" : "IDLE"}
+              </span>
             </div>
           </div>
         </aside>
@@ -654,8 +950,12 @@ function CodebaseChat() {
         </div>
 
         <div className="flex items-center gap-4">
-          <span>1,284 chunks</span>
-          <span>4,912 files analyzed</span>
+          <span>
+            {sessionId
+              ? "Conversation session active"
+              : "No active session"}
+          </span>
+
           <span>Embedding model ready</span>
         </div>
       </div>
