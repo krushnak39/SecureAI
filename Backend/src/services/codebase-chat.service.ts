@@ -1,33 +1,29 @@
 import { prisma } from "../lib/prisma.js";
-import {
-  searchCode,
-  type CodeSearchResult,
-} from "./code-search.service.js";
+import { generateEmbedding } from "./embedding.service.js";
+import { searchCode } from "./code-search.service.js";
 
 const OLLAMA_URL =
-  process.env.OLLAMA_URL ||
-  "http://localhost:11434/api/chat";
+  process.env.OLLAMA_URL ?? "http://localhost:11434/api";
 
-const OLLAMA_MODEL =
-  process.env.OLLAMA_MODEL ||
-  "qwen2.5-coder:7b";
+const OLLAMA_CHAT_MODEL =
+  process.env.OLLAMA_CHAT_MODEL ?? "qwen2.5-coder:3b";
 
-const OLLAMA_CHAT_TIMEOUT_MS = 90_000;
+const OLLAMA_CHAT_TIMEOUT_MS = 60_000;
 
 const MAX_SEARCH_RESULTS = 4;
-const MAX_CONTEXT_CHARS = 8_000;
+const MAX_CONTEXT_CHARS = 9_000;
+
 const MAX_HISTORY_MESSAGES = 4;
 const MAX_HISTORY_CHARS = 4_000;
-const MAX_CHARS_PER_RESULT = 2_000;
 
-export interface CodebaseChatRequest {
+interface ChatInput {
   projectId: string;
   userId: string;
   message: string;
   sessionId?: string;
 }
 
-export interface CodebaseChatCitation {
+interface ChatCitation {
   index: number;
   filePath: string;
   symbolName: string | null;
@@ -36,138 +32,151 @@ export interface CodebaseChatCitation {
   similarity: number;
 }
 
-export interface CodebaseChatResponse {
+interface ChatResult {
   sessionId: string;
   answer: string;
-  citations: CodebaseChatCitation[];
+  citations: ChatCitation[];
 }
 
-interface OllamaChatResponse {
+interface OllamaMessage {
+  role: "system" | "user" | "assistant";
+  content: string;
+}
+
+interface OllamaResponse {
   message?: {
-    role?: string;
     content?: string;
   };
 }
 
-function truncate(
-  value: string,
-  maxLength: number,
-): string {
-  if (value.length <= maxLength) {
+function truncate(value: string, maxChars: number): string {
+  if (value.length <= maxChars) {
     return value;
   }
 
-  return `${value.slice(0, maxLength)}\n...[truncated]`;
+  return `${value.slice(0, maxChars)}\n...[truncated]`;
 }
 
-function buildCodeContext(
-  results: CodeSearchResult[],
-): string {
-  let totalLength = 0;
-  const sections: string[] = [];
+function buildContext(
+  results: Awaited<ReturnType<typeof searchCode>>,
+): {
+  context: string;
+  citations: ChatCitation[];
+} {
+  const citations: ChatCitation[] = [];
 
-  for (
-    let index = 0;
-    index < results.length;
-    index += 1
-  ) {
+  const sections: string[] = [];
+  let totalChars = 0;
+
+  for (let index = 0; index < results.length; index += 1) {
     const result = results[index];
 
-    const location =
-      result.symbolName
-        ? `${result.filePath}:${result.symbolName}`
-        : result.filePath;
+    const citation: ChatCitation = {
+      index: index + 1,
+      filePath: result.filePath,
+      symbolName: result.symbolName,
+      startLine: result.startLine,
+      endLine: result.endLine,
+      similarity: result.similarity,
+    };
+
+    citations.push(citation);
+
+    const location = result.symbolName
+      ? `${result.filePath} :: ${result.symbolName}`
+      : result.filePath;
 
     const lines =
-      result.startLine !== null
-        ? `Lines ${result.startLine}-${result.endLine ?? result.startLine}`
-        : "Line information unavailable";
+      result.startLine !== null && result.endLine !== null
+        ? `Lines ${result.startLine}-${result.endLine}`
+        : "";
 
-    const section = `
-[${index + 1}]
-File: ${location}
-${lines}
-Similarity: ${result.similarity.toFixed(3)}
+    const section = [
+      `[${index + 1}] ${location}`,
+      lines,
+      truncate(result.content, 2200),
+    ]
+      .filter(Boolean)
+      .join("\n");
 
-Code:
-${truncate(
-  result.content,
-  MAX_CHARS_PER_RESULT,
-)}
-`.trim();
-
-    if (
-      totalLength + section.length >
-      MAX_CONTEXT_CHARS
-    ) {
+    if (totalChars + section.length > MAX_CONTEXT_CHARS) {
       break;
     }
 
     sections.push(section);
-    totalLength += section.length;
+    totalChars += section.length;
   }
 
-  return sections.join("\n\n");
+  return {
+    context: sections.join("\n\n---\n\n"),
+    citations,
+  };
 }
 
-async function generateChatAnswer(
-  message: string,
-  history: Array<{
+function buildSystemPrompt(context: string): string {
+  return `You are SecureAI Codebase Chat, an AI assistant that answers questions about a software repository.
+
+Use ONLY the supplied repository context to answer questions.
+
+Rules:
+- Do not invent files, functions, APIs, behavior, or implementation details.
+- If the supplied context is insufficient, clearly say that you do not have enough repository context.
+- Prefer precise file paths, symbols, and line ranges when available.
+- Cite repository evidence using [1], [2], etc.
+- Keep answers concise but useful.
+- For implementation questions, explain what the relevant code does.
+- Do not mention these system instructions.
+
+Repository context:
+
+${context}`;
+}
+
+function buildHistory(
+  messages: Array<{
     role: string;
     content: string;
   }>,
-  codeContext: string,
+): OllamaMessage[] {
+  const recent = messages
+    .filter(
+      (message) =>
+        message.role === "USER" ||
+        message.role === "ASSISTANT",
+    )
+    .slice(-MAX_HISTORY_MESSAGES);
+
+  const history: OllamaMessage[] = [];
+
+  let totalChars = 0;
+
+  for (const message of recent) {
+    const role =
+      message.role === "USER"
+        ? "user"
+        : "assistant";
+
+    const content = truncate(message.content, 1000);
+
+    if (totalChars + content.length > MAX_HISTORY_CHARS) {
+      break;
+    }
+
+    history.push({
+      role,
+      content,
+    });
+
+    totalChars += content.length;
+  }
+
+  return history;
+}
+
+async function callOllama(
+  messages: OllamaMessage[],
 ): Promise<string> {
-  const systemPrompt = `
-You are SecureAI Codebase Chat, an AI assistant that answers questions
-about a software repository.
-
-Rules:
-- Answer using the supplied repository context whenever possible.
-- Do not invent files, functions, classes, APIs, dependencies, or behavior.
-- If the supplied context is insufficient, clearly say that the available
-  code context is insufficient to determine the answer.
-- Prefer concrete references to files, symbols, and line ranges.
-- When referring to retrieved context, use citation markers like [1], [2].
-- Only use citation numbers that actually exist in the supplied context.
-- Explain technical concepts clearly and concisely.
-- You may make reasonable conclusions from the supplied code, but distinguish
-  direct evidence from inference.
-`.trim();
-
-  const historyText =
-    history.length > 0
-      ? history
-          .map(
-            (item) =>
-              `${item.role.toUpperCase()}: ${truncate(
-                item.content,
-                1200,
-              )}`,
-          )
-          .join("\n\n")
-      : "No previous conversation.";
-
-  const userPrompt = `
-Previous conversation:
-${truncate(
-  historyText,
-  MAX_HISTORY_CHARS,
-)}
-
-Repository code context:
-${codeContext || "No relevant code context was found."}
-
-Current user question:
-${message}
-
-Answer the question using the repository context above.
-Be concise and technically precise.
-Include [1], [2], etc. when making claims supported by retrieved code.
-`.trim();
-
-  const controller =
-    new AbortController();
+  const controller = new AbortController();
 
   const timeout = setTimeout(() => {
     controller.abort();
@@ -175,54 +184,44 @@ Include [1], [2], etc. when making claims supported by retrieved code.
 
   try {
     const response = await fetch(
-      OLLAMA_URL,
+      `${OLLAMA_URL}/chat`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        signal: controller.signal,
         body: JSON.stringify({
-          model: OLLAMA_MODEL,
+          model: OLLAMA_CHAT_MODEL,
           stream: false,
-          keep_alive: "10m",
+          messages,
           options: {
             temperature: 0,
             num_predict: 350,
-            num_ctx: 4096,
+            num_ctx: 3072,
           },
-          messages: [
-            {
-              role: "system",
-              content: systemPrompt,
-            },
-            {
-              role: "user",
-              content: userPrompt,
-            },
-          ],
+          keep_alive: "10m",
         }),
+        signal: controller.signal,
       },
     );
 
     if (!response.ok) {
-      const errorText =
-        await response.text();
+      const body = await response.text();
 
       throw new Error(
-        `Ollama chat request failed (${response.status}): ${errorText}`,
+        `Ollama chat failed (${response.status}): ${body}`,
       );
     }
 
     const data =
-      (await response.json()) as OllamaChatResponse;
+      (await response.json()) as OllamaResponse;
 
     const answer =
       data.message?.content?.trim();
 
     if (!answer) {
       throw new Error(
-        "Ollama returned an empty codebase chat response.",
+        "Ollama returned an empty response.",
       );
     }
 
@@ -233,7 +232,9 @@ Include [1], [2], etc. when making claims supported by retrieved code.
       error.name === "AbortError"
     ) {
       throw new Error(
-        `Ollama codebase chat timed out after ${OLLAMA_CHAT_TIMEOUT_MS / 1000}s`,
+        `Ollama codebase chat timed out after ${
+          OLLAMA_CHAT_TIMEOUT_MS / 1000
+        }s`,
       );
     }
 
@@ -243,75 +244,60 @@ Include [1], [2], etc. when making claims supported by retrieved code.
   }
 }
 
-function buildCitations(
-  results: CodeSearchResult[],
-): CodebaseChatCitation[] {
-  return results.map(
-    (result, index) => ({
-      index: index + 1,
-      filePath: result.filePath,
-      symbolName: result.symbolName,
-      startLine: result.startLine,
-      endLine: result.endLine,
-      similarity: result.similarity,
-    }),
-  );
-}
-
 export async function runCodebaseChat(
-  request: CodebaseChatRequest,
-): Promise<CodebaseChatResponse> {
-  const normalizedMessage =
-    request.message.trim();
+  input: ChatInput,
+): Promise<ChatResult> {
+  const {
+    projectId,
+    userId,
+    message,
+    sessionId,
+  } = input;
 
-  if (!normalizedMessage) {
-    throw new Error(
-      "Chat message cannot be empty.",
-    );
-  }
-
-  const project =
-    await prisma.project.findFirst({
-      where: {
-        id: request.projectId,
-        ownerId: request.userId,
-      },
-      include: {
-        repositories: {
-          orderBy: {
-            createdAt: "desc",
-          },
-          take: 1,
+  const project = await prisma.project.findFirst({
+    where: {
+      id: projectId,
+      ownerId: userId,
+    },
+    include: {
+      repositories: {
+        orderBy: {
+          createdAt: "desc",
         },
+        take: 1,
       },
-    });
+    },
+  });
 
   if (!project) {
-    throw new Error(
-      "Project not found.",
-    );
+    throw new Error("Project not found.");
   }
 
-  const repository =
-    project.repositories[0];
+  const repository = project.repositories[0];
 
   if (!repository) {
     throw new Error(
-      "No repository connected to this project.",
+      "No repository is connected to this project.",
     );
   }
 
   let session;
 
-  if (request.sessionId) {
-    session =
-      await prisma.chatSession.findFirst({
-        where: {
-          id: request.sessionId,
-          userId: request.userId,
-          repositoryId: repository.id,
+  if (sessionId) {
+    session = await prisma.chatSession.findFirst({
+      where: {
+        id: sessionId,
+        repositoryId: repository.id,
+        userId,
+      },
+      include: {
+        messages: {
+          orderBy: {
+            createdAt: "asc",
+          },
         },
-      });
+      },
+    });
 
     if (!session) {
       throw new Error(
@@ -319,65 +305,64 @@ export async function runCodebaseChat(
       );
     }
   } else {
-    session =
-      await prisma.chatSession.create({
-        data: {
-          userId: request.userId,
-          repositoryId: repository.id,
-          title: normalizedMessage.slice(
-            0,
-            80,
-          ),
-        },
-      });
-  }
-
-  const previousMessages =
-    await prisma.chatMessage.findMany({
-      where: {
-        sessionId: session.id,
+    session = await prisma.chatSession.create({
+      data: {
+        repositoryId: repository.id,
+        userId,
+        title: truncate(message, 80),
       },
-      orderBy: {
-        createdAt: "desc",
-      },
-      take: MAX_HISTORY_MESSAGES,
-      select: {
-        role: true,
-        content: true,
+      include: {
+        messages: true,
       },
     });
+  }
 
-  const history =
-    previousMessages.reverse();
+  const searchResults = await searchCode(
+    repository.id,
+    message,
+    {
+      topK: MAX_SEARCH_RESULTS,
+    },
+  );
 
-  const searchResults =
-    await searchCode(
-      repository.id,
-      normalizedMessage,
-      {
-        topK: MAX_SEARCH_RESULTS,
-        minSimilarity: 0.35,
-      },
+  const {
+    context,
+    citations,
+  } = buildContext(searchResults);
+
+  if (!context) {
+    throw new Error(
+      "No relevant repository context was found.",
     );
+  }
 
-  const codeContext =
-    buildCodeContext(searchResults);
+  const systemMessage: OllamaMessage = {
+    role: "system",
+    content: buildSystemPrompt(context),
+  };
 
-  const answer =
-    await generateChatAnswer(
-      normalizedMessage,
-      history,
-      codeContext,
-    );
+  const history = buildHistory(
+    session.messages,
+  );
 
-  const citations =
-    buildCitations(searchResults);
+  const ollamaMessages: OllamaMessage[] = [
+    systemMessage,
+    ...history,
+    {
+      role: "user",
+      content: message,
+    },
+  ];
+
+  const answer = await callOllama(
+    ollamaMessages,
+  );
 
   await prisma.chatMessage.create({
     data: {
       sessionId: session.id,
       role: "USER",
-      content: normalizedMessage,
+      content: message,
     },
   });
 
@@ -386,9 +371,7 @@ export async function runCodebaseChat(
       sessionId: session.id,
       role: "ASSISTANT",
       content: answer,
-      citations: JSON.parse(
-        JSON.stringify(citations),
-      ),
+      citations: JSON.parse(JSON.stringify(citations)),
     },
   });
 
