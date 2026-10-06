@@ -262,14 +262,14 @@ export type RepositoryWhereInput = {
   lastAnalyzed?: Prisma.DateTimeNullableFilter<"Repository"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"Repository"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Repository"> | Date | string
-  project?: Prisma.XOR<Prisma.ProjectScalarRelationFilter, Prisma.ProjectWhereInput>
   analyses?: Prisma.AnalysisListRelationFilter
-  dependencies?: Prisma.DependencyListRelationFilter
-  codeChunks?: Prisma.CodeChunkListRelationFilter
-  documents?: Prisma.DocumentListRelationFilter
   workflows?: Prisma.CIWorkflowListRelationFilter
-  pullRequests?: Prisma.PullRequestListRelationFilter
   chatSessions?: Prisma.ChatSessionListRelationFilter
+  codeChunks?: Prisma.CodeChunkListRelationFilter
+  dependencies?: Prisma.DependencyListRelationFilter
+  documents?: Prisma.DocumentListRelationFilter
+  pullRequests?: Prisma.PullRequestListRelationFilter
+  project?: Prisma.XOR<Prisma.ProjectScalarRelationFilter, Prisma.ProjectWhereInput>
 }
 
 export type RepositoryOrderByWithRelationInput = {
@@ -288,14 +288,14 @@ export type RepositoryOrderByWithRelationInput = {
   lastAnalyzed?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
-  project?: Prisma.ProjectOrderByWithRelationInput
   analyses?: Prisma.AnalysisOrderByRelationAggregateInput
-  dependencies?: Prisma.DependencyOrderByRelationAggregateInput
-  codeChunks?: Prisma.CodeChunkOrderByRelationAggregateInput
-  documents?: Prisma.DocumentOrderByRelationAggregateInput
   workflows?: Prisma.CIWorkflowOrderByRelationAggregateInput
-  pullRequests?: Prisma.PullRequestOrderByRelationAggregateInput
   chatSessions?: Prisma.ChatSessionOrderByRelationAggregateInput
+  codeChunks?: Prisma.CodeChunkOrderByRelationAggregateInput
+  dependencies?: Prisma.DependencyOrderByRelationAggregateInput
+  documents?: Prisma.DocumentOrderByRelationAggregateInput
+  pullRequests?: Prisma.PullRequestOrderByRelationAggregateInput
+  project?: Prisma.ProjectOrderByWithRelationInput
 }
 
 export type RepositoryWhereUniqueInput = Prisma.AtLeast<{
@@ -317,14 +317,14 @@ export type RepositoryWhereUniqueInput = Prisma.AtLeast<{
   lastAnalyzed?: Prisma.DateTimeNullableFilter<"Repository"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"Repository"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Repository"> | Date | string
-  project?: Prisma.XOR<Prisma.ProjectScalarRelationFilter, Prisma.ProjectWhereInput>
   analyses?: Prisma.AnalysisListRelationFilter
-  dependencies?: Prisma.DependencyListRelationFilter
-  codeChunks?: Prisma.CodeChunkListRelationFilter
-  documents?: Prisma.DocumentListRelationFilter
   workflows?: Prisma.CIWorkflowListRelationFilter
-  pullRequests?: Prisma.PullRequestListRelationFilter
   chatSessions?: Prisma.ChatSessionListRelationFilter
+  codeChunks?: Prisma.CodeChunkListRelationFilter
+  dependencies?: Prisma.DependencyListRelationFilter
+  documents?: Prisma.DocumentListRelationFilter
+  pullRequests?: Prisma.PullRequestListRelationFilter
+  project?: Prisma.XOR<Prisma.ProjectScalarRelationFilter, Prisma.ProjectWhereInput>
 }, "id">
 
 export type RepositoryOrderByWithAggregationInput = {
@@ -384,14 +384,14 @@ export type RepositoryCreateInput = {
   lastAnalyzed?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  project: Prisma.ProjectCreateNestedOneWithoutRepositoriesInput
   analyses?: Prisma.AnalysisCreateNestedManyWithoutRepositoryInput
-  dependencies?: Prisma.DependencyCreateNestedManyWithoutRepositoryInput
-  codeChunks?: Prisma.CodeChunkCreateNestedManyWithoutRepositoryInput
-  documents?: Prisma.DocumentCreateNestedManyWithoutRepositoryInput
   workflows?: Prisma.CIWorkflowCreateNestedManyWithoutRepositoryInput
-  pullRequests?: Prisma.PullRequestCreateNestedManyWithoutRepositoryInput
   chatSessions?: Prisma.ChatSessionCreateNestedManyWithoutRepositoryInput
+  codeChunks?: Prisma.CodeChunkCreateNestedManyWithoutRepositoryInput
+  dependencies?: Prisma.DependencyCreateNestedManyWithoutRepositoryInput
+  documents?: Prisma.DocumentCreateNestedManyWithoutRepositoryInput
+  pullRequests?: Prisma.PullRequestCreateNestedManyWithoutRepositoryInput
+  project: Prisma.ProjectCreateNestedOneWithoutRepositoriesInput
 }
 
 export type RepositoryUncheckedCreateInput = {
@@ -411,12 +411,12 @@ export type RepositoryUncheckedCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   analyses?: Prisma.AnalysisUncheckedCreateNestedManyWithoutRepositoryInput
-  dependencies?: Prisma.DependencyUncheckedCreateNestedManyWithoutRepositoryInput
-  codeChunks?: Prisma.CodeChunkUncheckedCreateNestedManyWithoutRepositoryInput
-  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutRepositoryInput
   workflows?: Prisma.CIWorkflowUncheckedCreateNestedManyWithoutRepositoryInput
-  pullRequests?: Prisma.PullRequestUncheckedCreateNestedManyWithoutRepositoryInput
   chatSessions?: Prisma.ChatSessionUncheckedCreateNestedManyWithoutRepositoryInput
+  codeChunks?: Prisma.CodeChunkUncheckedCreateNestedManyWithoutRepositoryInput
+  dependencies?: Prisma.DependencyUncheckedCreateNestedManyWithoutRepositoryInput
+  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutRepositoryInput
+  pullRequests?: Prisma.PullRequestUncheckedCreateNestedManyWithoutRepositoryInput
 }
 
 export type RepositoryUpdateInput = {
@@ -434,14 +434,14 @@ export type RepositoryUpdateInput = {
   lastAnalyzed?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  project?: Prisma.ProjectUpdateOneRequiredWithoutRepositoriesNestedInput
   analyses?: Prisma.AnalysisUpdateManyWithoutRepositoryNestedInput
-  dependencies?: Prisma.DependencyUpdateManyWithoutRepositoryNestedInput
-  codeChunks?: Prisma.CodeChunkUpdateManyWithoutRepositoryNestedInput
-  documents?: Prisma.DocumentUpdateManyWithoutRepositoryNestedInput
   workflows?: Prisma.CIWorkflowUpdateManyWithoutRepositoryNestedInput
-  pullRequests?: Prisma.PullRequestUpdateManyWithoutRepositoryNestedInput
   chatSessions?: Prisma.ChatSessionUpdateManyWithoutRepositoryNestedInput
+  codeChunks?: Prisma.CodeChunkUpdateManyWithoutRepositoryNestedInput
+  dependencies?: Prisma.DependencyUpdateManyWithoutRepositoryNestedInput
+  documents?: Prisma.DocumentUpdateManyWithoutRepositoryNestedInput
+  pullRequests?: Prisma.PullRequestUpdateManyWithoutRepositoryNestedInput
+  project?: Prisma.ProjectUpdateOneRequiredWithoutRepositoriesNestedInput
 }
 
 export type RepositoryUncheckedUpdateInput = {
@@ -461,12 +461,12 @@ export type RepositoryUncheckedUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   analyses?: Prisma.AnalysisUncheckedUpdateManyWithoutRepositoryNestedInput
-  dependencies?: Prisma.DependencyUncheckedUpdateManyWithoutRepositoryNestedInput
-  codeChunks?: Prisma.CodeChunkUncheckedUpdateManyWithoutRepositoryNestedInput
-  documents?: Prisma.DocumentUncheckedUpdateManyWithoutRepositoryNestedInput
   workflows?: Prisma.CIWorkflowUncheckedUpdateManyWithoutRepositoryNestedInput
-  pullRequests?: Prisma.PullRequestUncheckedUpdateManyWithoutRepositoryNestedInput
   chatSessions?: Prisma.ChatSessionUncheckedUpdateManyWithoutRepositoryNestedInput
+  codeChunks?: Prisma.CodeChunkUncheckedUpdateManyWithoutRepositoryNestedInput
+  dependencies?: Prisma.DependencyUncheckedUpdateManyWithoutRepositoryNestedInput
+  documents?: Prisma.DocumentUncheckedUpdateManyWithoutRepositoryNestedInput
+  pullRequests?: Prisma.PullRequestUncheckedUpdateManyWithoutRepositoryNestedInput
 }
 
 export type RepositoryCreateManyInput = {
@@ -762,12 +762,12 @@ export type RepositoryCreateWithoutProjectInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   analyses?: Prisma.AnalysisCreateNestedManyWithoutRepositoryInput
-  dependencies?: Prisma.DependencyCreateNestedManyWithoutRepositoryInput
-  codeChunks?: Prisma.CodeChunkCreateNestedManyWithoutRepositoryInput
-  documents?: Prisma.DocumentCreateNestedManyWithoutRepositoryInput
   workflows?: Prisma.CIWorkflowCreateNestedManyWithoutRepositoryInput
-  pullRequests?: Prisma.PullRequestCreateNestedManyWithoutRepositoryInput
   chatSessions?: Prisma.ChatSessionCreateNestedManyWithoutRepositoryInput
+  codeChunks?: Prisma.CodeChunkCreateNestedManyWithoutRepositoryInput
+  dependencies?: Prisma.DependencyCreateNestedManyWithoutRepositoryInput
+  documents?: Prisma.DocumentCreateNestedManyWithoutRepositoryInput
+  pullRequests?: Prisma.PullRequestCreateNestedManyWithoutRepositoryInput
 }
 
 export type RepositoryUncheckedCreateWithoutProjectInput = {
@@ -786,12 +786,12 @@ export type RepositoryUncheckedCreateWithoutProjectInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   analyses?: Prisma.AnalysisUncheckedCreateNestedManyWithoutRepositoryInput
-  dependencies?: Prisma.DependencyUncheckedCreateNestedManyWithoutRepositoryInput
-  codeChunks?: Prisma.CodeChunkUncheckedCreateNestedManyWithoutRepositoryInput
-  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutRepositoryInput
   workflows?: Prisma.CIWorkflowUncheckedCreateNestedManyWithoutRepositoryInput
-  pullRequests?: Prisma.PullRequestUncheckedCreateNestedManyWithoutRepositoryInput
   chatSessions?: Prisma.ChatSessionUncheckedCreateNestedManyWithoutRepositoryInput
+  codeChunks?: Prisma.CodeChunkUncheckedCreateNestedManyWithoutRepositoryInput
+  dependencies?: Prisma.DependencyUncheckedCreateNestedManyWithoutRepositoryInput
+  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutRepositoryInput
+  pullRequests?: Prisma.PullRequestUncheckedCreateNestedManyWithoutRepositoryInput
 }
 
 export type RepositoryCreateOrConnectWithoutProjectInput = {
@@ -856,13 +856,13 @@ export type RepositoryCreateWithoutAnalysesInput = {
   lastAnalyzed?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  project: Prisma.ProjectCreateNestedOneWithoutRepositoriesInput
-  dependencies?: Prisma.DependencyCreateNestedManyWithoutRepositoryInput
-  codeChunks?: Prisma.CodeChunkCreateNestedManyWithoutRepositoryInput
-  documents?: Prisma.DocumentCreateNestedManyWithoutRepositoryInput
   workflows?: Prisma.CIWorkflowCreateNestedManyWithoutRepositoryInput
-  pullRequests?: Prisma.PullRequestCreateNestedManyWithoutRepositoryInput
   chatSessions?: Prisma.ChatSessionCreateNestedManyWithoutRepositoryInput
+  codeChunks?: Prisma.CodeChunkCreateNestedManyWithoutRepositoryInput
+  dependencies?: Prisma.DependencyCreateNestedManyWithoutRepositoryInput
+  documents?: Prisma.DocumentCreateNestedManyWithoutRepositoryInput
+  pullRequests?: Prisma.PullRequestCreateNestedManyWithoutRepositoryInput
+  project: Prisma.ProjectCreateNestedOneWithoutRepositoriesInput
 }
 
 export type RepositoryUncheckedCreateWithoutAnalysesInput = {
@@ -881,12 +881,12 @@ export type RepositoryUncheckedCreateWithoutAnalysesInput = {
   lastAnalyzed?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  dependencies?: Prisma.DependencyUncheckedCreateNestedManyWithoutRepositoryInput
-  codeChunks?: Prisma.CodeChunkUncheckedCreateNestedManyWithoutRepositoryInput
-  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutRepositoryInput
   workflows?: Prisma.CIWorkflowUncheckedCreateNestedManyWithoutRepositoryInput
-  pullRequests?: Prisma.PullRequestUncheckedCreateNestedManyWithoutRepositoryInput
   chatSessions?: Prisma.ChatSessionUncheckedCreateNestedManyWithoutRepositoryInput
+  codeChunks?: Prisma.CodeChunkUncheckedCreateNestedManyWithoutRepositoryInput
+  dependencies?: Prisma.DependencyUncheckedCreateNestedManyWithoutRepositoryInput
+  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutRepositoryInput
+  pullRequests?: Prisma.PullRequestUncheckedCreateNestedManyWithoutRepositoryInput
 }
 
 export type RepositoryCreateOrConnectWithoutAnalysesInput = {
@@ -920,13 +920,13 @@ export type RepositoryUpdateWithoutAnalysesInput = {
   lastAnalyzed?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  project?: Prisma.ProjectUpdateOneRequiredWithoutRepositoriesNestedInput
-  dependencies?: Prisma.DependencyUpdateManyWithoutRepositoryNestedInput
-  codeChunks?: Prisma.CodeChunkUpdateManyWithoutRepositoryNestedInput
-  documents?: Prisma.DocumentUpdateManyWithoutRepositoryNestedInput
   workflows?: Prisma.CIWorkflowUpdateManyWithoutRepositoryNestedInput
-  pullRequests?: Prisma.PullRequestUpdateManyWithoutRepositoryNestedInput
   chatSessions?: Prisma.ChatSessionUpdateManyWithoutRepositoryNestedInput
+  codeChunks?: Prisma.CodeChunkUpdateManyWithoutRepositoryNestedInput
+  dependencies?: Prisma.DependencyUpdateManyWithoutRepositoryNestedInput
+  documents?: Prisma.DocumentUpdateManyWithoutRepositoryNestedInput
+  pullRequests?: Prisma.PullRequestUpdateManyWithoutRepositoryNestedInput
+  project?: Prisma.ProjectUpdateOneRequiredWithoutRepositoriesNestedInput
 }
 
 export type RepositoryUncheckedUpdateWithoutAnalysesInput = {
@@ -945,12 +945,12 @@ export type RepositoryUncheckedUpdateWithoutAnalysesInput = {
   lastAnalyzed?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  dependencies?: Prisma.DependencyUncheckedUpdateManyWithoutRepositoryNestedInput
-  codeChunks?: Prisma.CodeChunkUncheckedUpdateManyWithoutRepositoryNestedInput
-  documents?: Prisma.DocumentUncheckedUpdateManyWithoutRepositoryNestedInput
   workflows?: Prisma.CIWorkflowUncheckedUpdateManyWithoutRepositoryNestedInput
-  pullRequests?: Prisma.PullRequestUncheckedUpdateManyWithoutRepositoryNestedInput
   chatSessions?: Prisma.ChatSessionUncheckedUpdateManyWithoutRepositoryNestedInput
+  codeChunks?: Prisma.CodeChunkUncheckedUpdateManyWithoutRepositoryNestedInput
+  dependencies?: Prisma.DependencyUncheckedUpdateManyWithoutRepositoryNestedInput
+  documents?: Prisma.DocumentUncheckedUpdateManyWithoutRepositoryNestedInput
+  pullRequests?: Prisma.PullRequestUncheckedUpdateManyWithoutRepositoryNestedInput
 }
 
 export type RepositoryCreateWithoutDependenciesInput = {
@@ -968,13 +968,13 @@ export type RepositoryCreateWithoutDependenciesInput = {
   lastAnalyzed?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  project: Prisma.ProjectCreateNestedOneWithoutRepositoriesInput
   analyses?: Prisma.AnalysisCreateNestedManyWithoutRepositoryInput
+  workflows?: Prisma.CIWorkflowCreateNestedManyWithoutRepositoryInput
+  chatSessions?: Prisma.ChatSessionCreateNestedManyWithoutRepositoryInput
   codeChunks?: Prisma.CodeChunkCreateNestedManyWithoutRepositoryInput
   documents?: Prisma.DocumentCreateNestedManyWithoutRepositoryInput
-  workflows?: Prisma.CIWorkflowCreateNestedManyWithoutRepositoryInput
   pullRequests?: Prisma.PullRequestCreateNestedManyWithoutRepositoryInput
-  chatSessions?: Prisma.ChatSessionCreateNestedManyWithoutRepositoryInput
+  project: Prisma.ProjectCreateNestedOneWithoutRepositoriesInput
 }
 
 export type RepositoryUncheckedCreateWithoutDependenciesInput = {
@@ -994,11 +994,11 @@ export type RepositoryUncheckedCreateWithoutDependenciesInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   analyses?: Prisma.AnalysisUncheckedCreateNestedManyWithoutRepositoryInput
+  workflows?: Prisma.CIWorkflowUncheckedCreateNestedManyWithoutRepositoryInput
+  chatSessions?: Prisma.ChatSessionUncheckedCreateNestedManyWithoutRepositoryInput
   codeChunks?: Prisma.CodeChunkUncheckedCreateNestedManyWithoutRepositoryInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutRepositoryInput
-  workflows?: Prisma.CIWorkflowUncheckedCreateNestedManyWithoutRepositoryInput
   pullRequests?: Prisma.PullRequestUncheckedCreateNestedManyWithoutRepositoryInput
-  chatSessions?: Prisma.ChatSessionUncheckedCreateNestedManyWithoutRepositoryInput
 }
 
 export type RepositoryCreateOrConnectWithoutDependenciesInput = {
@@ -1032,13 +1032,13 @@ export type RepositoryUpdateWithoutDependenciesInput = {
   lastAnalyzed?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  project?: Prisma.ProjectUpdateOneRequiredWithoutRepositoriesNestedInput
   analyses?: Prisma.AnalysisUpdateManyWithoutRepositoryNestedInput
+  workflows?: Prisma.CIWorkflowUpdateManyWithoutRepositoryNestedInput
+  chatSessions?: Prisma.ChatSessionUpdateManyWithoutRepositoryNestedInput
   codeChunks?: Prisma.CodeChunkUpdateManyWithoutRepositoryNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutRepositoryNestedInput
-  workflows?: Prisma.CIWorkflowUpdateManyWithoutRepositoryNestedInput
   pullRequests?: Prisma.PullRequestUpdateManyWithoutRepositoryNestedInput
-  chatSessions?: Prisma.ChatSessionUpdateManyWithoutRepositoryNestedInput
+  project?: Prisma.ProjectUpdateOneRequiredWithoutRepositoriesNestedInput
 }
 
 export type RepositoryUncheckedUpdateWithoutDependenciesInput = {
@@ -1058,11 +1058,11 @@ export type RepositoryUncheckedUpdateWithoutDependenciesInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   analyses?: Prisma.AnalysisUncheckedUpdateManyWithoutRepositoryNestedInput
+  workflows?: Prisma.CIWorkflowUncheckedUpdateManyWithoutRepositoryNestedInput
+  chatSessions?: Prisma.ChatSessionUncheckedUpdateManyWithoutRepositoryNestedInput
   codeChunks?: Prisma.CodeChunkUncheckedUpdateManyWithoutRepositoryNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutRepositoryNestedInput
-  workflows?: Prisma.CIWorkflowUncheckedUpdateManyWithoutRepositoryNestedInput
   pullRequests?: Prisma.PullRequestUncheckedUpdateManyWithoutRepositoryNestedInput
-  chatSessions?: Prisma.ChatSessionUncheckedUpdateManyWithoutRepositoryNestedInput
 }
 
 export type RepositoryCreateWithoutCodeChunksInput = {
@@ -1080,13 +1080,13 @@ export type RepositoryCreateWithoutCodeChunksInput = {
   lastAnalyzed?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  project: Prisma.ProjectCreateNestedOneWithoutRepositoriesInput
   analyses?: Prisma.AnalysisCreateNestedManyWithoutRepositoryInput
+  workflows?: Prisma.CIWorkflowCreateNestedManyWithoutRepositoryInput
+  chatSessions?: Prisma.ChatSessionCreateNestedManyWithoutRepositoryInput
   dependencies?: Prisma.DependencyCreateNestedManyWithoutRepositoryInput
   documents?: Prisma.DocumentCreateNestedManyWithoutRepositoryInput
-  workflows?: Prisma.CIWorkflowCreateNestedManyWithoutRepositoryInput
   pullRequests?: Prisma.PullRequestCreateNestedManyWithoutRepositoryInput
-  chatSessions?: Prisma.ChatSessionCreateNestedManyWithoutRepositoryInput
+  project: Prisma.ProjectCreateNestedOneWithoutRepositoriesInput
 }
 
 export type RepositoryUncheckedCreateWithoutCodeChunksInput = {
@@ -1106,11 +1106,11 @@ export type RepositoryUncheckedCreateWithoutCodeChunksInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   analyses?: Prisma.AnalysisUncheckedCreateNestedManyWithoutRepositoryInput
+  workflows?: Prisma.CIWorkflowUncheckedCreateNestedManyWithoutRepositoryInput
+  chatSessions?: Prisma.ChatSessionUncheckedCreateNestedManyWithoutRepositoryInput
   dependencies?: Prisma.DependencyUncheckedCreateNestedManyWithoutRepositoryInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutRepositoryInput
-  workflows?: Prisma.CIWorkflowUncheckedCreateNestedManyWithoutRepositoryInput
   pullRequests?: Prisma.PullRequestUncheckedCreateNestedManyWithoutRepositoryInput
-  chatSessions?: Prisma.ChatSessionUncheckedCreateNestedManyWithoutRepositoryInput
 }
 
 export type RepositoryCreateOrConnectWithoutCodeChunksInput = {
@@ -1144,13 +1144,13 @@ export type RepositoryUpdateWithoutCodeChunksInput = {
   lastAnalyzed?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  project?: Prisma.ProjectUpdateOneRequiredWithoutRepositoriesNestedInput
   analyses?: Prisma.AnalysisUpdateManyWithoutRepositoryNestedInput
+  workflows?: Prisma.CIWorkflowUpdateManyWithoutRepositoryNestedInput
+  chatSessions?: Prisma.ChatSessionUpdateManyWithoutRepositoryNestedInput
   dependencies?: Prisma.DependencyUpdateManyWithoutRepositoryNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutRepositoryNestedInput
-  workflows?: Prisma.CIWorkflowUpdateManyWithoutRepositoryNestedInput
   pullRequests?: Prisma.PullRequestUpdateManyWithoutRepositoryNestedInput
-  chatSessions?: Prisma.ChatSessionUpdateManyWithoutRepositoryNestedInput
+  project?: Prisma.ProjectUpdateOneRequiredWithoutRepositoriesNestedInput
 }
 
 export type RepositoryUncheckedUpdateWithoutCodeChunksInput = {
@@ -1170,11 +1170,11 @@ export type RepositoryUncheckedUpdateWithoutCodeChunksInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   analyses?: Prisma.AnalysisUncheckedUpdateManyWithoutRepositoryNestedInput
+  workflows?: Prisma.CIWorkflowUncheckedUpdateManyWithoutRepositoryNestedInput
+  chatSessions?: Prisma.ChatSessionUncheckedUpdateManyWithoutRepositoryNestedInput
   dependencies?: Prisma.DependencyUncheckedUpdateManyWithoutRepositoryNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutRepositoryNestedInput
-  workflows?: Prisma.CIWorkflowUncheckedUpdateManyWithoutRepositoryNestedInput
   pullRequests?: Prisma.PullRequestUncheckedUpdateManyWithoutRepositoryNestedInput
-  chatSessions?: Prisma.ChatSessionUncheckedUpdateManyWithoutRepositoryNestedInput
 }
 
 export type RepositoryCreateWithoutDocumentsInput = {
@@ -1192,13 +1192,13 @@ export type RepositoryCreateWithoutDocumentsInput = {
   lastAnalyzed?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  project: Prisma.ProjectCreateNestedOneWithoutRepositoriesInput
   analyses?: Prisma.AnalysisCreateNestedManyWithoutRepositoryInput
-  dependencies?: Prisma.DependencyCreateNestedManyWithoutRepositoryInput
-  codeChunks?: Prisma.CodeChunkCreateNestedManyWithoutRepositoryInput
   workflows?: Prisma.CIWorkflowCreateNestedManyWithoutRepositoryInput
-  pullRequests?: Prisma.PullRequestCreateNestedManyWithoutRepositoryInput
   chatSessions?: Prisma.ChatSessionCreateNestedManyWithoutRepositoryInput
+  codeChunks?: Prisma.CodeChunkCreateNestedManyWithoutRepositoryInput
+  dependencies?: Prisma.DependencyCreateNestedManyWithoutRepositoryInput
+  pullRequests?: Prisma.PullRequestCreateNestedManyWithoutRepositoryInput
+  project: Prisma.ProjectCreateNestedOneWithoutRepositoriesInput
 }
 
 export type RepositoryUncheckedCreateWithoutDocumentsInput = {
@@ -1218,11 +1218,11 @@ export type RepositoryUncheckedCreateWithoutDocumentsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   analyses?: Prisma.AnalysisUncheckedCreateNestedManyWithoutRepositoryInput
-  dependencies?: Prisma.DependencyUncheckedCreateNestedManyWithoutRepositoryInput
-  codeChunks?: Prisma.CodeChunkUncheckedCreateNestedManyWithoutRepositoryInput
   workflows?: Prisma.CIWorkflowUncheckedCreateNestedManyWithoutRepositoryInput
-  pullRequests?: Prisma.PullRequestUncheckedCreateNestedManyWithoutRepositoryInput
   chatSessions?: Prisma.ChatSessionUncheckedCreateNestedManyWithoutRepositoryInput
+  codeChunks?: Prisma.CodeChunkUncheckedCreateNestedManyWithoutRepositoryInput
+  dependencies?: Prisma.DependencyUncheckedCreateNestedManyWithoutRepositoryInput
+  pullRequests?: Prisma.PullRequestUncheckedCreateNestedManyWithoutRepositoryInput
 }
 
 export type RepositoryCreateOrConnectWithoutDocumentsInput = {
@@ -1256,13 +1256,13 @@ export type RepositoryUpdateWithoutDocumentsInput = {
   lastAnalyzed?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  project?: Prisma.ProjectUpdateOneRequiredWithoutRepositoriesNestedInput
   analyses?: Prisma.AnalysisUpdateManyWithoutRepositoryNestedInput
-  dependencies?: Prisma.DependencyUpdateManyWithoutRepositoryNestedInput
-  codeChunks?: Prisma.CodeChunkUpdateManyWithoutRepositoryNestedInput
   workflows?: Prisma.CIWorkflowUpdateManyWithoutRepositoryNestedInput
-  pullRequests?: Prisma.PullRequestUpdateManyWithoutRepositoryNestedInput
   chatSessions?: Prisma.ChatSessionUpdateManyWithoutRepositoryNestedInput
+  codeChunks?: Prisma.CodeChunkUpdateManyWithoutRepositoryNestedInput
+  dependencies?: Prisma.DependencyUpdateManyWithoutRepositoryNestedInput
+  pullRequests?: Prisma.PullRequestUpdateManyWithoutRepositoryNestedInput
+  project?: Prisma.ProjectUpdateOneRequiredWithoutRepositoriesNestedInput
 }
 
 export type RepositoryUncheckedUpdateWithoutDocumentsInput = {
@@ -1282,11 +1282,11 @@ export type RepositoryUncheckedUpdateWithoutDocumentsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   analyses?: Prisma.AnalysisUncheckedUpdateManyWithoutRepositoryNestedInput
-  dependencies?: Prisma.DependencyUncheckedUpdateManyWithoutRepositoryNestedInput
-  codeChunks?: Prisma.CodeChunkUncheckedUpdateManyWithoutRepositoryNestedInput
   workflows?: Prisma.CIWorkflowUncheckedUpdateManyWithoutRepositoryNestedInput
-  pullRequests?: Prisma.PullRequestUncheckedUpdateManyWithoutRepositoryNestedInput
   chatSessions?: Prisma.ChatSessionUncheckedUpdateManyWithoutRepositoryNestedInput
+  codeChunks?: Prisma.CodeChunkUncheckedUpdateManyWithoutRepositoryNestedInput
+  dependencies?: Prisma.DependencyUncheckedUpdateManyWithoutRepositoryNestedInput
+  pullRequests?: Prisma.PullRequestUncheckedUpdateManyWithoutRepositoryNestedInput
 }
 
 export type RepositoryCreateWithoutChatSessionsInput = {
@@ -1304,13 +1304,13 @@ export type RepositoryCreateWithoutChatSessionsInput = {
   lastAnalyzed?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  project: Prisma.ProjectCreateNestedOneWithoutRepositoriesInput
   analyses?: Prisma.AnalysisCreateNestedManyWithoutRepositoryInput
-  dependencies?: Prisma.DependencyCreateNestedManyWithoutRepositoryInput
-  codeChunks?: Prisma.CodeChunkCreateNestedManyWithoutRepositoryInput
-  documents?: Prisma.DocumentCreateNestedManyWithoutRepositoryInput
   workflows?: Prisma.CIWorkflowCreateNestedManyWithoutRepositoryInput
+  codeChunks?: Prisma.CodeChunkCreateNestedManyWithoutRepositoryInput
+  dependencies?: Prisma.DependencyCreateNestedManyWithoutRepositoryInput
+  documents?: Prisma.DocumentCreateNestedManyWithoutRepositoryInput
   pullRequests?: Prisma.PullRequestCreateNestedManyWithoutRepositoryInput
+  project: Prisma.ProjectCreateNestedOneWithoutRepositoriesInput
 }
 
 export type RepositoryUncheckedCreateWithoutChatSessionsInput = {
@@ -1330,10 +1330,10 @@ export type RepositoryUncheckedCreateWithoutChatSessionsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   analyses?: Prisma.AnalysisUncheckedCreateNestedManyWithoutRepositoryInput
-  dependencies?: Prisma.DependencyUncheckedCreateNestedManyWithoutRepositoryInput
-  codeChunks?: Prisma.CodeChunkUncheckedCreateNestedManyWithoutRepositoryInput
-  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutRepositoryInput
   workflows?: Prisma.CIWorkflowUncheckedCreateNestedManyWithoutRepositoryInput
+  codeChunks?: Prisma.CodeChunkUncheckedCreateNestedManyWithoutRepositoryInput
+  dependencies?: Prisma.DependencyUncheckedCreateNestedManyWithoutRepositoryInput
+  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutRepositoryInput
   pullRequests?: Prisma.PullRequestUncheckedCreateNestedManyWithoutRepositoryInput
 }
 
@@ -1368,13 +1368,13 @@ export type RepositoryUpdateWithoutChatSessionsInput = {
   lastAnalyzed?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  project?: Prisma.ProjectUpdateOneRequiredWithoutRepositoriesNestedInput
   analyses?: Prisma.AnalysisUpdateManyWithoutRepositoryNestedInput
-  dependencies?: Prisma.DependencyUpdateManyWithoutRepositoryNestedInput
-  codeChunks?: Prisma.CodeChunkUpdateManyWithoutRepositoryNestedInput
-  documents?: Prisma.DocumentUpdateManyWithoutRepositoryNestedInput
   workflows?: Prisma.CIWorkflowUpdateManyWithoutRepositoryNestedInput
+  codeChunks?: Prisma.CodeChunkUpdateManyWithoutRepositoryNestedInput
+  dependencies?: Prisma.DependencyUpdateManyWithoutRepositoryNestedInput
+  documents?: Prisma.DocumentUpdateManyWithoutRepositoryNestedInput
   pullRequests?: Prisma.PullRequestUpdateManyWithoutRepositoryNestedInput
+  project?: Prisma.ProjectUpdateOneRequiredWithoutRepositoriesNestedInput
 }
 
 export type RepositoryUncheckedUpdateWithoutChatSessionsInput = {
@@ -1394,10 +1394,10 @@ export type RepositoryUncheckedUpdateWithoutChatSessionsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   analyses?: Prisma.AnalysisUncheckedUpdateManyWithoutRepositoryNestedInput
-  dependencies?: Prisma.DependencyUncheckedUpdateManyWithoutRepositoryNestedInput
-  codeChunks?: Prisma.CodeChunkUncheckedUpdateManyWithoutRepositoryNestedInput
-  documents?: Prisma.DocumentUncheckedUpdateManyWithoutRepositoryNestedInput
   workflows?: Prisma.CIWorkflowUncheckedUpdateManyWithoutRepositoryNestedInput
+  codeChunks?: Prisma.CodeChunkUncheckedUpdateManyWithoutRepositoryNestedInput
+  dependencies?: Prisma.DependencyUncheckedUpdateManyWithoutRepositoryNestedInput
+  documents?: Prisma.DocumentUncheckedUpdateManyWithoutRepositoryNestedInput
   pullRequests?: Prisma.PullRequestUncheckedUpdateManyWithoutRepositoryNestedInput
 }
 
@@ -1416,13 +1416,13 @@ export type RepositoryCreateWithoutWorkflowsInput = {
   lastAnalyzed?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  project: Prisma.ProjectCreateNestedOneWithoutRepositoriesInput
   analyses?: Prisma.AnalysisCreateNestedManyWithoutRepositoryInput
-  dependencies?: Prisma.DependencyCreateNestedManyWithoutRepositoryInput
+  chatSessions?: Prisma.ChatSessionCreateNestedManyWithoutRepositoryInput
   codeChunks?: Prisma.CodeChunkCreateNestedManyWithoutRepositoryInput
+  dependencies?: Prisma.DependencyCreateNestedManyWithoutRepositoryInput
   documents?: Prisma.DocumentCreateNestedManyWithoutRepositoryInput
   pullRequests?: Prisma.PullRequestCreateNestedManyWithoutRepositoryInput
-  chatSessions?: Prisma.ChatSessionCreateNestedManyWithoutRepositoryInput
+  project: Prisma.ProjectCreateNestedOneWithoutRepositoriesInput
 }
 
 export type RepositoryUncheckedCreateWithoutWorkflowsInput = {
@@ -1442,11 +1442,11 @@ export type RepositoryUncheckedCreateWithoutWorkflowsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   analyses?: Prisma.AnalysisUncheckedCreateNestedManyWithoutRepositoryInput
-  dependencies?: Prisma.DependencyUncheckedCreateNestedManyWithoutRepositoryInput
+  chatSessions?: Prisma.ChatSessionUncheckedCreateNestedManyWithoutRepositoryInput
   codeChunks?: Prisma.CodeChunkUncheckedCreateNestedManyWithoutRepositoryInput
+  dependencies?: Prisma.DependencyUncheckedCreateNestedManyWithoutRepositoryInput
   documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutRepositoryInput
   pullRequests?: Prisma.PullRequestUncheckedCreateNestedManyWithoutRepositoryInput
-  chatSessions?: Prisma.ChatSessionUncheckedCreateNestedManyWithoutRepositoryInput
 }
 
 export type RepositoryCreateOrConnectWithoutWorkflowsInput = {
@@ -1480,13 +1480,13 @@ export type RepositoryUpdateWithoutWorkflowsInput = {
   lastAnalyzed?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  project?: Prisma.ProjectUpdateOneRequiredWithoutRepositoriesNestedInput
   analyses?: Prisma.AnalysisUpdateManyWithoutRepositoryNestedInput
-  dependencies?: Prisma.DependencyUpdateManyWithoutRepositoryNestedInput
+  chatSessions?: Prisma.ChatSessionUpdateManyWithoutRepositoryNestedInput
   codeChunks?: Prisma.CodeChunkUpdateManyWithoutRepositoryNestedInput
+  dependencies?: Prisma.DependencyUpdateManyWithoutRepositoryNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutRepositoryNestedInput
   pullRequests?: Prisma.PullRequestUpdateManyWithoutRepositoryNestedInput
-  chatSessions?: Prisma.ChatSessionUpdateManyWithoutRepositoryNestedInput
+  project?: Prisma.ProjectUpdateOneRequiredWithoutRepositoriesNestedInput
 }
 
 export type RepositoryUncheckedUpdateWithoutWorkflowsInput = {
@@ -1506,11 +1506,11 @@ export type RepositoryUncheckedUpdateWithoutWorkflowsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   analyses?: Prisma.AnalysisUncheckedUpdateManyWithoutRepositoryNestedInput
-  dependencies?: Prisma.DependencyUncheckedUpdateManyWithoutRepositoryNestedInput
+  chatSessions?: Prisma.ChatSessionUncheckedUpdateManyWithoutRepositoryNestedInput
   codeChunks?: Prisma.CodeChunkUncheckedUpdateManyWithoutRepositoryNestedInput
+  dependencies?: Prisma.DependencyUncheckedUpdateManyWithoutRepositoryNestedInput
   documents?: Prisma.DocumentUncheckedUpdateManyWithoutRepositoryNestedInput
   pullRequests?: Prisma.PullRequestUncheckedUpdateManyWithoutRepositoryNestedInput
-  chatSessions?: Prisma.ChatSessionUncheckedUpdateManyWithoutRepositoryNestedInput
 }
 
 export type RepositoryCreateWithoutPullRequestsInput = {
@@ -1528,13 +1528,13 @@ export type RepositoryCreateWithoutPullRequestsInput = {
   lastAnalyzed?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  project: Prisma.ProjectCreateNestedOneWithoutRepositoriesInput
   analyses?: Prisma.AnalysisCreateNestedManyWithoutRepositoryInput
-  dependencies?: Prisma.DependencyCreateNestedManyWithoutRepositoryInput
-  codeChunks?: Prisma.CodeChunkCreateNestedManyWithoutRepositoryInput
-  documents?: Prisma.DocumentCreateNestedManyWithoutRepositoryInput
   workflows?: Prisma.CIWorkflowCreateNestedManyWithoutRepositoryInput
   chatSessions?: Prisma.ChatSessionCreateNestedManyWithoutRepositoryInput
+  codeChunks?: Prisma.CodeChunkCreateNestedManyWithoutRepositoryInput
+  dependencies?: Prisma.DependencyCreateNestedManyWithoutRepositoryInput
+  documents?: Prisma.DocumentCreateNestedManyWithoutRepositoryInput
+  project: Prisma.ProjectCreateNestedOneWithoutRepositoriesInput
 }
 
 export type RepositoryUncheckedCreateWithoutPullRequestsInput = {
@@ -1554,11 +1554,11 @@ export type RepositoryUncheckedCreateWithoutPullRequestsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   analyses?: Prisma.AnalysisUncheckedCreateNestedManyWithoutRepositoryInput
-  dependencies?: Prisma.DependencyUncheckedCreateNestedManyWithoutRepositoryInput
-  codeChunks?: Prisma.CodeChunkUncheckedCreateNestedManyWithoutRepositoryInput
-  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutRepositoryInput
   workflows?: Prisma.CIWorkflowUncheckedCreateNestedManyWithoutRepositoryInput
   chatSessions?: Prisma.ChatSessionUncheckedCreateNestedManyWithoutRepositoryInput
+  codeChunks?: Prisma.CodeChunkUncheckedCreateNestedManyWithoutRepositoryInput
+  dependencies?: Prisma.DependencyUncheckedCreateNestedManyWithoutRepositoryInput
+  documents?: Prisma.DocumentUncheckedCreateNestedManyWithoutRepositoryInput
 }
 
 export type RepositoryCreateOrConnectWithoutPullRequestsInput = {
@@ -1592,13 +1592,13 @@ export type RepositoryUpdateWithoutPullRequestsInput = {
   lastAnalyzed?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  project?: Prisma.ProjectUpdateOneRequiredWithoutRepositoriesNestedInput
   analyses?: Prisma.AnalysisUpdateManyWithoutRepositoryNestedInput
-  dependencies?: Prisma.DependencyUpdateManyWithoutRepositoryNestedInput
-  codeChunks?: Prisma.CodeChunkUpdateManyWithoutRepositoryNestedInput
-  documents?: Prisma.DocumentUpdateManyWithoutRepositoryNestedInput
   workflows?: Prisma.CIWorkflowUpdateManyWithoutRepositoryNestedInput
   chatSessions?: Prisma.ChatSessionUpdateManyWithoutRepositoryNestedInput
+  codeChunks?: Prisma.CodeChunkUpdateManyWithoutRepositoryNestedInput
+  dependencies?: Prisma.DependencyUpdateManyWithoutRepositoryNestedInput
+  documents?: Prisma.DocumentUpdateManyWithoutRepositoryNestedInput
+  project?: Prisma.ProjectUpdateOneRequiredWithoutRepositoriesNestedInput
 }
 
 export type RepositoryUncheckedUpdateWithoutPullRequestsInput = {
@@ -1618,11 +1618,11 @@ export type RepositoryUncheckedUpdateWithoutPullRequestsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   analyses?: Prisma.AnalysisUncheckedUpdateManyWithoutRepositoryNestedInput
-  dependencies?: Prisma.DependencyUncheckedUpdateManyWithoutRepositoryNestedInput
-  codeChunks?: Prisma.CodeChunkUncheckedUpdateManyWithoutRepositoryNestedInput
-  documents?: Prisma.DocumentUncheckedUpdateManyWithoutRepositoryNestedInput
   workflows?: Prisma.CIWorkflowUncheckedUpdateManyWithoutRepositoryNestedInput
   chatSessions?: Prisma.ChatSessionUncheckedUpdateManyWithoutRepositoryNestedInput
+  codeChunks?: Prisma.CodeChunkUncheckedUpdateManyWithoutRepositoryNestedInput
+  dependencies?: Prisma.DependencyUncheckedUpdateManyWithoutRepositoryNestedInput
+  documents?: Prisma.DocumentUncheckedUpdateManyWithoutRepositoryNestedInput
 }
 
 export type RepositoryCreateManyProjectInput = {
@@ -1658,12 +1658,12 @@ export type RepositoryUpdateWithoutProjectInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   analyses?: Prisma.AnalysisUpdateManyWithoutRepositoryNestedInput
-  dependencies?: Prisma.DependencyUpdateManyWithoutRepositoryNestedInput
-  codeChunks?: Prisma.CodeChunkUpdateManyWithoutRepositoryNestedInput
-  documents?: Prisma.DocumentUpdateManyWithoutRepositoryNestedInput
   workflows?: Prisma.CIWorkflowUpdateManyWithoutRepositoryNestedInput
-  pullRequests?: Prisma.PullRequestUpdateManyWithoutRepositoryNestedInput
   chatSessions?: Prisma.ChatSessionUpdateManyWithoutRepositoryNestedInput
+  codeChunks?: Prisma.CodeChunkUpdateManyWithoutRepositoryNestedInput
+  dependencies?: Prisma.DependencyUpdateManyWithoutRepositoryNestedInput
+  documents?: Prisma.DocumentUpdateManyWithoutRepositoryNestedInput
+  pullRequests?: Prisma.PullRequestUpdateManyWithoutRepositoryNestedInput
 }
 
 export type RepositoryUncheckedUpdateWithoutProjectInput = {
@@ -1682,12 +1682,12 @@ export type RepositoryUncheckedUpdateWithoutProjectInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   analyses?: Prisma.AnalysisUncheckedUpdateManyWithoutRepositoryNestedInput
-  dependencies?: Prisma.DependencyUncheckedUpdateManyWithoutRepositoryNestedInput
-  codeChunks?: Prisma.CodeChunkUncheckedUpdateManyWithoutRepositoryNestedInput
-  documents?: Prisma.DocumentUncheckedUpdateManyWithoutRepositoryNestedInput
   workflows?: Prisma.CIWorkflowUncheckedUpdateManyWithoutRepositoryNestedInput
-  pullRequests?: Prisma.PullRequestUncheckedUpdateManyWithoutRepositoryNestedInput
   chatSessions?: Prisma.ChatSessionUncheckedUpdateManyWithoutRepositoryNestedInput
+  codeChunks?: Prisma.CodeChunkUncheckedUpdateManyWithoutRepositoryNestedInput
+  dependencies?: Prisma.DependencyUncheckedUpdateManyWithoutRepositoryNestedInput
+  documents?: Prisma.DocumentUncheckedUpdateManyWithoutRepositoryNestedInput
+  pullRequests?: Prisma.PullRequestUncheckedUpdateManyWithoutRepositoryNestedInput
 }
 
 export type RepositoryUncheckedUpdateManyWithoutProjectInput = {
@@ -1714,22 +1714,22 @@ export type RepositoryUncheckedUpdateManyWithoutProjectInput = {
 
 export type RepositoryCountOutputType = {
   analyses: number
-  dependencies: number
-  codeChunks: number
-  documents: number
   workflows: number
-  pullRequests: number
   chatSessions: number
+  codeChunks: number
+  dependencies: number
+  documents: number
+  pullRequests: number
 }
 
 export type RepositoryCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   analyses?: boolean | RepositoryCountOutputTypeCountAnalysesArgs
-  dependencies?: boolean | RepositoryCountOutputTypeCountDependenciesArgs
-  codeChunks?: boolean | RepositoryCountOutputTypeCountCodeChunksArgs
-  documents?: boolean | RepositoryCountOutputTypeCountDocumentsArgs
   workflows?: boolean | RepositoryCountOutputTypeCountWorkflowsArgs
-  pullRequests?: boolean | RepositoryCountOutputTypeCountPullRequestsArgs
   chatSessions?: boolean | RepositoryCountOutputTypeCountChatSessionsArgs
+  codeChunks?: boolean | RepositoryCountOutputTypeCountCodeChunksArgs
+  dependencies?: boolean | RepositoryCountOutputTypeCountDependenciesArgs
+  documents?: boolean | RepositoryCountOutputTypeCountDocumentsArgs
+  pullRequests?: boolean | RepositoryCountOutputTypeCountPullRequestsArgs
 }
 
 /**
@@ -1752,8 +1752,15 @@ export type RepositoryCountOutputTypeCountAnalysesArgs<ExtArgs extends runtime.T
 /**
  * RepositoryCountOutputType without action
  */
-export type RepositoryCountOutputTypeCountDependenciesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.DependencyWhereInput
+export type RepositoryCountOutputTypeCountWorkflowsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.CIWorkflowWhereInput
+}
+
+/**
+ * RepositoryCountOutputType without action
+ */
+export type RepositoryCountOutputTypeCountChatSessionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ChatSessionWhereInput
 }
 
 /**
@@ -1766,6 +1773,13 @@ export type RepositoryCountOutputTypeCountCodeChunksArgs<ExtArgs extends runtime
 /**
  * RepositoryCountOutputType without action
  */
+export type RepositoryCountOutputTypeCountDependenciesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.DependencyWhereInput
+}
+
+/**
+ * RepositoryCountOutputType without action
+ */
 export type RepositoryCountOutputTypeCountDocumentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.DocumentWhereInput
 }
@@ -1773,22 +1787,8 @@ export type RepositoryCountOutputTypeCountDocumentsArgs<ExtArgs extends runtime.
 /**
  * RepositoryCountOutputType without action
  */
-export type RepositoryCountOutputTypeCountWorkflowsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.CIWorkflowWhereInput
-}
-
-/**
- * RepositoryCountOutputType without action
- */
 export type RepositoryCountOutputTypeCountPullRequestsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.PullRequestWhereInput
-}
-
-/**
- * RepositoryCountOutputType without action
- */
-export type RepositoryCountOutputTypeCountChatSessionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.ChatSessionWhereInput
 }
 
 
@@ -1808,14 +1808,14 @@ export type RepositorySelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   lastAnalyzed?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
   analyses?: boolean | Prisma.Repository$analysesArgs<ExtArgs>
-  dependencies?: boolean | Prisma.Repository$dependenciesArgs<ExtArgs>
-  codeChunks?: boolean | Prisma.Repository$codeChunksArgs<ExtArgs>
-  documents?: boolean | Prisma.Repository$documentsArgs<ExtArgs>
   workflows?: boolean | Prisma.Repository$workflowsArgs<ExtArgs>
-  pullRequests?: boolean | Prisma.Repository$pullRequestsArgs<ExtArgs>
   chatSessions?: boolean | Prisma.Repository$chatSessionsArgs<ExtArgs>
+  codeChunks?: boolean | Prisma.Repository$codeChunksArgs<ExtArgs>
+  dependencies?: boolean | Prisma.Repository$dependenciesArgs<ExtArgs>
+  documents?: boolean | Prisma.Repository$documentsArgs<ExtArgs>
+  pullRequests?: boolean | Prisma.Repository$pullRequestsArgs<ExtArgs>
+  project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
   _count?: boolean | Prisma.RepositoryCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["repository"]>
 
@@ -1877,14 +1877,14 @@ export type RepositorySelectScalar = {
 
 export type RepositoryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "projectId" | "provider" | "externalId" | "name" | "fullName" | "url" | "defaultBranch" | "branch" | "language" | "isPrivate" | "connectedAt" | "lastAnalyzed" | "createdAt" | "updatedAt", ExtArgs["result"]["repository"]>
 export type RepositoryInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
   analyses?: boolean | Prisma.Repository$analysesArgs<ExtArgs>
-  dependencies?: boolean | Prisma.Repository$dependenciesArgs<ExtArgs>
-  codeChunks?: boolean | Prisma.Repository$codeChunksArgs<ExtArgs>
-  documents?: boolean | Prisma.Repository$documentsArgs<ExtArgs>
   workflows?: boolean | Prisma.Repository$workflowsArgs<ExtArgs>
-  pullRequests?: boolean | Prisma.Repository$pullRequestsArgs<ExtArgs>
   chatSessions?: boolean | Prisma.Repository$chatSessionsArgs<ExtArgs>
+  codeChunks?: boolean | Prisma.Repository$codeChunksArgs<ExtArgs>
+  dependencies?: boolean | Prisma.Repository$dependenciesArgs<ExtArgs>
+  documents?: boolean | Prisma.Repository$documentsArgs<ExtArgs>
+  pullRequests?: boolean | Prisma.Repository$pullRequestsArgs<ExtArgs>
+  project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
   _count?: boolean | Prisma.RepositoryCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type RepositoryIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1897,14 +1897,14 @@ export type RepositoryIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.E
 export type $RepositoryPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Repository"
   objects: {
-    project: Prisma.$ProjectPayload<ExtArgs>
     analyses: Prisma.$AnalysisPayload<ExtArgs>[]
-    dependencies: Prisma.$DependencyPayload<ExtArgs>[]
-    codeChunks: Prisma.$CodeChunkPayload<ExtArgs>[]
-    documents: Prisma.$DocumentPayload<ExtArgs>[]
     workflows: Prisma.$CIWorkflowPayload<ExtArgs>[]
-    pullRequests: Prisma.$PullRequestPayload<ExtArgs>[]
     chatSessions: Prisma.$ChatSessionPayload<ExtArgs>[]
+    codeChunks: Prisma.$CodeChunkPayload<ExtArgs>[]
+    dependencies: Prisma.$DependencyPayload<ExtArgs>[]
+    documents: Prisma.$DocumentPayload<ExtArgs>[]
+    pullRequests: Prisma.$PullRequestPayload<ExtArgs>[]
+    project: Prisma.$ProjectPayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -2316,14 +2316,14 @@ readonly fields: RepositoryFieldRefs;
  */
 export interface Prisma__RepositoryClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  project<T extends Prisma.ProjectDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProjectDefaultArgs<ExtArgs>>): Prisma.Prisma__ProjectClient<runtime.Types.Result.GetResult<Prisma.$ProjectPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   analyses<T extends Prisma.Repository$analysesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Repository$analysesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AnalysisPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  dependencies<T extends Prisma.Repository$dependenciesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Repository$dependenciesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DependencyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  codeChunks<T extends Prisma.Repository$codeChunksArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Repository$codeChunksArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CodeChunkPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  documents<T extends Prisma.Repository$documentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Repository$documentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   workflows<T extends Prisma.Repository$workflowsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Repository$workflowsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CIWorkflowPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  pullRequests<T extends Prisma.Repository$pullRequestsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Repository$pullRequestsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PullRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   chatSessions<T extends Prisma.Repository$chatSessionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Repository$chatSessionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ChatSessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  codeChunks<T extends Prisma.Repository$codeChunksArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Repository$codeChunksArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CodeChunkPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  dependencies<T extends Prisma.Repository$dependenciesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Repository$dependenciesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DependencyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  documents<T extends Prisma.Repository$documentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Repository$documentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  pullRequests<T extends Prisma.Repository$pullRequestsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Repository$pullRequestsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PullRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  project<T extends Prisma.ProjectDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProjectDefaultArgs<ExtArgs>>): Prisma.Prisma__ProjectClient<runtime.Types.Result.GetResult<Prisma.$ProjectPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2793,27 +2793,51 @@ export type Repository$analysesArgs<ExtArgs extends runtime.Types.Extensions.Int
 }
 
 /**
- * Repository.dependencies
+ * Repository.workflows
  */
-export type Repository$dependenciesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+export type Repository$workflowsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
-   * Select specific fields to fetch from the Dependency
+   * Select specific fields to fetch from the CIWorkflow
    */
-  select?: Prisma.DependencySelect<ExtArgs> | null
+  select?: Prisma.CIWorkflowSelect<ExtArgs> | null
   /**
-   * Omit specific fields from the Dependency
+   * Omit specific fields from the CIWorkflow
    */
-  omit?: Prisma.DependencyOmit<ExtArgs> | null
+  omit?: Prisma.CIWorkflowOmit<ExtArgs> | null
   /**
    * Choose, which related nodes to fetch as well
    */
-  include?: Prisma.DependencyInclude<ExtArgs> | null
-  where?: Prisma.DependencyWhereInput
-  orderBy?: Prisma.DependencyOrderByWithRelationInput | Prisma.DependencyOrderByWithRelationInput[]
-  cursor?: Prisma.DependencyWhereUniqueInput
+  include?: Prisma.CIWorkflowInclude<ExtArgs> | null
+  where?: Prisma.CIWorkflowWhereInput
+  orderBy?: Prisma.CIWorkflowOrderByWithRelationInput | Prisma.CIWorkflowOrderByWithRelationInput[]
+  cursor?: Prisma.CIWorkflowWhereUniqueInput
   take?: number
   skip?: number
-  distinct?: Prisma.DependencyScalarFieldEnum | Prisma.DependencyScalarFieldEnum[]
+  distinct?: Prisma.CIWorkflowScalarFieldEnum | Prisma.CIWorkflowScalarFieldEnum[]
+}
+
+/**
+ * Repository.chatSessions
+ */
+export type Repository$chatSessionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ChatSession
+   */
+  select?: Prisma.ChatSessionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ChatSession
+   */
+  omit?: Prisma.ChatSessionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ChatSessionInclude<ExtArgs> | null
+  where?: Prisma.ChatSessionWhereInput
+  orderBy?: Prisma.ChatSessionOrderByWithRelationInput | Prisma.ChatSessionOrderByWithRelationInput[]
+  cursor?: Prisma.ChatSessionWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ChatSessionScalarFieldEnum | Prisma.ChatSessionScalarFieldEnum[]
 }
 
 /**
@@ -2841,6 +2865,30 @@ export type Repository$codeChunksArgs<ExtArgs extends runtime.Types.Extensions.I
 }
 
 /**
+ * Repository.dependencies
+ */
+export type Repository$dependenciesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Dependency
+   */
+  select?: Prisma.DependencySelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Dependency
+   */
+  omit?: Prisma.DependencyOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.DependencyInclude<ExtArgs> | null
+  where?: Prisma.DependencyWhereInput
+  orderBy?: Prisma.DependencyOrderByWithRelationInput | Prisma.DependencyOrderByWithRelationInput[]
+  cursor?: Prisma.DependencyWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.DependencyScalarFieldEnum | Prisma.DependencyScalarFieldEnum[]
+}
+
+/**
  * Repository.documents
  */
 export type Repository$documentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2865,30 +2913,6 @@ export type Repository$documentsArgs<ExtArgs extends runtime.Types.Extensions.In
 }
 
 /**
- * Repository.workflows
- */
-export type Repository$workflowsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the CIWorkflow
-   */
-  select?: Prisma.CIWorkflowSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the CIWorkflow
-   */
-  omit?: Prisma.CIWorkflowOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.CIWorkflowInclude<ExtArgs> | null
-  where?: Prisma.CIWorkflowWhereInput
-  orderBy?: Prisma.CIWorkflowOrderByWithRelationInput | Prisma.CIWorkflowOrderByWithRelationInput[]
-  cursor?: Prisma.CIWorkflowWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.CIWorkflowScalarFieldEnum | Prisma.CIWorkflowScalarFieldEnum[]
-}
-
-/**
  * Repository.pullRequests
  */
 export type Repository$pullRequestsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2910,30 +2934,6 @@ export type Repository$pullRequestsArgs<ExtArgs extends runtime.Types.Extensions
   take?: number
   skip?: number
   distinct?: Prisma.PullRequestScalarFieldEnum | Prisma.PullRequestScalarFieldEnum[]
-}
-
-/**
- * Repository.chatSessions
- */
-export type Repository$chatSessionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the ChatSession
-   */
-  select?: Prisma.ChatSessionSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the ChatSession
-   */
-  omit?: Prisma.ChatSessionOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.ChatSessionInclude<ExtArgs> | null
-  where?: Prisma.ChatSessionWhereInput
-  orderBy?: Prisma.ChatSessionOrderByWithRelationInput | Prisma.ChatSessionOrderByWithRelationInput[]
-  cursor?: Prisma.ChatSessionWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.ChatSessionScalarFieldEnum | Prisma.ChatSessionScalarFieldEnum[]
 }
 
 /**

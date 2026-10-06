@@ -6,6 +6,16 @@ import {
   triggerCIAnalysis,
 } from "../services/cicd.service.js";
 
+function serializeBigInt<T>(value: T): T {
+  return JSON.parse(
+    JSON.stringify(value, (_key, currentValue) =>
+      typeof currentValue === "bigint"
+        ? currentValue.toString()
+        : currentValue,
+    ),
+  ) as T;
+}
+
 export async function getCICDOverview(
   req: Request,
   res: Response,
@@ -22,7 +32,7 @@ export async function getCICDOverview(
 
     const result = await getCICDOverviewService(projectId);
 
-    res.json(result);
+    res.json(serializeBigInt(result));
   } catch (error) {
     console.error("[CI/CD] Overview error:", error);
 
@@ -51,7 +61,7 @@ export async function runCICDSync(
 
     const result = await syncCICDService(projectId);
 
-    res.json(result);
+    res.json(serializeBigInt(result));
   } catch (error) {
     console.error("[CI/CD] Sync error:", error);
 
@@ -80,7 +90,7 @@ export async function triggerCICDWorkflow(
 
     const result = await triggerCIAnalysis(projectId);
 
-    res.json(result);
+    res.json(serializeBigInt(result));
   } catch (error) {
     console.error("[CI/CD] Workflow dispatch error:", error);
 

@@ -461,21 +461,13 @@ export async function syncCIWorkflows(
   };
 }
 
-export async function syncCICD(
-  projectId: string,
-) {
-  const [
-    pullRequests,
-    workflows,
-  ] = await Promise.all([
+export async function syncCICD(projectId: string) {
+  await Promise.all([
     syncPullRequests(projectId),
     syncCIWorkflows(projectId),
   ]);
 
-  return {
-    pullRequests,
-    workflows,
-  };
+  return getCICDOverview(projectId);
 }
 
 export async function getCICDOverview(
@@ -686,6 +678,7 @@ export async function triggerCIAnalysis(
     branch: "feature",
   };
 }
+
 
 
 

@@ -214,8 +214,8 @@ export type CIWorkflowRunWhereInput = {
   startedAt?: Prisma.DateTimeNullableFilter<"CIWorkflowRun"> | Date | string | null
   completedAt?: Prisma.DateTimeNullableFilter<"CIWorkflowRun"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"CIWorkflowRun"> | Date | string
-  workflow?: Prisma.XOR<Prisma.CIWorkflowScalarRelationFilter, Prisma.CIWorkflowWhereInput>
   checks?: Prisma.CICheckListRelationFilter
+  workflow?: Prisma.XOR<Prisma.CIWorkflowScalarRelationFilter, Prisma.CIWorkflowWhereInput>
 }
 
 export type CIWorkflowRunOrderByWithRelationInput = {
@@ -228,8 +228,8 @@ export type CIWorkflowRunOrderByWithRelationInput = {
   startedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   completedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
-  workflow?: Prisma.CIWorkflowOrderByWithRelationInput
   checks?: Prisma.CICheckOrderByRelationAggregateInput
+  workflow?: Prisma.CIWorkflowOrderByWithRelationInput
 }
 
 export type CIWorkflowRunWhereUniqueInput = Prisma.AtLeast<{
@@ -245,8 +245,8 @@ export type CIWorkflowRunWhereUniqueInput = Prisma.AtLeast<{
   startedAt?: Prisma.DateTimeNullableFilter<"CIWorkflowRun"> | Date | string | null
   completedAt?: Prisma.DateTimeNullableFilter<"CIWorkflowRun"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"CIWorkflowRun"> | Date | string
-  workflow?: Prisma.XOR<Prisma.CIWorkflowScalarRelationFilter, Prisma.CIWorkflowWhereInput>
   checks?: Prisma.CICheckListRelationFilter
+  workflow?: Prisma.XOR<Prisma.CIWorkflowScalarRelationFilter, Prisma.CIWorkflowWhereInput>
 }, "id">
 
 export type CIWorkflowRunOrderByWithAggregationInput = {
@@ -288,8 +288,8 @@ export type CIWorkflowRunCreateInput = {
   startedAt?: Date | string | null
   completedAt?: Date | string | null
   createdAt?: Date | string
-  workflow: Prisma.CIWorkflowCreateNestedOneWithoutRunsInput
   checks?: Prisma.CICheckCreateNestedManyWithoutRunInput
+  workflow: Prisma.CIWorkflowCreateNestedOneWithoutRunsInput
 }
 
 export type CIWorkflowRunUncheckedCreateInput = {
@@ -314,8 +314,8 @@ export type CIWorkflowRunUpdateInput = {
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  workflow?: Prisma.CIWorkflowUpdateOneRequiredWithoutRunsNestedInput
   checks?: Prisma.CICheckUpdateManyWithoutRunNestedInput
+  workflow?: Prisma.CIWorkflowUpdateOneRequiredWithoutRunsNestedInput
 }
 
 export type CIWorkflowRunUncheckedUpdateInput = {
@@ -693,8 +693,8 @@ export type CIWorkflowRunSelect<ExtArgs extends runtime.Types.Extensions.Interna
   startedAt?: boolean
   completedAt?: boolean
   createdAt?: boolean
-  workflow?: boolean | Prisma.CIWorkflowDefaultArgs<ExtArgs>
   checks?: boolean | Prisma.CIWorkflowRun$checksArgs<ExtArgs>
+  workflow?: boolean | Prisma.CIWorkflowDefaultArgs<ExtArgs>
   _count?: boolean | Prisma.CIWorkflowRunCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["cIWorkflowRun"]>
 
@@ -738,8 +738,8 @@ export type CIWorkflowRunSelectScalar = {
 
 export type CIWorkflowRunOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "workflowId" | "externalId" | "branch" | "commitSha" | "status" | "startedAt" | "completedAt" | "createdAt", ExtArgs["result"]["cIWorkflowRun"]>
 export type CIWorkflowRunInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  workflow?: boolean | Prisma.CIWorkflowDefaultArgs<ExtArgs>
   checks?: boolean | Prisma.CIWorkflowRun$checksArgs<ExtArgs>
+  workflow?: boolean | Prisma.CIWorkflowDefaultArgs<ExtArgs>
   _count?: boolean | Prisma.CIWorkflowRunCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type CIWorkflowRunIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -752,8 +752,8 @@ export type CIWorkflowRunIncludeUpdateManyAndReturn<ExtArgs extends runtime.Type
 export type $CIWorkflowRunPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "CIWorkflowRun"
   objects: {
-    workflow: Prisma.$CIWorkflowPayload<ExtArgs>
     checks: Prisma.$CICheckPayload<ExtArgs>[]
+    workflow: Prisma.$CIWorkflowPayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1159,8 +1159,8 @@ readonly fields: CIWorkflowRunFieldRefs;
  */
 export interface Prisma__CIWorkflowRunClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  workflow<T extends Prisma.CIWorkflowDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.CIWorkflowDefaultArgs<ExtArgs>>): Prisma.Prisma__CIWorkflowClient<runtime.Types.Result.GetResult<Prisma.$CIWorkflowPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   checks<T extends Prisma.CIWorkflowRun$checksArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.CIWorkflowRun$checksArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CICheckPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  workflow<T extends Prisma.CIWorkflowDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.CIWorkflowDefaultArgs<ExtArgs>>): Prisma.Prisma__CIWorkflowClient<runtime.Types.Result.GetResult<Prisma.$CIWorkflowPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.

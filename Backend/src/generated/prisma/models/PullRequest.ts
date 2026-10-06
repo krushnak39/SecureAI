@@ -32,14 +32,14 @@ export type PullRequestAvgAggregateOutputType = {
 }
 
 export type PullRequestSumAggregateOutputType = {
-  externalId: number | null
+  externalId: bigint | null
   number: number | null
 }
 
 export type PullRequestMinAggregateOutputType = {
   id: string | null
   repositoryId: string | null
-  externalId: number | null
+  externalId: bigint | null
   number: number | null
   title: string | null
   author: string | null
@@ -55,7 +55,7 @@ export type PullRequestMinAggregateOutputType = {
 export type PullRequestMaxAggregateOutputType = {
   id: string | null
   repositoryId: string | null
-  externalId: number | null
+  externalId: bigint | null
   number: number | null
   title: string | null
   author: string | null
@@ -234,7 +234,7 @@ export type PullRequestGroupByArgs<ExtArgs extends runtime.Types.Extensions.Inte
 export type PullRequestGroupByOutputType = {
   id: string
   repositoryId: string
-  externalId: number | null
+  externalId: bigint | null
   number: number | null
   title: string
   author: string | null
@@ -273,7 +273,7 @@ export type PullRequestWhereInput = {
   NOT?: Prisma.PullRequestWhereInput | Prisma.PullRequestWhereInput[]
   id?: Prisma.StringFilter<"PullRequest"> | string
   repositoryId?: Prisma.StringFilter<"PullRequest"> | string
-  externalId?: Prisma.IntNullableFilter<"PullRequest"> | number | null
+  externalId?: Prisma.BigIntNullableFilter<"PullRequest"> | bigint | number | null
   number?: Prisma.IntNullableFilter<"PullRequest"> | number | null
   title?: Prisma.StringFilter<"PullRequest"> | string
   author?: Prisma.StringNullableFilter<"PullRequest"> | string | null
@@ -311,7 +311,7 @@ export type PullRequestWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.PullRequestWhereInput[]
   NOT?: Prisma.PullRequestWhereInput | Prisma.PullRequestWhereInput[]
   repositoryId?: Prisma.StringFilter<"PullRequest"> | string
-  externalId?: Prisma.IntNullableFilter<"PullRequest"> | number | null
+  externalId?: Prisma.BigIntNullableFilter<"PullRequest"> | bigint | number | null
   number?: Prisma.IntNullableFilter<"PullRequest"> | number | null
   title?: Prisma.StringFilter<"PullRequest"> | string
   author?: Prisma.StringNullableFilter<"PullRequest"> | string | null
@@ -352,7 +352,7 @@ export type PullRequestScalarWhereWithAggregatesInput = {
   NOT?: Prisma.PullRequestScalarWhereWithAggregatesInput | Prisma.PullRequestScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"PullRequest"> | string
   repositoryId?: Prisma.StringWithAggregatesFilter<"PullRequest"> | string
-  externalId?: Prisma.IntNullableWithAggregatesFilter<"PullRequest"> | number | null
+  externalId?: Prisma.BigIntNullableWithAggregatesFilter<"PullRequest"> | bigint | number | null
   number?: Prisma.IntNullableWithAggregatesFilter<"PullRequest"> | number | null
   title?: Prisma.StringWithAggregatesFilter<"PullRequest"> | string
   author?: Prisma.StringNullableWithAggregatesFilter<"PullRequest"> | string | null
@@ -367,7 +367,7 @@ export type PullRequestScalarWhereWithAggregatesInput = {
 
 export type PullRequestCreateInput = {
   id?: string
-  externalId?: number | null
+  externalId?: bigint | number | null
   number?: number | null
   title: string
   author?: string | null
@@ -384,7 +384,7 @@ export type PullRequestCreateInput = {
 export type PullRequestUncheckedCreateInput = {
   id?: string
   repositoryId: string
-  externalId?: number | null
+  externalId?: bigint | number | null
   number?: number | null
   title: string
   author?: string | null
@@ -399,7 +399,7 @@ export type PullRequestUncheckedCreateInput = {
 
 export type PullRequestUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  externalId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  externalId?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   title?: Prisma.StringFieldUpdateOperationsInput | string
   author?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -416,7 +416,7 @@ export type PullRequestUpdateInput = {
 export type PullRequestUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   repositoryId?: Prisma.StringFieldUpdateOperationsInput | string
-  externalId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  externalId?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   title?: Prisma.StringFieldUpdateOperationsInput | string
   author?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -432,7 +432,7 @@ export type PullRequestUncheckedUpdateInput = {
 export type PullRequestCreateManyInput = {
   id?: string
   repositoryId: string
-  externalId?: number | null
+  externalId?: bigint | number | null
   number?: number | null
   title: string
   author?: string | null
@@ -447,7 +447,7 @@ export type PullRequestCreateManyInput = {
 
 export type PullRequestUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  externalId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  externalId?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   title?: Prisma.StringFieldUpdateOperationsInput | string
   author?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -463,7 +463,7 @@ export type PullRequestUpdateManyMutationInput = {
 export type PullRequestUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   repositoryId?: Prisma.StringFieldUpdateOperationsInput | string
-  externalId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  externalId?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   title?: Prisma.StringFieldUpdateOperationsInput | string
   author?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -591,13 +591,21 @@ export type PullRequestUncheckedUpdateManyWithoutRepositoryNestedInput = {
   deleteMany?: Prisma.PullRequestScalarWhereInput | Prisma.PullRequestScalarWhereInput[]
 }
 
+export type NullableBigIntFieldUpdateOperationsInput = {
+  set?: bigint | number | null
+  increment?: bigint | number
+  decrement?: bigint | number
+  multiply?: bigint | number
+  divide?: bigint | number
+}
+
 export type EnumPullRequestStatusFieldUpdateOperationsInput = {
   set?: $Enums.PullRequestStatus
 }
 
 export type PullRequestCreateWithoutRepositoryInput = {
   id?: string
-  externalId?: number | null
+  externalId?: bigint | number | null
   number?: number | null
   title: string
   author?: string | null
@@ -612,7 +620,7 @@ export type PullRequestCreateWithoutRepositoryInput = {
 
 export type PullRequestUncheckedCreateWithoutRepositoryInput = {
   id?: string
-  externalId?: number | null
+  externalId?: bigint | number | null
   number?: number | null
   title: string
   author?: string | null
@@ -657,7 +665,7 @@ export type PullRequestScalarWhereInput = {
   NOT?: Prisma.PullRequestScalarWhereInput | Prisma.PullRequestScalarWhereInput[]
   id?: Prisma.StringFilter<"PullRequest"> | string
   repositoryId?: Prisma.StringFilter<"PullRequest"> | string
-  externalId?: Prisma.IntNullableFilter<"PullRequest"> | number | null
+  externalId?: Prisma.BigIntNullableFilter<"PullRequest"> | bigint | number | null
   number?: Prisma.IntNullableFilter<"PullRequest"> | number | null
   title?: Prisma.StringFilter<"PullRequest"> | string
   author?: Prisma.StringNullableFilter<"PullRequest"> | string | null
@@ -672,7 +680,7 @@ export type PullRequestScalarWhereInput = {
 
 export type PullRequestCreateManyRepositoryInput = {
   id?: string
-  externalId?: number | null
+  externalId?: bigint | number | null
   number?: number | null
   title: string
   author?: string | null
@@ -687,7 +695,7 @@ export type PullRequestCreateManyRepositoryInput = {
 
 export type PullRequestUpdateWithoutRepositoryInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  externalId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  externalId?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   title?: Prisma.StringFieldUpdateOperationsInput | string
   author?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -702,7 +710,7 @@ export type PullRequestUpdateWithoutRepositoryInput = {
 
 export type PullRequestUncheckedUpdateWithoutRepositoryInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  externalId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  externalId?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   title?: Prisma.StringFieldUpdateOperationsInput | string
   author?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -717,7 +725,7 @@ export type PullRequestUncheckedUpdateWithoutRepositoryInput = {
 
 export type PullRequestUncheckedUpdateManyWithoutRepositoryInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  externalId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  externalId?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   title?: Prisma.StringFieldUpdateOperationsInput | string
   author?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -818,7 +826,7 @@ export type $PullRequestPayload<ExtArgs extends runtime.Types.Extensions.Interna
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     repositoryId: string
-    externalId: number | null
+    externalId: bigint | null
     number: number | null
     title: string
     author: string | null
@@ -1255,7 +1263,7 @@ export interface Prisma__PullRequestClient<T, Null = never, ExtArgs extends runt
 export interface PullRequestFieldRefs {
   readonly id: Prisma.FieldRef<"PullRequest", 'String'>
   readonly repositoryId: Prisma.FieldRef<"PullRequest", 'String'>
-  readonly externalId: Prisma.FieldRef<"PullRequest", 'Int'>
+  readonly externalId: Prisma.FieldRef<"PullRequest", 'BigInt'>
   readonly number: Prisma.FieldRef<"PullRequest", 'Int'>
   readonly title: Prisma.FieldRef<"PullRequest", 'String'>
   readonly author: Prisma.FieldRef<"PullRequest", 'String'>

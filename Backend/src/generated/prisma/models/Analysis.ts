@@ -349,9 +349,9 @@ export type AnalysisWhereInput = {
   errorMessage?: Prisma.StringNullableFilter<"Analysis"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Analysis"> | Date | string
   repository?: Prisma.XOR<Prisma.RepositoryScalarRelationFilter, Prisma.RepositoryWhereInput>
+  architectureComponents?: Prisma.ArchitectureComponentListRelationFilter
   findings?: Prisma.FindingListRelationFilter
   performanceIssues?: Prisma.PerformanceIssueListRelationFilter
-  architectureComponents?: Prisma.ArchitectureComponentListRelationFilter
 }
 
 export type AnalysisOrderByWithRelationInput = {
@@ -374,9 +374,9 @@ export type AnalysisOrderByWithRelationInput = {
   errorMessage?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   repository?: Prisma.RepositoryOrderByWithRelationInput
+  architectureComponents?: Prisma.ArchitectureComponentOrderByRelationAggregateInput
   findings?: Prisma.FindingOrderByRelationAggregateInput
   performanceIssues?: Prisma.PerformanceIssueOrderByRelationAggregateInput
-  architectureComponents?: Prisma.ArchitectureComponentOrderByRelationAggregateInput
 }
 
 export type AnalysisWhereUniqueInput = Prisma.AtLeast<{
@@ -402,9 +402,9 @@ export type AnalysisWhereUniqueInput = Prisma.AtLeast<{
   errorMessage?: Prisma.StringNullableFilter<"Analysis"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Analysis"> | Date | string
   repository?: Prisma.XOR<Prisma.RepositoryScalarRelationFilter, Prisma.RepositoryWhereInput>
+  architectureComponents?: Prisma.ArchitectureComponentListRelationFilter
   findings?: Prisma.FindingListRelationFilter
   performanceIssues?: Prisma.PerformanceIssueListRelationFilter
-  architectureComponents?: Prisma.ArchitectureComponentListRelationFilter
 }, "id">
 
 export type AnalysisOrderByWithAggregationInput = {
@@ -476,9 +476,9 @@ export type AnalysisCreateInput = {
   errorMessage?: string | null
   createdAt?: Date | string
   repository: Prisma.RepositoryCreateNestedOneWithoutAnalysesInput
+  architectureComponents?: Prisma.ArchitectureComponentCreateNestedManyWithoutAnalysisInput
   findings?: Prisma.FindingCreateNestedManyWithoutAnalysisInput
   performanceIssues?: Prisma.PerformanceIssueCreateNestedManyWithoutAnalysisInput
-  architectureComponents?: Prisma.ArchitectureComponentCreateNestedManyWithoutAnalysisInput
 }
 
 export type AnalysisUncheckedCreateInput = {
@@ -500,9 +500,9 @@ export type AnalysisUncheckedCreateInput = {
   linesAnalyzed?: number
   errorMessage?: string | null
   createdAt?: Date | string
+  architectureComponents?: Prisma.ArchitectureComponentUncheckedCreateNestedManyWithoutAnalysisInput
   findings?: Prisma.FindingUncheckedCreateNestedManyWithoutAnalysisInput
   performanceIssues?: Prisma.PerformanceIssueUncheckedCreateNestedManyWithoutAnalysisInput
-  architectureComponents?: Prisma.ArchitectureComponentUncheckedCreateNestedManyWithoutAnalysisInput
 }
 
 export type AnalysisUpdateInput = {
@@ -524,9 +524,9 @@ export type AnalysisUpdateInput = {
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   repository?: Prisma.RepositoryUpdateOneRequiredWithoutAnalysesNestedInput
+  architectureComponents?: Prisma.ArchitectureComponentUpdateManyWithoutAnalysisNestedInput
   findings?: Prisma.FindingUpdateManyWithoutAnalysisNestedInput
   performanceIssues?: Prisma.PerformanceIssueUpdateManyWithoutAnalysisNestedInput
-  architectureComponents?: Prisma.ArchitectureComponentUpdateManyWithoutAnalysisNestedInput
 }
 
 export type AnalysisUncheckedUpdateInput = {
@@ -548,9 +548,9 @@ export type AnalysisUncheckedUpdateInput = {
   linesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  architectureComponents?: Prisma.ArchitectureComponentUncheckedUpdateManyWithoutAnalysisNestedInput
   findings?: Prisma.FindingUncheckedUpdateManyWithoutAnalysisNestedInput
   performanceIssues?: Prisma.PerformanceIssueUncheckedUpdateManyWithoutAnalysisNestedInput
-  architectureComponents?: Prisma.ArchitectureComponentUncheckedUpdateManyWithoutAnalysisNestedInput
 }
 
 export type AnalysisCreateManyInput = {
@@ -841,9 +841,9 @@ export type AnalysisCreateWithoutRepositoryInput = {
   linesAnalyzed?: number
   errorMessage?: string | null
   createdAt?: Date | string
+  architectureComponents?: Prisma.ArchitectureComponentCreateNestedManyWithoutAnalysisInput
   findings?: Prisma.FindingCreateNestedManyWithoutAnalysisInput
   performanceIssues?: Prisma.PerformanceIssueCreateNestedManyWithoutAnalysisInput
-  architectureComponents?: Prisma.ArchitectureComponentCreateNestedManyWithoutAnalysisInput
 }
 
 export type AnalysisUncheckedCreateWithoutRepositoryInput = {
@@ -864,9 +864,9 @@ export type AnalysisUncheckedCreateWithoutRepositoryInput = {
   linesAnalyzed?: number
   errorMessage?: string | null
   createdAt?: Date | string
+  architectureComponents?: Prisma.ArchitectureComponentUncheckedCreateNestedManyWithoutAnalysisInput
   findings?: Prisma.FindingUncheckedCreateNestedManyWithoutAnalysisInput
   performanceIssues?: Prisma.PerformanceIssueUncheckedCreateNestedManyWithoutAnalysisInput
-  architectureComponents?: Prisma.ArchitectureComponentUncheckedCreateNestedManyWithoutAnalysisInput
 }
 
 export type AnalysisCreateOrConnectWithoutRepositoryInput = {
@@ -938,8 +938,8 @@ export type AnalysisCreateWithoutFindingsInput = {
   errorMessage?: string | null
   createdAt?: Date | string
   repository: Prisma.RepositoryCreateNestedOneWithoutAnalysesInput
-  performanceIssues?: Prisma.PerformanceIssueCreateNestedManyWithoutAnalysisInput
   architectureComponents?: Prisma.ArchitectureComponentCreateNestedManyWithoutAnalysisInput
+  performanceIssues?: Prisma.PerformanceIssueCreateNestedManyWithoutAnalysisInput
 }
 
 export type AnalysisUncheckedCreateWithoutFindingsInput = {
@@ -961,8 +961,8 @@ export type AnalysisUncheckedCreateWithoutFindingsInput = {
   linesAnalyzed?: number
   errorMessage?: string | null
   createdAt?: Date | string
-  performanceIssues?: Prisma.PerformanceIssueUncheckedCreateNestedManyWithoutAnalysisInput
   architectureComponents?: Prisma.ArchitectureComponentUncheckedCreateNestedManyWithoutAnalysisInput
+  performanceIssues?: Prisma.PerformanceIssueUncheckedCreateNestedManyWithoutAnalysisInput
 }
 
 export type AnalysisCreateOrConnectWithoutFindingsInput = {
@@ -1000,8 +1000,8 @@ export type AnalysisUpdateWithoutFindingsInput = {
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   repository?: Prisma.RepositoryUpdateOneRequiredWithoutAnalysesNestedInput
-  performanceIssues?: Prisma.PerformanceIssueUpdateManyWithoutAnalysisNestedInput
   architectureComponents?: Prisma.ArchitectureComponentUpdateManyWithoutAnalysisNestedInput
+  performanceIssues?: Prisma.PerformanceIssueUpdateManyWithoutAnalysisNestedInput
 }
 
 export type AnalysisUncheckedUpdateWithoutFindingsInput = {
@@ -1023,8 +1023,8 @@ export type AnalysisUncheckedUpdateWithoutFindingsInput = {
   linesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  performanceIssues?: Prisma.PerformanceIssueUncheckedUpdateManyWithoutAnalysisNestedInput
   architectureComponents?: Prisma.ArchitectureComponentUncheckedUpdateManyWithoutAnalysisNestedInput
+  performanceIssues?: Prisma.PerformanceIssueUncheckedUpdateManyWithoutAnalysisNestedInput
 }
 
 export type AnalysisCreateWithoutPerformanceIssuesInput = {
@@ -1046,8 +1046,8 @@ export type AnalysisCreateWithoutPerformanceIssuesInput = {
   errorMessage?: string | null
   createdAt?: Date | string
   repository: Prisma.RepositoryCreateNestedOneWithoutAnalysesInput
-  findings?: Prisma.FindingCreateNestedManyWithoutAnalysisInput
   architectureComponents?: Prisma.ArchitectureComponentCreateNestedManyWithoutAnalysisInput
+  findings?: Prisma.FindingCreateNestedManyWithoutAnalysisInput
 }
 
 export type AnalysisUncheckedCreateWithoutPerformanceIssuesInput = {
@@ -1069,8 +1069,8 @@ export type AnalysisUncheckedCreateWithoutPerformanceIssuesInput = {
   linesAnalyzed?: number
   errorMessage?: string | null
   createdAt?: Date | string
-  findings?: Prisma.FindingUncheckedCreateNestedManyWithoutAnalysisInput
   architectureComponents?: Prisma.ArchitectureComponentUncheckedCreateNestedManyWithoutAnalysisInput
+  findings?: Prisma.FindingUncheckedCreateNestedManyWithoutAnalysisInput
 }
 
 export type AnalysisCreateOrConnectWithoutPerformanceIssuesInput = {
@@ -1108,8 +1108,8 @@ export type AnalysisUpdateWithoutPerformanceIssuesInput = {
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   repository?: Prisma.RepositoryUpdateOneRequiredWithoutAnalysesNestedInput
-  findings?: Prisma.FindingUpdateManyWithoutAnalysisNestedInput
   architectureComponents?: Prisma.ArchitectureComponentUpdateManyWithoutAnalysisNestedInput
+  findings?: Prisma.FindingUpdateManyWithoutAnalysisNestedInput
 }
 
 export type AnalysisUncheckedUpdateWithoutPerformanceIssuesInput = {
@@ -1131,8 +1131,8 @@ export type AnalysisUncheckedUpdateWithoutPerformanceIssuesInput = {
   linesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  findings?: Prisma.FindingUncheckedUpdateManyWithoutAnalysisNestedInput
   architectureComponents?: Prisma.ArchitectureComponentUncheckedUpdateManyWithoutAnalysisNestedInput
+  findings?: Prisma.FindingUncheckedUpdateManyWithoutAnalysisNestedInput
 }
 
 export type AnalysisCreateWithoutArchitectureComponentsInput = {
@@ -1281,9 +1281,9 @@ export type AnalysisUpdateWithoutRepositoryInput = {
   linesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  architectureComponents?: Prisma.ArchitectureComponentUpdateManyWithoutAnalysisNestedInput
   findings?: Prisma.FindingUpdateManyWithoutAnalysisNestedInput
   performanceIssues?: Prisma.PerformanceIssueUpdateManyWithoutAnalysisNestedInput
-  architectureComponents?: Prisma.ArchitectureComponentUpdateManyWithoutAnalysisNestedInput
 }
 
 export type AnalysisUncheckedUpdateWithoutRepositoryInput = {
@@ -1304,9 +1304,9 @@ export type AnalysisUncheckedUpdateWithoutRepositoryInput = {
   linesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  architectureComponents?: Prisma.ArchitectureComponentUncheckedUpdateManyWithoutAnalysisNestedInput
   findings?: Prisma.FindingUncheckedUpdateManyWithoutAnalysisNestedInput
   performanceIssues?: Prisma.PerformanceIssueUncheckedUpdateManyWithoutAnalysisNestedInput
-  architectureComponents?: Prisma.ArchitectureComponentUncheckedUpdateManyWithoutAnalysisNestedInput
 }
 
 export type AnalysisUncheckedUpdateManyWithoutRepositoryInput = {
@@ -1335,15 +1335,15 @@ export type AnalysisUncheckedUpdateManyWithoutRepositoryInput = {
  */
 
 export type AnalysisCountOutputType = {
+  architectureComponents: number
   findings: number
   performanceIssues: number
-  architectureComponents: number
 }
 
 export type AnalysisCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  architectureComponents?: boolean | AnalysisCountOutputTypeCountArchitectureComponentsArgs
   findings?: boolean | AnalysisCountOutputTypeCountFindingsArgs
   performanceIssues?: boolean | AnalysisCountOutputTypeCountPerformanceIssuesArgs
-  architectureComponents?: boolean | AnalysisCountOutputTypeCountArchitectureComponentsArgs
 }
 
 /**
@@ -1359,6 +1359,13 @@ export type AnalysisCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Ext
 /**
  * AnalysisCountOutputType without action
  */
+export type AnalysisCountOutputTypeCountArchitectureComponentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ArchitectureComponentWhereInput
+}
+
+/**
+ * AnalysisCountOutputType without action
+ */
 export type AnalysisCountOutputTypeCountFindingsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.FindingWhereInput
 }
@@ -1368,13 +1375,6 @@ export type AnalysisCountOutputTypeCountFindingsArgs<ExtArgs extends runtime.Typ
  */
 export type AnalysisCountOutputTypeCountPerformanceIssuesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.PerformanceIssueWhereInput
-}
-
-/**
- * AnalysisCountOutputType without action
- */
-export type AnalysisCountOutputTypeCountArchitectureComponentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.ArchitectureComponentWhereInput
 }
 
 
@@ -1398,9 +1398,9 @@ export type AnalysisSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   errorMessage?: boolean
   createdAt?: boolean
   repository?: boolean | Prisma.RepositoryDefaultArgs<ExtArgs>
+  architectureComponents?: boolean | Prisma.Analysis$architectureComponentsArgs<ExtArgs>
   findings?: boolean | Prisma.Analysis$findingsArgs<ExtArgs>
   performanceIssues?: boolean | Prisma.Analysis$performanceIssuesArgs<ExtArgs>
-  architectureComponents?: boolean | Prisma.Analysis$architectureComponentsArgs<ExtArgs>
   _count?: boolean | Prisma.AnalysisCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["analysis"]>
 
@@ -1472,9 +1472,9 @@ export type AnalysisSelectScalar = {
 export type AnalysisOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "repositoryId" | "status" | "trigger" | "branch" | "commitSha" | "startedAt" | "completedAt" | "healthScore" | "codeQuality" | "securityScore" | "performance" | "architecture" | "maintainability" | "filesAnalyzed" | "linesAnalyzed" | "errorMessage" | "createdAt", ExtArgs["result"]["analysis"]>
 export type AnalysisInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   repository?: boolean | Prisma.RepositoryDefaultArgs<ExtArgs>
+  architectureComponents?: boolean | Prisma.Analysis$architectureComponentsArgs<ExtArgs>
   findings?: boolean | Prisma.Analysis$findingsArgs<ExtArgs>
   performanceIssues?: boolean | Prisma.Analysis$performanceIssuesArgs<ExtArgs>
-  architectureComponents?: boolean | Prisma.Analysis$architectureComponentsArgs<ExtArgs>
   _count?: boolean | Prisma.AnalysisCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type AnalysisIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1488,9 +1488,9 @@ export type $AnalysisPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
   name: "Analysis"
   objects: {
     repository: Prisma.$RepositoryPayload<ExtArgs>
+    architectureComponents: Prisma.$ArchitectureComponentPayload<ExtArgs>[]
     findings: Prisma.$FindingPayload<ExtArgs>[]
     performanceIssues: Prisma.$PerformanceIssuePayload<ExtArgs>[]
-    architectureComponents: Prisma.$ArchitectureComponentPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1906,9 +1906,9 @@ readonly fields: AnalysisFieldRefs;
 export interface Prisma__AnalysisClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   repository<T extends Prisma.RepositoryDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.RepositoryDefaultArgs<ExtArgs>>): Prisma.Prisma__RepositoryClient<runtime.Types.Result.GetResult<Prisma.$RepositoryPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  architectureComponents<T extends Prisma.Analysis$architectureComponentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Analysis$architectureComponentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ArchitectureComponentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   findings<T extends Prisma.Analysis$findingsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Analysis$findingsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FindingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   performanceIssues<T extends Prisma.Analysis$performanceIssuesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Analysis$performanceIssuesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PerformanceIssuePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  architectureComponents<T extends Prisma.Analysis$architectureComponentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Analysis$architectureComponentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ArchitectureComponentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2357,6 +2357,30 @@ export type AnalysisDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Inte
 }
 
 /**
+ * Analysis.architectureComponents
+ */
+export type Analysis$architectureComponentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ArchitectureComponent
+   */
+  select?: Prisma.ArchitectureComponentSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ArchitectureComponent
+   */
+  omit?: Prisma.ArchitectureComponentOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ArchitectureComponentInclude<ExtArgs> | null
+  where?: Prisma.ArchitectureComponentWhereInput
+  orderBy?: Prisma.ArchitectureComponentOrderByWithRelationInput | Prisma.ArchitectureComponentOrderByWithRelationInput[]
+  cursor?: Prisma.ArchitectureComponentWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ArchitectureComponentScalarFieldEnum | Prisma.ArchitectureComponentScalarFieldEnum[]
+}
+
+/**
  * Analysis.findings
  */
 export type Analysis$findingsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2402,30 +2426,6 @@ export type Analysis$performanceIssuesArgs<ExtArgs extends runtime.Types.Extensi
   take?: number
   skip?: number
   distinct?: Prisma.PerformanceIssueScalarFieldEnum | Prisma.PerformanceIssueScalarFieldEnum[]
-}
-
-/**
- * Analysis.architectureComponents
- */
-export type Analysis$architectureComponentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the ArchitectureComponent
-   */
-  select?: Prisma.ArchitectureComponentSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the ArchitectureComponent
-   */
-  omit?: Prisma.ArchitectureComponentOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.ArchitectureComponentInclude<ExtArgs> | null
-  where?: Prisma.ArchitectureComponentWhereInput
-  orderBy?: Prisma.ArchitectureComponentOrderByWithRelationInput | Prisma.ArchitectureComponentOrderByWithRelationInput[]
-  cursor?: Prisma.ArchitectureComponentWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.ArchitectureComponentScalarFieldEnum | Prisma.ArchitectureComponentScalarFieldEnum[]
 }
 
 /**

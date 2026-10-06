@@ -203,17 +203,17 @@ export const FindingScalarFieldEnum = {
   scanner: 'scanner',
   evidence: 'evidence',
   confidence: 'confidence',
-  aiExplanation: 'aiExplanation',
-  aiRootCause: 'aiRootCause',
-  aiImpact: 'aiImpact',
-  aiRecommendation: 'aiRecommendation',
-  aiSuggestedFix: 'aiSuggestedFix',
-  aiConfidence: 'aiConfidence',
-  aiModel: 'aiModel',
-  aiReviewedAt: 'aiReviewedAt',
   resolvedAt: 'resolvedAt',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  aiConfidence: 'aiConfidence',
+  aiExplanation: 'aiExplanation',
+  aiImpact: 'aiImpact',
+  aiModel: 'aiModel',
+  aiRecommendation: 'aiRecommendation',
+  aiReviewedAt: 'aiReviewedAt',
+  aiRootCause: 'aiRootCause',
+  aiSuggestedFix: 'aiSuggestedFix'
 } as const
 
 export type FindingScalarFieldEnum = (typeof FindingScalarFieldEnum)[keyof typeof FindingScalarFieldEnum]

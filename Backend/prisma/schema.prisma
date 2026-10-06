@@ -371,7 +371,7 @@ model CICheck {
 model PullRequest {
   id           String            @id @default(cuid())
   repositoryId String
-  externalId   Int?
+  externalId BigInt?
   number       Int?
   title        String
   author       String?
@@ -523,3 +523,4 @@ enum CheckStatus {
   FAILED
   CANCELLED
 }
+
