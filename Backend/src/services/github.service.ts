@@ -575,3 +575,167 @@ export async function getValidGitHubAccount(
 
   return account;
 }
+export interface GitHubPullRequest {
+  id: number;
+  number: number;
+  title: string;
+  user: {
+    login: string;
+    avatar_url?: string;
+  } | null;
+  head: {
+    ref: string;
+    sha: string;
+  };
+  base: {
+    ref: string;
+  };
+  state: "open" | "closed";
+  merged_at: string | null;
+  html_url: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GitHubWorkflow {
+  id: number;
+  name: string;
+  path: string;
+  state: string;
+  html_url?: string;
+}
+
+export interface GitHubWorkflowRun {
+  id: number;
+  workflow_id: number;
+  name: string;
+  display_title?: string;
+  status:
+    | "queued"
+    | "in_progress"
+    | "completed"
+    | string;
+  conclusion:
+    | "success"
+    | "failure"
+    | "cancelled"
+    | "skipped"
+    | "timed_out"
+    | "action_required"
+    | null
+    | string;
+  head_branch: string | null;
+  head_sha: string;
+  run_number: number;
+  created_at: string;
+  run_started_at: string | null;
+  updated_at: string;
+  html_url: string;
+  actor: {
+    login: string;
+  } | null;
+}
+
+export interface GitHubCheckRun {
+  id: number;
+  name: string;
+  status:
+    | "queued"
+    | "in_progress"
+    | "completed"
+    | string;
+  conclusion:
+    | "success"
+    | "failure"
+    | "cancelled"
+    | "skipped"
+    | "timed_out"
+    | "action_required"
+    | null
+    | string;
+  html_url: string;
+  started_at: string | null;
+  completed_at: string | null;
+}
+
+export async function listGitHubPullRequests(
+  accessToken: string,
+  fullName: string,
+) {
+  return githubRequest<GitHubPullRequest[]>(
+    `/repos/${fullName}/pulls?state=all&sort=updated&direction=desc&per_page=50`,
+    accessToken,
+  );
+}
+
+export async function listGitHubWorkflows(
+  accessToken: string,
+  fullName: string,
+) {
+  const response = await githubRequest<{
+    total_count: number;
+    workflows: GitHubWorkflow[];
+  }>(
+    `/repos/${fullName}/actions/workflows?per_page=100`,
+    accessToken,
+  );
+
+  return response.workflows;
+}
+
+export async function listGitHubWorkflowRuns(
+  accessToken: string,
+  fullName: string,
+) {
+  const response = await githubRequest<{
+    total_count: number;
+    workflow_runs: GitHubWorkflowRun[];
+  }>(
+    `/repos/${fullName}/actions/runs?per_page=50`,
+    accessToken,
+  );
+
+  return response.workflow_runs;
+}
+
+export async function listGitHubCheckRuns(
+  accessToken: string,
+  fullName: string,
+  commitSha: string,
+) {
+  const response = await githubRequest<{
+    total_count: number;
+    check_runs: GitHubCheckRun[];
+  }>(
+    `/repos/${fullName}/commits/${encodeURIComponent(
+      commitSha,
+    )}/check-runs?per_page=100`,
+    accessToken,
+  );
+
+  return response.check_runs;
+}
+
+export async function dispatchGitHubWorkflow(
+  accessToken: string,
+  fullName: string,
+  workflowId: string | number,
+  branch: string,
+) {
+  const encodedWorkflowId =
+    encodeURIComponent(String(workflowId));
+
+  return githubRequest<unknown>(
+    `/repos/${fullName}/actions/workflows/${encodedWorkflowId}/dispatches`,
+    accessToken,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ref: branch,
+      }),
+    },
+  );
+}

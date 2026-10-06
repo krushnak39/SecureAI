@@ -1,4 +1,5 @@
 import "dotenv/config";
+import cicdRoutes from "./routes/cicd.routes.js";
 import performanceRoutes from "./routes/performance.routes.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -84,6 +85,8 @@ app.use(
   "/api/health",
   healthRoutes,
 );
+
+app.use("/api", cicdRoutes);
 
 app.use(
   "/api/auth",
