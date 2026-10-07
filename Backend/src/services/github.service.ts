@@ -780,6 +780,59 @@ export async function listGitHubCheckRuns(
   return response.check_runs;
 }
 
+export interface CreateGitHubCheckRunInput {
+  name: string;
+  headSha: string;
+  status?: "queued" | "in_progress" | "completed";
+  conclusion?:
+    | "success"
+    | "failure"
+    | "neutral"
+    | "cancelled"
+    | "skipped"
+    | "timed_out"
+    | "action_required";
+  title?: string;
+  summary?: string;
+  text?: string;
+}
+
+export async function createGitHubCheckRun(
+  accessToken: string,
+  fullName: string,
+  input: CreateGitHubCheckRunInput,
+) {
+  return githubRequest<GitHubCheckRun>(
+    `/repos/${fullName}/check-runs`,
+    accessToken,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept:
+          "application/vnd.github+json",
+      },
+      body: JSON.stringify({
+        name: input.name,
+        head_sha: input.headSha,
+        status: input.status ?? "completed",
+        conclusion:
+          input.conclusion ?? "neutral",
+        output: {
+          title:
+            input.title ??
+            "SecureAI Pull Request Analysis",
+          summary:
+            input.summary ??
+            "SecureAI analysis completed.",
+          text:
+            input.text ?? "",
+        },
+      }),
+    },
+  );
+}
+
 export async function dispatchGitHubWorkflow(
   accessToken: string,
   fullName: string,

@@ -1,6 +1,7 @@
 import { prisma } from "../lib/prisma.js";
 
 import {
+  createGitHubCheckRun,
   getGitHubFileContent,
   getInstallationAccessToken,
   getRepositoryInstallation,
@@ -248,6 +249,44 @@ const riskAnalysis =
         new Date(),
     },
   });
+
+  const checkConclusion =
+  riskAnalysis.mergeReadiness ===
+    "BLOCKED"
+    ? "failure"
+    : riskAnalysis.mergeReadiness ===
+        "REVIEW_REQUIRED"
+      ? "neutral"
+      : "success";
+
+await createGitHubCheckRun(
+  installationToken.token,
+  fullName,
+  {
+    name: "SecureAI PR Analysis",
+    headSha,
+    status: "completed",
+    conclusion:
+      checkConclusion,
+    title:
+      `Risk: ${riskAnalysis.riskLevel} • ${riskAnalysis.riskScore}/100`,
+    summary:
+      `Merge readiness: ${riskAnalysis.mergeReadiness}`,
+    text:
+      [
+        `**Risk Score:** ${riskAnalysis.riskScore}/100`,
+        `**Risk Level:** ${riskAnalysis.riskLevel}`,
+        `**Merge Readiness:** ${riskAnalysis.mergeReadiness}`,
+        `**Changed Files:** ${changedFiles.length}`,
+        `**Changed Lines:** ${changedLines}`,
+        "",
+        "**Risk Factors:**",
+        ...riskAnalysis.reasons.map(
+          (reason) => `- ${reason}`,
+        ),
+      ].join("\n"),
+  },
+);
 
   return {
     handled: true,
