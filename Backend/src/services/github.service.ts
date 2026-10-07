@@ -666,6 +666,70 @@ export async function listGitHubPullRequests(
     `/repos/${fullName}/pulls?state=all&sort=updated&direction=desc&per_page=50`,
     accessToken,
   );
+
+}
+
+export interface GitHubPullRequestFile {
+  sha: string;
+  filename: string;
+  status:
+    | "added"
+    | "modified"
+    | "deleted"
+    | "renamed"
+    | "copied"
+    | "changed"
+    | "unchanged";
+  additions: number;
+  deletions: number;
+  changes: number;
+  patch?: string;
+  previous_filename?: string;
+}
+
+export async function getGitHubFileContent(
+  accessToken: string,
+  fullName: string,
+  filePath: string,
+  ref: string,
+) {
+  const encodedPath = filePath
+    .split("/")
+    .map((part) => encodeURIComponent(part))
+    .join("/");
+
+  const response = await githubRequest<{
+    content?: string;
+    encoding?: string;
+    path?: string;
+  }>(
+    `/repos/${fullName}/contents/${encodedPath}?ref=${encodeURIComponent(ref)}`,
+    accessToken,
+  );
+
+  if (!response.content) {
+    return null;
+  }
+
+  if (response.encoding === "base64") {
+    return Buffer.from(
+      response.content.replace(/\s/g, ""),
+      "base64",
+    ).toString("utf8");
+  }
+
+  return response.content;
+}
+
+export async function listGitHubPullRequestFiles(
+  accessToken: string,
+  fullName: string,
+  pullNumber: number,
+) {
+  return githubRequest<GitHubPullRequestFile[]>(
+    `/repos/${fullName}/pulls/${pullNumber}/files?per_page=100`,
+    accessToken,
+  );
 }
 
 export async function listGitHubWorkflows(

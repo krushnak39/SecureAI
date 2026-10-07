@@ -56,7 +56,7 @@ const ignoredFiles = new Set([
   "go.sum",
 ]);
 
-function getLanguage(
+export function getLanguage(
   filePath: string,
 ): string | null {
   const fileName =
