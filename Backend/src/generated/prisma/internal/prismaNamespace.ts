@@ -1956,6 +1956,7 @@ export type RepositoryScalarFieldEnum = (typeof RepositoryScalarFieldEnum)[keyof
 export const AnalysisScalarFieldEnum = {
   id: 'id',
   repositoryId: 'repositoryId',
+  pullRequestId: 'pullRequestId',
   status: 'status',
   trigger: 'trigger',
   branch: 'branch',
@@ -1971,6 +1972,9 @@ export const AnalysisScalarFieldEnum = {
   filesAnalyzed: 'filesAnalyzed',
   linesAnalyzed: 'linesAnalyzed',
   errorMessage: 'errorMessage',
+  riskScore: 'riskScore',
+  riskLevel: 'riskLevel',
+  mergeReadiness: 'mergeReadiness',
   createdAt: 'createdAt'
 } as const
 
@@ -2370,6 +2374,34 @@ export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'In
  * Reference to a field of type 'Int[]'
  */
 export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+/**
+ * Reference to a field of type 'PRRiskLevel'
+ */
+export type EnumPRRiskLevelFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PRRiskLevel'>
+    
+
+
+/**
+ * Reference to a field of type 'PRRiskLevel[]'
+ */
+export type ListEnumPRRiskLevelFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PRRiskLevel[]'>
+    
+
+
+/**
+ * Reference to a field of type 'PRMergeReadiness'
+ */
+export type EnumPRMergeReadinessFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PRMergeReadiness'>
+    
+
+
+/**
+ * Reference to a field of type 'PRMergeReadiness[]'
+ */
+export type ListEnumPRMergeReadinessFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PRMergeReadiness[]'>
     
 
 

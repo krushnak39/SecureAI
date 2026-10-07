@@ -285,6 +285,7 @@ export type PullRequestWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"PullRequest"> | Date | string
   mergedAt?: Prisma.DateTimeNullableFilter<"PullRequest"> | Date | string | null
   repository?: Prisma.XOR<Prisma.RepositoryScalarRelationFilter, Prisma.RepositoryWhereInput>
+  analyses?: Prisma.AnalysisListRelationFilter
 }
 
 export type PullRequestOrderByWithRelationInput = {
@@ -302,6 +303,7 @@ export type PullRequestOrderByWithRelationInput = {
   updatedAt?: Prisma.SortOrder
   mergedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   repository?: Prisma.RepositoryOrderByWithRelationInput
+  analyses?: Prisma.AnalysisOrderByRelationAggregateInput
 }
 
 export type PullRequestWhereUniqueInput = Prisma.AtLeast<{
@@ -323,6 +325,7 @@ export type PullRequestWhereUniqueInput = Prisma.AtLeast<{
   updatedAt?: Prisma.DateTimeFilter<"PullRequest"> | Date | string
   mergedAt?: Prisma.DateTimeNullableFilter<"PullRequest"> | Date | string | null
   repository?: Prisma.XOR<Prisma.RepositoryScalarRelationFilter, Prisma.RepositoryWhereInput>
+  analyses?: Prisma.AnalysisListRelationFilter
 }, "id" | "repositoryId_number">
 
 export type PullRequestOrderByWithAggregationInput = {
@@ -379,6 +382,7 @@ export type PullRequestCreateInput = {
   updatedAt?: Date | string
   mergedAt?: Date | string | null
   repository: Prisma.RepositoryCreateNestedOneWithoutPullRequestsInput
+  analyses?: Prisma.AnalysisCreateNestedManyWithoutPullRequestInput
 }
 
 export type PullRequestUncheckedCreateInput = {
@@ -395,6 +399,7 @@ export type PullRequestUncheckedCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   mergedAt?: Date | string | null
+  analyses?: Prisma.AnalysisUncheckedCreateNestedManyWithoutPullRequestInput
 }
 
 export type PullRequestUpdateInput = {
@@ -411,6 +416,7 @@ export type PullRequestUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   mergedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   repository?: Prisma.RepositoryUpdateOneRequiredWithoutPullRequestsNestedInput
+  analyses?: Prisma.AnalysisUpdateManyWithoutPullRequestNestedInput
 }
 
 export type PullRequestUncheckedUpdateInput = {
@@ -427,6 +433,7 @@ export type PullRequestUncheckedUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   mergedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  analyses?: Prisma.AnalysisUncheckedUpdateManyWithoutPullRequestNestedInput
 }
 
 export type PullRequestCreateManyInput = {
@@ -484,6 +491,11 @@ export type PullRequestListRelationFilter = {
 
 export type PullRequestOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
+}
+
+export type PullRequestNullableScalarRelationFilter = {
+  is?: Prisma.PullRequestWhereInput | null
+  isNot?: Prisma.PullRequestWhereInput | null
 }
 
 export type PullRequestRepositoryIdNumberCompoundUniqueInput = {
@@ -591,6 +603,22 @@ export type PullRequestUncheckedUpdateManyWithoutRepositoryNestedInput = {
   deleteMany?: Prisma.PullRequestScalarWhereInput | Prisma.PullRequestScalarWhereInput[]
 }
 
+export type PullRequestCreateNestedOneWithoutAnalysesInput = {
+  create?: Prisma.XOR<Prisma.PullRequestCreateWithoutAnalysesInput, Prisma.PullRequestUncheckedCreateWithoutAnalysesInput>
+  connectOrCreate?: Prisma.PullRequestCreateOrConnectWithoutAnalysesInput
+  connect?: Prisma.PullRequestWhereUniqueInput
+}
+
+export type PullRequestUpdateOneWithoutAnalysesNestedInput = {
+  create?: Prisma.XOR<Prisma.PullRequestCreateWithoutAnalysesInput, Prisma.PullRequestUncheckedCreateWithoutAnalysesInput>
+  connectOrCreate?: Prisma.PullRequestCreateOrConnectWithoutAnalysesInput
+  upsert?: Prisma.PullRequestUpsertWithoutAnalysesInput
+  disconnect?: Prisma.PullRequestWhereInput | boolean
+  delete?: Prisma.PullRequestWhereInput | boolean
+  connect?: Prisma.PullRequestWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.PullRequestUpdateToOneWithWhereWithoutAnalysesInput, Prisma.PullRequestUpdateWithoutAnalysesInput>, Prisma.PullRequestUncheckedUpdateWithoutAnalysesInput>
+}
+
 export type NullableBigIntFieldUpdateOperationsInput = {
   set?: bigint | number | null
   increment?: bigint | number
@@ -616,6 +644,7 @@ export type PullRequestCreateWithoutRepositoryInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   mergedAt?: Date | string | null
+  analyses?: Prisma.AnalysisCreateNestedManyWithoutPullRequestInput
 }
 
 export type PullRequestUncheckedCreateWithoutRepositoryInput = {
@@ -631,6 +660,7 @@ export type PullRequestUncheckedCreateWithoutRepositoryInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   mergedAt?: Date | string | null
+  analyses?: Prisma.AnalysisUncheckedCreateNestedManyWithoutPullRequestInput
 }
 
 export type PullRequestCreateOrConnectWithoutRepositoryInput = {
@@ -678,6 +708,86 @@ export type PullRequestScalarWhereInput = {
   mergedAt?: Prisma.DateTimeNullableFilter<"PullRequest"> | Date | string | null
 }
 
+export type PullRequestCreateWithoutAnalysesInput = {
+  id?: string
+  externalId?: bigint | number | null
+  number?: number | null
+  title: string
+  author?: string | null
+  sourceBranch?: string | null
+  targetBranch?: string | null
+  status?: $Enums.PullRequestStatus
+  url?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  mergedAt?: Date | string | null
+  repository: Prisma.RepositoryCreateNestedOneWithoutPullRequestsInput
+}
+
+export type PullRequestUncheckedCreateWithoutAnalysesInput = {
+  id?: string
+  repositoryId: string
+  externalId?: bigint | number | null
+  number?: number | null
+  title: string
+  author?: string | null
+  sourceBranch?: string | null
+  targetBranch?: string | null
+  status?: $Enums.PullRequestStatus
+  url?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  mergedAt?: Date | string | null
+}
+
+export type PullRequestCreateOrConnectWithoutAnalysesInput = {
+  where: Prisma.PullRequestWhereUniqueInput
+  create: Prisma.XOR<Prisma.PullRequestCreateWithoutAnalysesInput, Prisma.PullRequestUncheckedCreateWithoutAnalysesInput>
+}
+
+export type PullRequestUpsertWithoutAnalysesInput = {
+  update: Prisma.XOR<Prisma.PullRequestUpdateWithoutAnalysesInput, Prisma.PullRequestUncheckedUpdateWithoutAnalysesInput>
+  create: Prisma.XOR<Prisma.PullRequestCreateWithoutAnalysesInput, Prisma.PullRequestUncheckedCreateWithoutAnalysesInput>
+  where?: Prisma.PullRequestWhereInput
+}
+
+export type PullRequestUpdateToOneWithWhereWithoutAnalysesInput = {
+  where?: Prisma.PullRequestWhereInput
+  data: Prisma.XOR<Prisma.PullRequestUpdateWithoutAnalysesInput, Prisma.PullRequestUncheckedUpdateWithoutAnalysesInput>
+}
+
+export type PullRequestUpdateWithoutAnalysesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  externalId?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  author?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sourceBranch?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetBranch?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumPullRequestStatusFieldUpdateOperationsInput | $Enums.PullRequestStatus
+  url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  mergedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  repository?: Prisma.RepositoryUpdateOneRequiredWithoutPullRequestsNestedInput
+}
+
+export type PullRequestUncheckedUpdateWithoutAnalysesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  repositoryId?: Prisma.StringFieldUpdateOperationsInput | string
+  externalId?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  number?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  author?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sourceBranch?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetBranch?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumPullRequestStatusFieldUpdateOperationsInput | $Enums.PullRequestStatus
+  url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  mergedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+}
+
 export type PullRequestCreateManyRepositoryInput = {
   id?: string
   externalId?: bigint | number | null
@@ -706,6 +816,7 @@ export type PullRequestUpdateWithoutRepositoryInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   mergedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  analyses?: Prisma.AnalysisUpdateManyWithoutPullRequestNestedInput
 }
 
 export type PullRequestUncheckedUpdateWithoutRepositoryInput = {
@@ -721,6 +832,7 @@ export type PullRequestUncheckedUpdateWithoutRepositoryInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   mergedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  analyses?: Prisma.AnalysisUncheckedUpdateManyWithoutPullRequestNestedInput
 }
 
 export type PullRequestUncheckedUpdateManyWithoutRepositoryInput = {
@@ -739,6 +851,35 @@ export type PullRequestUncheckedUpdateManyWithoutRepositoryInput = {
 }
 
 
+/**
+ * Count Type PullRequestCountOutputType
+ */
+
+export type PullRequestCountOutputType = {
+  analyses: number
+}
+
+export type PullRequestCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  analyses?: boolean | PullRequestCountOutputTypeCountAnalysesArgs
+}
+
+/**
+ * PullRequestCountOutputType without action
+ */
+export type PullRequestCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the PullRequestCountOutputType
+   */
+  select?: Prisma.PullRequestCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * PullRequestCountOutputType without action
+ */
+export type PullRequestCountOutputTypeCountAnalysesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AnalysisWhereInput
+}
+
 
 export type PullRequestSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -755,6 +896,8 @@ export type PullRequestSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   updatedAt?: boolean
   mergedAt?: boolean
   repository?: boolean | Prisma.RepositoryDefaultArgs<ExtArgs>
+  analyses?: boolean | Prisma.PullRequest$analysesArgs<ExtArgs>
+  _count?: boolean | Prisma.PullRequestCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["pullRequest"]>
 
 export type PullRequestSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -810,6 +953,8 @@ export type PullRequestSelectScalar = {
 export type PullRequestOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "repositoryId" | "externalId" | "number" | "title" | "author" | "sourceBranch" | "targetBranch" | "status" | "url" | "createdAt" | "updatedAt" | "mergedAt", ExtArgs["result"]["pullRequest"]>
 export type PullRequestInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   repository?: boolean | Prisma.RepositoryDefaultArgs<ExtArgs>
+  analyses?: boolean | Prisma.PullRequest$analysesArgs<ExtArgs>
+  _count?: boolean | Prisma.PullRequestCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type PullRequestIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   repository?: boolean | Prisma.RepositoryDefaultArgs<ExtArgs>
@@ -822,6 +967,7 @@ export type $PullRequestPayload<ExtArgs extends runtime.Types.Extensions.Interna
   name: "PullRequest"
   objects: {
     repository: Prisma.$RepositoryPayload<ExtArgs>
+    analyses: Prisma.$AnalysisPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1232,6 +1378,7 @@ readonly fields: PullRequestFieldRefs;
 export interface Prisma__PullRequestClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   repository<T extends Prisma.RepositoryDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.RepositoryDefaultArgs<ExtArgs>>): Prisma.Prisma__RepositoryClient<runtime.Types.Result.GetResult<Prisma.$RepositoryPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  analyses<T extends Prisma.PullRequest$analysesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.PullRequest$analysesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AnalysisPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1672,6 +1819,30 @@ export type PullRequestDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.I
    * Limit how many PullRequests to delete.
    */
   limit?: number
+}
+
+/**
+ * PullRequest.analyses
+ */
+export type PullRequest$analysesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Analysis
+   */
+  select?: Prisma.AnalysisSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Analysis
+   */
+  omit?: Prisma.AnalysisOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AnalysisInclude<ExtArgs> | null
+  where?: Prisma.AnalysisWhereInput
+  orderBy?: Prisma.AnalysisOrderByWithRelationInput | Prisma.AnalysisOrderByWithRelationInput[]
+  cursor?: Prisma.AnalysisWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AnalysisScalarFieldEnum | Prisma.AnalysisScalarFieldEnum[]
 }
 
 /**

@@ -196,3 +196,22 @@ export const CheckStatus = {
 } as const
 
 export type CheckStatus = (typeof CheckStatus)[keyof typeof CheckStatus]
+
+
+export const PRRiskLevel = {
+  LOW: 'LOW',
+  MEDIUM: 'MEDIUM',
+  HIGH: 'HIGH',
+  CRITICAL: 'CRITICAL'
+} as const
+
+export type PRRiskLevel = (typeof PRRiskLevel)[keyof typeof PRRiskLevel]
+
+
+export const PRMergeReadiness = {
+  READY: 'READY',
+  REVIEW_REQUIRED: 'REVIEW_REQUIRED',
+  BLOCKED: 'BLOCKED'
+} as const
+
+export type PRMergeReadiness = (typeof PRMergeReadiness)[keyof typeof PRMergeReadiness]

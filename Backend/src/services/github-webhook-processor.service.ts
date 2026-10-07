@@ -8,6 +8,10 @@ import {
 } from "./github.service.js";
 
 import {
+  calculatePRRisk,
+} from "./pr-risk.service.js";
+
+import {
   reviewRepositoryCode,
 } from "./code-review.service.js";
 
@@ -167,6 +171,84 @@ export async function processGitHubPullRequestWebhook(
       analyzableFiles,
     );
 
+  const changedLines =
+  changedFiles.reduce(
+    (total, file) =>
+      total +
+      file.additions +
+      file.deletions,
+    0,
+  );
+
+const riskAnalysis =
+  calculatePRRisk({
+    codeReviewFindings,
+    securityFindings:
+      securityScan.findings,
+    changedFiles:
+      changedFiles.length,
+    changedLines,
+  });
+
+  const analysis =
+  await prisma.analysis.create({
+    data: {
+      repositoryId:
+        repository.id,
+
+      pullRequestId:
+        null,
+
+      status:
+        "COMPLETED",
+
+      trigger:
+        "PULL_REQUEST",
+
+      branch:
+        payload.pull_request?.head?.ref ??
+        null,
+
+      commitSha:
+        headSha,
+
+      filesAnalyzed:
+        analyzableFiles.length,
+
+      linesAnalyzed:
+        analyzableFiles.reduce(
+          (total, file) =>
+            total + file.lines,
+          0,
+        ),
+
+      riskScore:
+        riskAnalysis.riskScore,
+
+      riskLevel:
+        riskAnalysis.riskLevel,
+
+      mergeReadiness:
+        riskAnalysis.mergeReadiness,
+
+      codeQuality:
+        Math.max(
+          0,
+          100 -
+            codeReviewFindings.length * 5,
+        ),
+
+      securityScore:
+        securityScan.securityScore,
+
+      startedAt:
+        new Date(),
+
+      completedAt:
+        new Date(),
+    },
+  });
+
   return {
     handled: true,
 
@@ -229,6 +311,22 @@ export async function processGitHubPullRequestWebhook(
     analysis: {
       analyzableFiles:
         analyzableFiles.length,
+
+        risk: {
+  score:
+    riskAnalysis.riskScore,
+
+  level:
+    riskAnalysis.riskLevel,
+
+  mergeReadiness:
+    riskAnalysis.mergeReadiness,
+
+  reasons:
+    riskAnalysis.reasons,
+
+  changedLines,
+},
 
       codeReview: {
         findings:

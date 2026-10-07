@@ -235,6 +235,20 @@ export type IntFilter<$PrismaModel = never> = {
   not?: Prisma.NestedIntFilter<$PrismaModel> | number
 }
 
+export type EnumPRRiskLevelNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.PRRiskLevel | Prisma.EnumPRRiskLevelFieldRefInput<$PrismaModel> | null
+  in?: $Enums.PRRiskLevel[] | Prisma.ListEnumPRRiskLevelFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.PRRiskLevel[] | Prisma.ListEnumPRRiskLevelFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumPRRiskLevelNullableFilter<$PrismaModel> | $Enums.PRRiskLevel | null
+}
+
+export type EnumPRMergeReadinessNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.PRMergeReadiness | Prisma.EnumPRMergeReadinessFieldRefInput<$PrismaModel> | null
+  in?: $Enums.PRMergeReadiness[] | Prisma.ListEnumPRMergeReadinessFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.PRMergeReadiness[] | Prisma.ListEnumPRMergeReadinessFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumPRMergeReadinessNullableFilter<$PrismaModel> | $Enums.PRMergeReadiness | null
+}
+
 export type EnumAnalysisStatusWithAggregatesFilter<$PrismaModel = never> = {
   equals?: $Enums.AnalysisStatus | Prisma.EnumAnalysisStatusFieldRefInput<$PrismaModel>
   in?: $Enums.AnalysisStatus[] | Prisma.ListEnumAnalysisStatusFieldRefInput<$PrismaModel>
@@ -285,6 +299,26 @@ export type IntWithAggregatesFilter<$PrismaModel = never> = {
   _sum?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedIntFilter<$PrismaModel>
   _max?: Prisma.NestedIntFilter<$PrismaModel>
+}
+
+export type EnumPRRiskLevelNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PRRiskLevel | Prisma.EnumPRRiskLevelFieldRefInput<$PrismaModel> | null
+  in?: $Enums.PRRiskLevel[] | Prisma.ListEnumPRRiskLevelFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.PRRiskLevel[] | Prisma.ListEnumPRRiskLevelFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumPRRiskLevelNullableWithAggregatesFilter<$PrismaModel> | $Enums.PRRiskLevel | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPRRiskLevelNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPRRiskLevelNullableFilter<$PrismaModel>
+}
+
+export type EnumPRMergeReadinessNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PRMergeReadiness | Prisma.EnumPRMergeReadinessFieldRefInput<$PrismaModel> | null
+  in?: $Enums.PRMergeReadiness[] | Prisma.ListEnumPRMergeReadinessFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.PRMergeReadiness[] | Prisma.ListEnumPRMergeReadinessFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumPRMergeReadinessNullableWithAggregatesFilter<$PrismaModel> | $Enums.PRMergeReadiness | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPRMergeReadinessNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPRMergeReadinessNullableFilter<$PrismaModel>
 }
 
 export type EnumFindingSeverityFilter<$PrismaModel = never> = {
@@ -842,6 +876,20 @@ export type NestedEnumAnalysisTriggerFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumAnalysisTriggerFilter<$PrismaModel> | $Enums.AnalysisTrigger
 }
 
+export type NestedEnumPRRiskLevelNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.PRRiskLevel | Prisma.EnumPRRiskLevelFieldRefInput<$PrismaModel> | null
+  in?: $Enums.PRRiskLevel[] | Prisma.ListEnumPRRiskLevelFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.PRRiskLevel[] | Prisma.ListEnumPRRiskLevelFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumPRRiskLevelNullableFilter<$PrismaModel> | $Enums.PRRiskLevel | null
+}
+
+export type NestedEnumPRMergeReadinessNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.PRMergeReadiness | Prisma.EnumPRMergeReadinessFieldRefInput<$PrismaModel> | null
+  in?: $Enums.PRMergeReadiness[] | Prisma.ListEnumPRMergeReadinessFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.PRMergeReadiness[] | Prisma.ListEnumPRMergeReadinessFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumPRMergeReadinessNullableFilter<$PrismaModel> | $Enums.PRMergeReadiness | null
+}
+
 export type NestedEnumAnalysisStatusWithAggregatesFilter<$PrismaModel = never> = {
   equals?: $Enums.AnalysisStatus | Prisma.EnumAnalysisStatusFieldRefInput<$PrismaModel>
   in?: $Enums.AnalysisStatus[] | Prisma.ListEnumAnalysisStatusFieldRefInput<$PrismaModel>
@@ -914,6 +962,26 @@ export type NestedFloatFilter<$PrismaModel = never> = {
   gt?: number | Prisma.FloatFieldRefInput<$PrismaModel>
   gte?: number | Prisma.FloatFieldRefInput<$PrismaModel>
   not?: Prisma.NestedFloatFilter<$PrismaModel> | number
+}
+
+export type NestedEnumPRRiskLevelNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PRRiskLevel | Prisma.EnumPRRiskLevelFieldRefInput<$PrismaModel> | null
+  in?: $Enums.PRRiskLevel[] | Prisma.ListEnumPRRiskLevelFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.PRRiskLevel[] | Prisma.ListEnumPRRiskLevelFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumPRRiskLevelNullableWithAggregatesFilter<$PrismaModel> | $Enums.PRRiskLevel | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPRRiskLevelNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPRRiskLevelNullableFilter<$PrismaModel>
+}
+
+export type NestedEnumPRMergeReadinessNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PRMergeReadiness | Prisma.EnumPRMergeReadinessFieldRefInput<$PrismaModel> | null
+  in?: $Enums.PRMergeReadiness[] | Prisma.ListEnumPRMergeReadinessFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.PRMergeReadiness[] | Prisma.ListEnumPRMergeReadinessFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumPRMergeReadinessNullableWithAggregatesFilter<$PrismaModel> | $Enums.PRMergeReadiness | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPRMergeReadinessNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPRMergeReadinessNullableFilter<$PrismaModel>
 }
 
 export type NestedEnumFindingSeverityFilter<$PrismaModel = never> = {
