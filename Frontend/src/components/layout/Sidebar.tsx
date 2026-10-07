@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   Activity,
   Box,
@@ -12,51 +13,165 @@ import {
   ShieldCheck,
   Workflow,
 } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 
-const sections = [
-  {
-    title: "Repository",
-    items: [
-      { label: "Overview", icon: LayoutDashboard, path: "/dashboard" },
-      { label: "Code Review", icon: Code2, path: "/dashboard/review" },
-      { label: "Security", icon: ShieldCheck, path: "/dashboard/security" },
-      { label: "Dependencies", icon: Box, path: "/dashboard/dependencies" },
-    ],
-  },
-  {
-    title: "Analysis",
-    items: [
-      {
-        label: "Architecture",
-        icon: Network,
-        path: "/dashboard/architecture",
-      },
-      {
-        label: "Performance",
-        icon: Gauge,
-        path: "/dashboard/performance",
-      },
-      {
-        label: "Codebase Chat",
-        icon: MessageSquareCode,
-        path: "/dashboard/chat",
-      },
-      {
-        label: "Documentation",
-        icon: FileText,
-        path: "/dashboard/documentation",
-      },
-      {
-        label: "CI/CD",
-        icon: Workflow,
-        path: "/dashboard/cicd",
-      },
-    ],
-  },
-];
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  "http://localhost:5000/api";
 
 function Sidebar() {
+  const location = useLocation();
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
+    null,
+  );
+
+  /*
+   * If we are already inside a project route, use that project's ID.
+   *
+   * Example:
+   * /projects/cmu8ry2hd0001sktx5mcpoos/security
+   */
+  const projectRouteMatch = location.pathname.match(
+    /^\/projects\/([^/]+)/,
+  );
+
+  const projectId =
+    projectRouteMatch?.[1] ?? selectedProjectId;
+
+  /*
+   * Dashboard does not contain a project ID in its URL.
+   * Fetch the first project so the sidebar can still generate
+   * project-aware links from /dashboard.
+   */
+  useEffect(() => {
+    if (projectRouteMatch) {
+      return;
+    }
+
+    async function loadProject() {
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/projects`,
+          {
+            credentials: "include",
+          },
+        );
+
+        if (!response.ok) {
+          return;
+        }
+
+        const data = await response.json();
+
+        const projects = Array.isArray(data)
+          ? data
+          : data.projects;
+
+        if (Array.isArray(projects) && projects.length > 0) {
+          setSelectedProjectId(projects[0].id);
+        }
+      } catch {
+        // Keep the sidebar usable even if projects cannot be loaded.
+      }
+    }
+
+    loadProject();
+  }, [location.pathname, projectRouteMatch]);
+
+  const projectPath = projectId
+    ? `/projects/${projectId}`
+    : "/projects";
+
+  const reviewPath = projectId
+    ? `/projects/${projectId}/review`
+    : "/projects";
+
+  const securityPath = projectId
+    ? `/projects/${projectId}/security`
+    : "/projects";
+
+  const dependenciesPath = projectId
+    ? `/projects/${projectId}/dependencies`
+    : "/projects";
+
+  const architecturePath = projectId
+    ? `/projects/${projectId}/architecture`
+    : "/projects";
+
+  const performancePath = projectId
+    ? `/projects/${projectId}/performance`
+    : "/projects";
+
+  const chatPath = projectId
+    ? `/projects/${projectId}/chat`
+    : "/projects";
+
+  const documentationPath = projectId
+    ? `/projects/${projectId}/documentation`
+    : "/projects";
+
+  const cicdPath = projectId
+    ? `/projects/${projectId}/cicd`
+    : "/projects";
+
+  const sections = [
+    {
+      title: "Repository",
+      items: [
+        {
+          label: "Overview",
+          icon: LayoutDashboard,
+          path: projectPath,
+        },
+        {
+          label: "Code Review",
+          icon: Code2,
+          path: reviewPath,
+        },
+        {
+          label: "Security",
+          icon: ShieldCheck,
+          path: securityPath,
+        },
+        {
+          label: "Dependencies",
+          icon: Box,
+          path: dependenciesPath,
+        },
+      ],
+    },
+    {
+      title: "Analysis",
+      items: [
+        {
+          label: "Architecture",
+          icon: Network,
+          path: architecturePath,
+        },
+        {
+          label: "Performance",
+          icon: Gauge,
+          path: performancePath,
+        },
+        {
+          label: "Codebase Chat",
+          icon: MessageSquareCode,
+          path: chatPath,
+        },
+        {
+          label: "Documentation",
+          icon: FileText,
+          path: documentationPath,
+        },
+        {
+          label: "CI/CD",
+          icon: Workflow,
+          path: cicdPath,
+        },
+      ],
+    },
+  ];
+
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r border-slate-800/80 bg-[#070b12] lg:flex lg:flex-col">
       <div className="flex h-16 items-center border-b border-slate-800/80 px-5">
@@ -119,7 +234,7 @@ function Sidebar() {
                   <NavLink
                     key={item.label}
                     to={item.path}
-                    end={item.path === "/dashboard"}
+                    end={item.label === "Overview"}
                     className={({ isActive }) =>
                       `group flex w-full items-center gap-3 border-l px-3 py-2 text-left text-sm transition ${
                         isActive

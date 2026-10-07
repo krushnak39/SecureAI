@@ -190,9 +190,9 @@ export type ChatSessionWhereInput = {
   title?: Prisma.StringNullableFilter<"ChatSession"> | string | null
   createdAt?: Prisma.DateTimeFilter<"ChatSession"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"ChatSession"> | Date | string
-  user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
-  repository?: Prisma.XOR<Prisma.RepositoryNullableScalarRelationFilter, Prisma.RepositoryWhereInput> | null
   messages?: Prisma.ChatMessageListRelationFilter
+  repository?: Prisma.XOR<Prisma.RepositoryNullableScalarRelationFilter, Prisma.RepositoryWhereInput> | null
+  user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }
 
 export type ChatSessionOrderByWithRelationInput = {
@@ -202,9 +202,9 @@ export type ChatSessionOrderByWithRelationInput = {
   title?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
-  user?: Prisma.UserOrderByWithRelationInput
-  repository?: Prisma.RepositoryOrderByWithRelationInput
   messages?: Prisma.ChatMessageOrderByRelationAggregateInput
+  repository?: Prisma.RepositoryOrderByWithRelationInput
+  user?: Prisma.UserOrderByWithRelationInput
 }
 
 export type ChatSessionWhereUniqueInput = Prisma.AtLeast<{
@@ -217,9 +217,9 @@ export type ChatSessionWhereUniqueInput = Prisma.AtLeast<{
   title?: Prisma.StringNullableFilter<"ChatSession"> | string | null
   createdAt?: Prisma.DateTimeFilter<"ChatSession"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"ChatSession"> | Date | string
-  user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
-  repository?: Prisma.XOR<Prisma.RepositoryNullableScalarRelationFilter, Prisma.RepositoryWhereInput> | null
   messages?: Prisma.ChatMessageListRelationFilter
+  repository?: Prisma.XOR<Prisma.RepositoryNullableScalarRelationFilter, Prisma.RepositoryWhereInput> | null
+  user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }, "id">
 
 export type ChatSessionOrderByWithAggregationInput = {
@@ -251,9 +251,9 @@ export type ChatSessionCreateInput = {
   title?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  user: Prisma.UserCreateNestedOneWithoutChatSessionsInput
-  repository?: Prisma.RepositoryCreateNestedOneWithoutChatSessionsInput
   messages?: Prisma.ChatMessageCreateNestedManyWithoutSessionInput
+  repository?: Prisma.RepositoryCreateNestedOneWithoutChatSessionsInput
+  user: Prisma.UserCreateNestedOneWithoutChatSessionsInput
 }
 
 export type ChatSessionUncheckedCreateInput = {
@@ -271,9 +271,9 @@ export type ChatSessionUpdateInput = {
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  user?: Prisma.UserUpdateOneRequiredWithoutChatSessionsNestedInput
-  repository?: Prisma.RepositoryUpdateOneWithoutChatSessionsNestedInput
   messages?: Prisma.ChatMessageUpdateManyWithoutSessionNestedInput
+  repository?: Prisma.RepositoryUpdateOneWithoutChatSessionsNestedInput
+  user?: Prisma.UserUpdateOneRequiredWithoutChatSessionsNestedInput
 }
 
 export type ChatSessionUncheckedUpdateInput = {
@@ -456,8 +456,8 @@ export type ChatSessionCreateWithoutUserInput = {
   title?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  repository?: Prisma.RepositoryCreateNestedOneWithoutChatSessionsInput
   messages?: Prisma.ChatMessageCreateNestedManyWithoutSessionInput
+  repository?: Prisma.RepositoryCreateNestedOneWithoutChatSessionsInput
 }
 
 export type ChatSessionUncheckedCreateWithoutUserInput = {
@@ -512,8 +512,8 @@ export type ChatSessionCreateWithoutRepositoryInput = {
   title?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  user: Prisma.UserCreateNestedOneWithoutChatSessionsInput
   messages?: Prisma.ChatMessageCreateNestedManyWithoutSessionInput
+  user: Prisma.UserCreateNestedOneWithoutChatSessionsInput
 }
 
 export type ChatSessionUncheckedCreateWithoutRepositoryInput = {
@@ -556,8 +556,8 @@ export type ChatSessionCreateWithoutMessagesInput = {
   title?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  user: Prisma.UserCreateNestedOneWithoutChatSessionsInput
   repository?: Prisma.RepositoryCreateNestedOneWithoutChatSessionsInput
+  user: Prisma.UserCreateNestedOneWithoutChatSessionsInput
 }
 
 export type ChatSessionUncheckedCreateWithoutMessagesInput = {
@@ -590,8 +590,8 @@ export type ChatSessionUpdateWithoutMessagesInput = {
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  user?: Prisma.UserUpdateOneRequiredWithoutChatSessionsNestedInput
   repository?: Prisma.RepositoryUpdateOneWithoutChatSessionsNestedInput
+  user?: Prisma.UserUpdateOneRequiredWithoutChatSessionsNestedInput
 }
 
 export type ChatSessionUncheckedUpdateWithoutMessagesInput = {
@@ -616,8 +616,8 @@ export type ChatSessionUpdateWithoutUserInput = {
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  repository?: Prisma.RepositoryUpdateOneWithoutChatSessionsNestedInput
   messages?: Prisma.ChatMessageUpdateManyWithoutSessionNestedInput
+  repository?: Prisma.RepositoryUpdateOneWithoutChatSessionsNestedInput
 }
 
 export type ChatSessionUncheckedUpdateWithoutUserInput = {
@@ -650,8 +650,8 @@ export type ChatSessionUpdateWithoutRepositoryInput = {
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  user?: Prisma.UserUpdateOneRequiredWithoutChatSessionsNestedInput
   messages?: Prisma.ChatMessageUpdateManyWithoutSessionNestedInput
+  user?: Prisma.UserUpdateOneRequiredWithoutChatSessionsNestedInput
 }
 
 export type ChatSessionUncheckedUpdateWithoutRepositoryInput = {
@@ -709,9 +709,9 @@ export type ChatSessionSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   title?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
-  repository?: boolean | Prisma.ChatSession$repositoryArgs<ExtArgs>
   messages?: boolean | Prisma.ChatSession$messagesArgs<ExtArgs>
+  repository?: boolean | Prisma.ChatSession$repositoryArgs<ExtArgs>
+  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   _count?: boolean | Prisma.ChatSessionCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["chatSession"]>
 
@@ -722,8 +722,8 @@ export type ChatSessionSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   title?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   repository?: boolean | Prisma.ChatSession$repositoryArgs<ExtArgs>
+  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["chatSession"]>
 
 export type ChatSessionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -733,8 +733,8 @@ export type ChatSessionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   title?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   repository?: boolean | Prisma.ChatSession$repositoryArgs<ExtArgs>
+  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["chatSession"]>
 
 export type ChatSessionSelectScalar = {
@@ -748,26 +748,26 @@ export type ChatSessionSelectScalar = {
 
 export type ChatSessionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "repositoryId" | "title" | "createdAt" | "updatedAt", ExtArgs["result"]["chatSession"]>
 export type ChatSessionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
-  repository?: boolean | Prisma.ChatSession$repositoryArgs<ExtArgs>
   messages?: boolean | Prisma.ChatSession$messagesArgs<ExtArgs>
+  repository?: boolean | Prisma.ChatSession$repositoryArgs<ExtArgs>
+  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   _count?: boolean | Prisma.ChatSessionCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type ChatSessionIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   repository?: boolean | Prisma.ChatSession$repositoryArgs<ExtArgs>
+  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
 export type ChatSessionIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   repository?: boolean | Prisma.ChatSession$repositoryArgs<ExtArgs>
+  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
 
 export type $ChatSessionPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "ChatSession"
   objects: {
-    user: Prisma.$UserPayload<ExtArgs>
-    repository: Prisma.$RepositoryPayload<ExtArgs> | null
     messages: Prisma.$ChatMessagePayload<ExtArgs>[]
+    repository: Prisma.$RepositoryPayload<ExtArgs> | null
+    user: Prisma.$UserPayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1170,9 +1170,9 @@ readonly fields: ChatSessionFieldRefs;
  */
 export interface Prisma__ChatSessionClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  user<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-  repository<T extends Prisma.ChatSession$repositoryArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ChatSession$repositoryArgs<ExtArgs>>): Prisma.Prisma__RepositoryClient<runtime.Types.Result.GetResult<Prisma.$RepositoryPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   messages<T extends Prisma.ChatSession$messagesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ChatSession$messagesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ChatMessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  repository<T extends Prisma.ChatSession$repositoryArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ChatSession$repositoryArgs<ExtArgs>>): Prisma.Prisma__RepositoryClient<runtime.Types.Result.GetResult<Prisma.$RepositoryPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  user<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1609,25 +1609,6 @@ export type ChatSessionDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.I
 }
 
 /**
- * ChatSession.repository
- */
-export type ChatSession$repositoryArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the Repository
-   */
-  select?: Prisma.RepositorySelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the Repository
-   */
-  omit?: Prisma.RepositoryOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.RepositoryInclude<ExtArgs> | null
-  where?: Prisma.RepositoryWhereInput
-}
-
-/**
  * ChatSession.messages
  */
 export type ChatSession$messagesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1649,6 +1630,25 @@ export type ChatSession$messagesArgs<ExtArgs extends runtime.Types.Extensions.In
   take?: number
   skip?: number
   distinct?: Prisma.ChatMessageScalarFieldEnum | Prisma.ChatMessageScalarFieldEnum[]
+}
+
+/**
+ * ChatSession.repository
+ */
+export type ChatSession$repositoryArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Repository
+   */
+  select?: Prisma.RepositorySelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Repository
+   */
+  omit?: Prisma.RepositoryOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.RepositoryInclude<ExtArgs> | null
+  where?: Prisma.RepositoryWhereInput
 }
 
 /**

@@ -17,7 +17,9 @@ import {
   Sparkles,
   TriangleAlert,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useParams } from "react-router-dom";
+import { apiRequest } from "../../services/api";
 
 type ComponentType =
   | "frontend"
@@ -40,7 +42,7 @@ interface ArchitectureComponent {
 }
 
 interface ArchitectureFinding {
-  id: number;
+  id: string;
   severity: "high" | "medium" | "low";
   title: string;
   component: string;
@@ -49,181 +51,48 @@ interface ArchitectureFinding {
   recommendation: string;
 }
 
-const components: ArchitectureComponent[] = [
-  {
-    id: "frontend",
-    name: "Web Application",
-    type: "frontend",
-    technology: "React + TypeScript",
-    description:
-      "Developer-facing interface responsible for repository intelligence, findings, analysis controls and codebase interaction.",
-    files: [
-      "src/pages",
-      "src/components",
-      "src/services",
-      "src/routes",
-    ],
-    dependencies: ["api"],
-    dependents: [],
-    health: "healthy",
-  },
-  {
-    id: "api",
-    name: "Application API",
-    type: "api",
-    technology: "Express + TypeScript",
-    description:
-      "Primary HTTP boundary between the frontend, repository services, analysis engines and persistence layer.",
-    files: [
-      "Backend/src/routes",
-      "Backend/src/controllers",
-      "Backend/src/middleware",
-    ],
-    dependencies: ["backend", "database", "github"],
-    dependents: ["frontend"],
-    health: "healthy",
-  },
-  {
-    id: "backend",
-    name: "Analysis Orchestrator",
-    type: "backend",
-    technology: "Node.js",
-    description:
-      "Coordinates repository analysis jobs and communicates with the specialized AI and security analysis services.",
-    files: [
-      "Backend/src/services",
-      "Backend/src/jobs",
-      "Backend/src/analyzers",
-    ],
-    dependencies: ["database", "ai", "security", "github"],
-    dependents: ["api"],
-    health: "warning",
-  },
-  {
-    id: "database",
-    name: "Data Layer",
-    type: "database",
-    technology: "PostgreSQL + pgvector",
-    description:
-      "Stores repositories, analysis results, findings, embeddings and persistent project intelligence.",
-    files: [
-      "prisma/schema.prisma",
-      "Backend/src/db",
-    ],
-    dependencies: [],
-    dependents: ["api", "backend", "ai"],
-    health: "healthy",
-  },
-  {
-    id: "ai",
-    name: "AI Analysis Service",
-    type: "ai",
-    technology: "FastAPI + LLM + RAG",
-    description:
-      "Provides code understanding, AI review, semantic retrieval, documentation generation and codebase conversations.",
-    files: [
-      "AI/app",
-      "AI/embeddings",
-      "AI/retrieval",
-      "AI/prompts",
-    ],
-    dependencies: ["database", "llm"],
-    dependents: ["backend"],
-    health: "healthy",
-  },
-  {
-    id: "github",
-    name: "GitHub Integration",
-    type: "external",
-    technology: "GitHub API",
-    description:
-      "Provides repository metadata, source files, pull requests, branches and CI/CD context.",
-    files: [
-      "Backend/src/integrations/github",
-    ],
-    dependencies: [],
-    dependents: ["api", "backend"],
-    health: "healthy",
-  },
-  {
-    id: "security",
-    name: "Security Engine",
-    type: "ai",
-    technology: "Semgrep + scanners",
-    description:
-      "Runs static security analysis, secret detection and dependency-oriented security checks.",
-    files: [
-      "AI/security",
-      "AI/scanners",
-    ],
-    dependencies: [],
-    dependents: ["backend"],
-    health: "healthy",
-  },
-  {
-    id: "llm",
-    name: "LLM Provider",
-    type: "external",
-    technology: "LLM API",
-    description:
-      "External language model provider used by the AI analysis service for reasoning and generation.",
-    files: [],
-    dependencies: [],
-    dependents: ["ai"],
-    health: "healthy",
-  },
-];
+interface ArchitectureRelationship {
+  id: string;
+  sourceId: string;
+  targetId: string;
+  relation: string;
+  metadata: unknown;
+}
 
-const findings: ArchitectureFinding[] = [
-  {
-    id: 1,
-    severity: "high",
-    title: "Analysis orchestrator has high dependency fan-out",
-    component: "Analysis Orchestrator",
-    description:
-      "The orchestration layer communicates with persistence, AI, security and repository integrations.",
-    impact:
-      "A highly connected orchestration layer can become difficult to test and change as the number of analysis capabilities grows.",
-    recommendation:
-      "Introduce explicit service boundaries and job-level interfaces so individual analysis engines remain independently replaceable.",
-  },
-  {
-    id: 2,
-    severity: "medium",
-    title: "AI service depends directly on persistence",
-    component: "AI Analysis Service",
-    description:
-      "The AI layer currently reads and writes repository intelligence through the database layer.",
-    impact:
-      "Direct persistence coupling can make AI workflows harder to reuse independently from the application's storage implementation.",
-    recommendation:
-      "Place a repository-context abstraction between retrieval workflows and database-specific operations.",
-  },
-  {
-    id: 3,
-    severity: "medium",
-    title: "External integrations are concentrated in orchestration",
-    component: "GitHub Integration",
-    description:
-      "Repository acquisition and analysis coordination are closely connected.",
-    impact:
-      "Changes to GitHub-specific behavior may propagate into analysis workflows.",
-    recommendation:
-      "Expose provider-neutral repository interfaces and isolate GitHub-specific API models inside the integration layer.",
-  },
-  {
-    id: 4,
-    severity: "low",
-    title: "Frontend service boundaries should remain explicit",
-    component: "Web Application",
-    description:
-      "The frontend communicates with multiple analysis capabilities through the application API.",
-    impact:
-      "Directly coupling UI modules to internal backend implementation details could make future API evolution harder.",
-    recommendation:
-      "Keep API calls centralized in typed frontend service modules and avoid embedding backend assumptions inside page components.",
-  },
-];
+interface ArchitectureApiResponse {
+  success: boolean;
+  data: {
+    analysis: {
+      id: string;
+      branch: string | null;
+      commitSha: string | null;
+      createdAt: string;
+      completedAt: string | null;
+    } | null;
+    architecture: {
+      health: number | null;
+      components: Array<{
+        id: string;
+        name: string;
+        type: string;
+        technology: string | null;
+        description: string | null;
+        files: unknown;
+        health: number | null;
+      }>;
+      relationships: ArchitectureRelationship[];
+      findings: Array<{
+        id: string;
+        severity: string;
+        title: string;
+        description: string;
+        impact: string | null;
+        recommendation: string | null;
+        evidence: string | null;
+      }>;
+    };
+  };
+}
 
 const typeConfig: Record<
   ComponentType,
@@ -280,23 +149,376 @@ const healthConfig = {
   },
 };
 
+function normalizeComponentType(type: string): ComponentType {
+  const normalized = type.toLowerCase();
+
+  if (
+    normalized === "frontend" ||
+    normalized === "api" ||
+    normalized === "backend" ||
+    normalized === "database" ||
+    normalized === "ai" ||
+    normalized === "external"
+  ) {
+    return normalized;
+  }
+
+  return "backend";
+}
+
+function getHealthState(
+  health: number | null,
+): ArchitectureComponent["health"] {
+  if (health === null) {
+    return "healthy";
+  }
+
+  if (health >= 85) {
+    return "healthy";
+  }
+
+  if (health >= 60) {
+    return "warning";
+  }
+
+  return "risk";
+}
+
+function normalizeFiles(files: unknown): string[] {
+  if (!Array.isArray(files)) {
+    return [];
+  }
+
+  return files.filter(
+    (file): file is string => typeof file === "string",
+  );
+}
+
+function normalizeSeverity(
+  severity: string,
+): ArchitectureFinding["severity"] {
+  switch (severity.toLowerCase()) {
+    case "high":
+      return "high";
+    case "medium":
+      return "medium";
+    default:
+      return "low";
+  }
+}
+
 function Architecture() {
-  const [selectedId, setSelectedId] = useState("backend");
+  // IMPORTANT:
+  // App.tsx defines the route as /projects/:id/architecture,
+  // so React Router exposes the parameter as "id".
+  const { id: projectId } = useParams<{ id: string }>();
+
+  const [components, setComponents] = useState<
+    ArchitectureComponent[]
+  >([]);
+  const [findings, setFindings] = useState<
+    ArchitectureFinding[]
+  >([]);
+  const [relationships, setRelationships] = useState<
+    ArchitectureRelationship[]
+  >([]);
+  const [architectureHealth, setArchitectureHealth] = useState<
+    number | null
+  >(null);
+  const [branch, setBranch] = useState<string>("—");
+  const [loading, setLoading] = useState(true);
+
+  const [rebuilding, setRebuilding] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(
+    null,
+  );
+
+  const loadArchitecture = async () => {
+    if (!projectId) {
+      setError("Project ID is missing.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setError(null);
+
+      const response =
+        await apiRequest<ArchitectureApiResponse>(
+          `/projects/${projectId}/architecture`,
+        );
+
+      if (!response.success) {
+        throw new Error(
+          "Failed to load architecture data.",
+        );
+      }
+
+      const architecture = response.data.architecture;
+
+      const relationshipData =
+        architecture.relationships ?? [];
+
+      const normalizedComponents: ArchitectureComponent[] =
+        architecture.components.map((component) => {
+          const dependencies = relationshipData
+            .filter(
+              (relationship) =>
+                relationship.sourceId === component.id,
+            )
+            .map(
+              (relationship) =>
+                relationship.targetId,
+            );
+
+          const dependents = relationshipData
+            .filter(
+              (relationship) =>
+                relationship.targetId === component.id,
+            )
+            .map(
+              (relationship) =>
+                relationship.sourceId,
+            );
+
+          return {
+            id: component.id,
+            name: component.name,
+            type: normalizeComponentType(
+              component.type,
+            ),
+            technology:
+              component.technology ?? "Unknown",
+            description:
+              component.description ??
+              "No architectural responsibility description is available.",
+            files: normalizeFiles(component.files),
+            dependencies,
+            dependents,
+            health: getHealthState(component.health),
+          };
+        });
+
+      const normalizedFindings: ArchitectureFinding[] =
+        architecture.findings.map((finding) => {
+          let componentName = "Architecture";
+
+          if (finding.evidence) {
+            const match =
+              finding.evidence.match(
+                /^Component:\s*(.+)$/,
+              );
+
+            if (match) {
+              componentName = match[1];
+            }
+          }
+
+          return {
+            id: finding.id,
+            severity: normalizeSeverity(
+              finding.severity,
+            ),
+            title: finding.title,
+            component: componentName,
+            description: finding.description,
+            impact:
+              finding.impact ??
+              "No additional architectural impact description is available.",
+            recommendation:
+              finding.recommendation ??
+              "Review the architecture finding and introduce an appropriate boundary or abstraction.",
+          };
+        });
+
+      setComponents(normalizedComponents);
+      setFindings(normalizedFindings);
+      setRelationships(relationshipData);
+      setArchitectureHealth(architecture.health);
+      setBranch(
+        response.data.analysis?.branch ?? "—",
+      );
+
+      setSelectedId((current) => {
+        if (
+          current &&
+          normalizedComponents.some(
+            (component) =>
+              component.id === current,
+          )
+        ) {
+          return current;
+        }
+
+        return (
+          normalizedComponents[0]?.id ?? null
+        );
+      });
+    } catch (requestError) {
+      console.error(
+        "[Architecture UI] Failed to load architecture:",
+        requestError,
+      );
+
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Failed to load architecture data.",
+      );
+    } finally {
+      setLoading(false);
+      
+    }
+  };
+
+  useEffect(() => {
+    void loadArchitecture();
+  }, [projectId]);
 
   const selectedComponent =
-    components.find((component) => component.id === selectedId) ??
-    components[0];
+    components.find(
+      (component) =>
+        component.id === selectedId,
+    ) ?? components[0];
 
-  const selectedType = typeConfig[selectedComponent.type];
+  const selectedType = selectedComponent
+    ? typeConfig[selectedComponent.type]
+    : typeConfig.backend;
+
   const SelectedIcon = selectedType.icon;
 
   const highFindings = findings.filter(
-    (finding) => finding.severity === "high",
+    (finding) =>
+      finding.severity === "high",
   ).length;
 
   const mediumFindings = findings.filter(
-    (finding) => finding.severity === "medium",
+    (finding) =>
+      finding.severity === "medium",
   ).length;
+
+  const graphLayers = useMemo(() => {
+    const frontend = components.filter(
+      (component) =>
+        component.type === "frontend",
+    );
+
+    const api = components.filter(
+      (component) =>
+        component.type === "api",
+    );
+
+    const backend = components.filter(
+      (component) =>
+        component.type === "backend",
+    );
+
+    const database = components.filter(
+      (component) =>
+        component.type === "database",
+    );
+
+    const ai = components.filter(
+      (component) =>
+        component.type === "ai",
+    );
+
+    const external = components.filter(
+      (component) =>
+        component.type === "external",
+    );
+
+    return {
+      top: [...frontend, ...api],
+      middle: [...backend, ...database],
+      bottom: [...external, ...ai],
+    };
+  }, [components]);
+
+  const handleRefresh = async () => {
+    if (!projectId) {
+      setError("Project ID is missing.");
+      return;
+    }
+
+    try {
+      setRebuilding(true);
+      setError(null);
+
+      await apiRequest(`/analysis/projects/${projectId}/analyze`, {
+        method: "POST",
+      });
+
+      await loadArchitecture();
+    } catch (requestError) {
+      console.error(
+        "[Architecture UI] Failed to rebuild architecture:",
+        requestError,
+      );
+
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Failed to rebuild architecture.",
+      );
+    } finally {
+      setRebuilding(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <section className="border border-secure-border bg-secure-panel p-8">
+          <div className="flex items-center gap-3 text-slate-400">
+            <RefreshCw
+              size={16}
+              className="animate-spin"
+            />
+
+            <span className="text-sm">
+              Loading architecture intelligence...
+            </span>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <section className="border border-red-500/20 bg-secure-panel p-8">
+          <div className="flex items-start gap-3">
+            <CircleAlert
+              size={18}
+              className="mt-0.5 text-red-400"
+            />
+
+            <div>
+              <h2 className="text-sm font-medium text-white">
+                Architecture data unavailable
+              </h2>
+
+              <p className="mt-2 text-xs leading-5 text-slate-500">
+                {error}
+              </p>
+
+              <button
+                type="button"
+                onClick={handleRefresh}
+                className="mt-5 flex items-center gap-2 border border-slate-700 bg-white px-4 py-2 text-xs font-medium text-black transition hover:bg-slate-200"
+              >
+                <RefreshCw size={13} />
+                Retry
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -329,11 +551,11 @@ function Architecture() {
             <div className="mt-5 flex flex-wrap items-center gap-2">
               <span className="flex items-center gap-2 border border-slate-800 bg-[#0a0f18] px-3 py-1.5 font-mono text-[10px] text-slate-400">
                 <GitBranch size={12} />
-                feature
+                {branch}
               </span>
 
               <span className="border border-slate-800 bg-[#0a0f18] px-3 py-1.5 font-mono text-[10px] text-slate-400">
-                8 components
+                {components.length} components
               </span>
 
               <span className="flex items-center gap-2 text-[10px] text-emerald-400">
@@ -345,10 +567,21 @@ function Architecture() {
 
           <button
             type="button"
-            className="flex items-center justify-center gap-2 border border-slate-700 bg-white px-4 py-2.5 text-sm font-medium text-black transition hover:bg-slate-200"
+            onClick={() => void handleRefresh()}
+            disabled={rebuilding}
+            className="flex items-center justify-center gap-2 border border-slate-700 bg-white px-4 py-2.5 text-sm font-medium text-black transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            <RefreshCw size={15} />
-            Rebuild architecture
+            <RefreshCw
+              size={15}
+              className={
+                rebuilding
+                  ? "animate-spin"
+                  : ""
+              }
+            />
+            {rebuilding
+              ? "Rebuilding architecture..."
+              : "Rebuild architecture"}
           </button>
         </div>
       </section>
@@ -362,7 +595,11 @@ function Architecture() {
               Components
             </span>
           </div>
-          <p className="mt-3 text-2xl font-semibold text-white">8</p>
+
+          <p className="mt-3 text-2xl font-semibold text-white">
+            {components.length}
+          </p>
+
           <p className="mt-1 text-[10px] text-slate-600">
             logical system nodes
           </p>
@@ -375,7 +612,11 @@ function Architecture() {
               Relationships
             </span>
           </div>
-          <p className="mt-3 text-2xl font-semibold text-cyan-400">13</p>
+
+          <p className="mt-3 text-2xl font-semibold text-cyan-400">
+            {relationships.length}
+          </p>
+
           <p className="mt-1 text-[10px] text-slate-600">
             dependency edges
           </p>
@@ -388,9 +629,11 @@ function Architecture() {
               Findings
             </span>
           </div>
+
           <p className="mt-3 text-2xl font-semibold text-amber-400">
             {findings.length}
           </p>
+
           <p className="mt-1 text-[10px] text-slate-600">
             architecture observations
           </p>
@@ -403,9 +646,11 @@ function Architecture() {
               Architecture Health
             </span>
           </div>
+
           <p className="mt-3 text-2xl font-semibold text-emerald-400">
-            78
+            {architectureHealth ?? "—"}
           </p>
+
           <p className="mt-1 text-[10px] text-slate-600">
             analysis score
           </p>
@@ -417,7 +662,11 @@ function Architecture() {
         <div className="flex flex-col gap-3 border-b border-secure-border px-5 py-4 md:flex-row md:items-center md:justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <Network size={15} className="text-violet-400" />
+              <Network
+                size={15}
+                className="text-violet-400"
+              />
+
               <h2 className="text-sm font-medium text-white">
                 System topology
               </h2>
@@ -429,111 +678,74 @@ function Architecture() {
           </div>
 
           <div className="flex flex-wrap gap-3">
-            {Object.entries(typeConfig).map(([type, config]) => {
-              const Icon = config.icon;
+            {Object.entries(typeConfig).map(
+              ([type, config]) => {
+                const Icon = config.icon;
 
-              return (
-                <div
-                  key={type}
-                  className="flex items-center gap-1.5 text-[9px] text-slate-600"
-                >
-                  <Icon size={11} className={config.className} />
-                  {config.label}
-                </div>
-              );
-            })}
+                return (
+                  <div
+                    key={type}
+                    className="flex items-center gap-1.5 text-[9px] text-slate-600"
+                  >
+                    <Icon
+                      size={11}
+                      className={config.className}
+                    />
+                    {config.label}
+                  </div>
+                );
+              },
+            )}
           </div>
         </div>
 
         <div className="overflow-x-auto p-6">
           <div className="min-w-[900px]">
-            {/* Layer 1 */}
-            <div className="grid grid-cols-3 gap-5">
-              <ArchitectureNode
-                component={components[0]}
-                selected={selectedId === components[0].id}
-                onSelect={() => setSelectedId(components[0].id)}
-              />
-
-              <div className="flex items-center justify-center">
-                <FlowArrow />
+            {components.length === 0 ? (
+              <div className="flex min-h-[240px] items-center justify-center text-xs text-slate-600">
+                No architecture components were detected.
               </div>
+            ) : (
+              <>
+                <ArchitectureGraphRow
+                  components={graphLayers.top}
+                  selectedId={selectedId}
+                  onSelect={setSelectedId}
+                />
 
-              <ArchitectureNode
-                component={components[1]}
-                selected={selectedId === components[1].id}
-                onSelect={() => setSelectedId(components[1].id)}
-              />
-            </div>
+                {graphLayers.top.length > 0 &&
+                  graphLayers.middle.length > 0 && (
+                    <div className="flex justify-center py-3">
+                      <ArrowDown
+                        size={18}
+                        className="text-slate-700"
+                      />
+                    </div>
+                  )}
 
-            <div className="flex justify-center py-3">
-              <ArrowDown size={18} className="text-slate-700" />
-            </div>
+                <ArchitectureGraphRow
+                  components={graphLayers.middle}
+                  selectedId={selectedId}
+                  onSelect={setSelectedId}
+                />
 
-            {/* Layer 2 */}
-            <div className="grid grid-cols-5 gap-4">
-              <div />
+                {graphLayers.middle.length > 0 &&
+                  graphLayers.bottom.length > 0 && (
+                    <div className="flex justify-center py-3">
+                      <ArrowDown
+                        size={18}
+                        className="text-slate-700"
+                      />
+                    </div>
+                  )}
 
-              <ArchitectureNode
-                component={components[2]}
-                selected={selectedId === components[2].id}
-                onSelect={() => setSelectedId(components[2].id)}
-              />
-
-              <div className="flex items-center justify-center">
-                <FlowArrow />
-              </div>
-
-              <ArchitectureNode
-                component={components[3]}
-                selected={selectedId === components[3].id}
-                onSelect={() => setSelectedId(components[3].id)}
-              />
-
-              <div />
-            </div>
-
-            <div className="flex justify-center py-3">
-              <ArrowDown size={18} className="text-slate-700" />
-            </div>
-
-            {/* Layer 3 */}
-            <div className="grid grid-cols-5 gap-4">
-              <ArchitectureNode
-                component={components[5]}
-                selected={selectedId === components[5].id}
-                onSelect={() => setSelectedId(components[5].id)}
-              />
-
-              <div />
-
-              <ArchitectureNode
-                component={components[4]}
-                selected={selectedId === components[4].id}
-                onSelect={() => setSelectedId(components[4].id)}
-              />
-
-              <div />
-
-              <ArchitectureNode
-                component={components[6]}
-                selected={selectedId === components[6].id}
-                onSelect={() => setSelectedId(components[6].id)}
-              />
-            </div>
-
-            <div className="flex justify-center py-3">
-              <ArrowDown size={18} className="text-slate-700" />
-            </div>
-
-            {/* Layer 4 */}
-            <div className="flex justify-center">
-              <ArchitectureNode
-                component={components[7]}
-                selected={selectedId === components[7].id}
-                onSelect={() => setSelectedId(components[7].id)}
-              />
-            </div>
+                <ArchitectureGraphRow
+                  components={graphLayers.bottom}
+                  selectedId={selectedId}
+                  onSelect={setSelectedId}
+                />
+              </>
+            )}
           </div>
         </div>
       </section>
@@ -542,127 +754,163 @@ function Architecture() {
       <section className="grid border border-secure-border bg-secure-panel lg:grid-cols-[0.9fr_1.1fr]">
         {/* Component detail */}
         <div className="border-b border-secure-border lg:border-b-0 lg:border-r">
-          <div className="border-b border-secure-border p-5">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center border border-slate-800 bg-[#080d15]">
-                  <SelectedIcon
-                    size={17}
-                    className={selectedType.className}
-                  />
+          {selectedComponent ? (
+            <>
+              <div className="border-b border-secure-border p-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center border border-slate-800 bg-[#080d15]">
+                      <SelectedIcon
+                        size={17}
+                        className={
+                          selectedType.className
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <p className="font-mono text-sm text-white">
+                        {selectedComponent.name}
+                      </p>
+
+                      <p className="mt-1 text-[10px] text-slate-600">
+                        {selectedComponent.technology}
+                      </p>
+                    </div>
+                  </div>
+
+                  <span
+                    className={`text-[10px] ${
+                      healthConfig[
+                        selectedComponent.health
+                      ].className
+                    }`}
+                  >
+                    {
+                      healthConfig[
+                        selectedComponent.health
+                      ].label
+                    }
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-6 p-5">
+                <div>
+                  <p className="mb-2 text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-600">
+                    Responsibility
+                  </p>
+
+                  <p className="text-xs leading-5 text-slate-400">
+                    {selectedComponent.description}
+                  </p>
                 </div>
 
                 <div>
-                  <p className="font-mono text-sm text-white">
-                    {selectedComponent.name}
+                  <p className="mb-3 text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-600">
+                    Dependencies
                   </p>
-                  <p className="mt-1 text-[10px] text-slate-600">
-                    {selectedComponent.technology}
-                  </p>
-                </div>
-              </div>
 
-              <span
-                className={`text-[10px] ${
-                  healthConfig[selectedComponent.health].className
-                }`}
-              >
-                {healthConfig[selectedComponent.health].label}
-              </span>
-            </div>
-          </div>
+                  {selectedComponent.dependencies
+                    .length > 0 ? (
+                    <div className="space-y-2">
+                      {selectedComponent.dependencies.map(
+                        (dependency) => {
+                          const target =
+                            components.find(
+                              (component) =>
+                                component.id ===
+                                dependency,
+                            );
 
-          <div className="space-y-6 p-5">
-            <div>
-              <p className="mb-2 text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-600">
-                Responsibility
-              </p>
+                          if (!target) {
+                            return null;
+                          }
 
-              <p className="text-xs leading-5 text-slate-400">
-                {selectedComponent.description}
-              </p>
-            </div>
+                          return (
+                            <button
+                              key={dependency}
+                              type="button"
+                              onClick={() =>
+                                setSelectedId(
+                                  dependency,
+                                )
+                              }
+                              className="flex w-full items-center justify-between border border-slate-800 bg-[#080d15] px-3 py-2 text-left transition hover:border-slate-700"
+                            >
+                              <div className="flex items-center gap-2">
+                                <ChevronRight
+                                  size={12}
+                                  className="text-slate-700"
+                                />
 
-            <div>
-              <p className="mb-3 text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-600">
-                Dependencies
-              </p>
+                                <span className="font-mono text-[10px] text-slate-400">
+                                  {target.name}
+                                </span>
+                              </div>
 
-              {selectedComponent.dependencies.length > 0 ? (
-                <div className="space-y-2">
-                  {selectedComponent.dependencies.map((dependency) => {
-                    const target = components.find(
-                      (component) => component.id === dependency,
-                    );
-
-                    if (!target) return null;
-
-                    return (
-                      <button
-                        key={dependency}
-                        type="button"
-                        onClick={() => setSelectedId(dependency)}
-                        className="flex w-full items-center justify-between border border-slate-800 bg-[#080d15] px-3 py-2 text-left transition hover:border-slate-700"
-                      >
-                        <div className="flex items-center gap-2">
-                          <ChevronRight
-                            size={12}
-                            className="text-slate-700"
-                          />
-                          <span className="font-mono text-[10px] text-slate-400">
-                            {target.name}
-                          </span>
-                        </div>
-
-                        <span className="text-[9px] text-slate-700">
-                          {target.technology}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : (
-                <p className="text-[10px] text-slate-600">
-                  No downstream dependencies detected.
-                </p>
-              )}
-            </div>
-
-            <div>
-              <p className="mb-3 text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-600">
-                Referenced paths
-              </p>
-
-              <div className="space-y-1.5">
-                {selectedComponent.files.length > 0 ? (
-                  selectedComponent.files.map((file) => (
-                    <div
-                      key={file}
-                      className="border border-slate-800 bg-[#080d15] px-3 py-2 font-mono text-[10px] text-slate-500"
-                    >
-                      {file}
+                              <span className="text-[9px] text-slate-700">
+                                {target.technology}
+                              </span>
+                            </button>
+                          );
+                        },
+                      )}
                     </div>
-                  ))
-                ) : (
-                  <p className="text-[10px] text-slate-600">
-                    External component — no repository path.
+                  ) : (
+                    <p className="text-[10px] text-slate-600">
+                      No downstream dependencies detected.
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <p className="mb-3 text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-600">
+                    Referenced paths
                   </p>
-                )}
-              </div>
-            </div>
 
-            <div className="border-t border-slate-800 pt-5">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] text-slate-600">
-                  Upstream consumers
-                </span>
+                  <div className="space-y-1.5">
+                    {selectedComponent.files.length >
+                    0 ? (
+                      selectedComponent.files.map(
+                        (file) => (
+                          <div
+                            key={file}
+                            className="border border-slate-800 bg-[#080d15] px-3 py-2 font-mono text-[10px] text-slate-500"
+                          >
+                            {file}
+                          </div>
+                        ),
+                      )
+                    ) : (
+                      <p className="text-[10px] text-slate-600">
+                        External component — no repository path.
+                      </p>
+                    )}
+                  </div>
+                </div>
 
-                <span className="font-mono text-xs text-slate-300">
-                  {selectedComponent.dependents.length}
-                </span>
+                <div className="border-t border-slate-800 pt-5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-slate-600">
+                      Upstream consumers
+                    </span>
+
+                    <span className="font-mono text-xs text-slate-300">
+                      {
+                        selectedComponent
+                          .dependents.length
+                      }
+                    </span>
+                  </div>
+                </div>
               </div>
+            </>
+          ) : (
+            <div className="p-5 text-xs text-slate-600">
+              Select an architecture component to inspect it.
             </div>
-          </div>
+          )}
         </div>
 
         {/* Findings */}
@@ -675,6 +923,7 @@ function Architecture() {
                     size={15}
                     className="text-amber-400"
                   />
+
                   <h2 className="text-sm font-medium text-white">
                     Architecture findings
                   </h2>
@@ -689,6 +938,7 @@ function Architecture() {
                 <span className="text-red-400">
                   {highFindings} HIGH
                 </span>
+
                 <span className="text-amber-400">
                   {mediumFindings} MEDIUM
                 </span>
@@ -697,22 +947,36 @@ function Architecture() {
           </div>
 
           <div className="divide-y divide-slate-800/70">
-            {findings.map((finding) => (
-              <ArchitectureFindingRow
-                key={finding.id}
-                finding={finding}
-                selected={finding.component === selectedComponent.name}
-                onSelect={() => {
-                  const component = components.find(
-                    (item) => item.name === finding.component,
-                  );
-
-                  if (component) {
-                    setSelectedId(component.id);
+            {findings.length > 0 ? (
+              findings.map((finding) => (
+                <ArchitectureFindingRow
+                  key={finding.id}
+                  finding={finding}
+                  selected={
+                    finding.component ===
+                    selectedComponent?.name
                   }
-                }}
-              />
-            ))}
+                  onSelect={() => {
+                    const component =
+                      components.find(
+                        (item) =>
+                          item.name ===
+                          finding.component,
+                      );
+
+                    if (component) {
+                      setSelectedId(
+                        component.id,
+                      );
+                    }
+                  }}
+                />
+              ))
+            ) : (
+              <div className="p-8 text-center text-xs text-slate-600">
+                No architecture findings detected.
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -721,7 +985,11 @@ function Architecture() {
       <section className="border border-secure-border bg-secure-panel">
         <div className="border-b border-secure-border px-5 py-4">
           <div className="flex items-center gap-2">
-            <ShieldCheck size={15} className="text-violet-400" />
+            <ShieldCheck
+              size={15}
+              className="text-violet-400"
+            />
+
             <h2 className="text-sm font-medium text-white">
               Architecture analysis pipeline
             </h2>
@@ -730,39 +998,62 @@ function Architecture() {
 
         <div className="grid md:grid-cols-5">
           {[
-            ["01", "AST parsing", "Source structure indexed"],
-            ["02", "Import graph", "Dependencies extracted"],
-            ["03", "Boundary detection", "Layers identified"],
-            ["04", "Graph analysis", "Relationships mapped"],
-            ["05", "AI reasoning", "Findings generated"],
-          ].map(([number, title, detail], index) => (
-            <div
-              key={number}
-              className={`p-5 ${
-                index !== 4
-                  ? "border-b md:border-b-0 md:border-r border-slate-800"
-                  : ""
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <span className="font-mono text-[10px] text-violet-400">
-                  {number}
-                </span>
-                <span className="text-xs font-medium text-slate-300">
-                  {title}
-                </span>
-              </div>
+            [
+              "01",
+              "AST parsing",
+              "Source structure indexed",
+            ],
+            [
+              "02",
+              "Import graph",
+              "Dependencies extracted",
+            ],
+            [
+              "03",
+              "Boundary detection",
+              "Layers identified",
+            ],
+            [
+              "04",
+              "Graph analysis",
+              "Relationships mapped",
+            ],
+            [
+              "05",
+              "AI reasoning",
+              "Findings generated",
+            ],
+          ].map(
+            ([number, title, detail], index) => (
+              <div
+                key={number}
+                className={`p-5 ${
+                  index !== 4
+                    ? "border-b md:border-b-0 md:border-r border-slate-800"
+                    : ""
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-[10px] text-violet-400">
+                    {number}
+                  </span>
 
-              <div className="mt-3 flex items-center gap-2 text-[10px] text-emerald-400">
-                <CheckCircle2 size={12} />
-                {detail}
+                  <span className="text-xs font-medium text-slate-300">
+                    {title}
+                  </span>
+                </div>
+
+                <div className="mt-3 flex items-center gap-2 text-[10px] text-emerald-400">
+                  <CheckCircle2 size={12} />
+                  {detail}
+                </div>
               </div>
-            </div>
-          ))}
+            ),
+          )}
         </div>
       </section>
 
-      {/* Static data notice */}
+      {/* Dynamic data notice */}
       <div className="flex items-start gap-3 border border-cyan-400/10 bg-cyan-400/[0.025] px-4 py-3">
         <CircleAlert
           size={14}
@@ -770,12 +1061,54 @@ function Architecture() {
         />
 
         <p className="text-[10px] leading-5 text-slate-600">
-          Current architecture intelligence uses structured frontend data.
-          Later, SecureAI will derive the graph automatically from repository
-          source code using AST parsing, import analysis, dependency
-          extraction and graph generation.
+          Architecture intelligence is now derived from the analyzed
+          repository using source structure, import relationships, dependency
+          analysis and architectural risk detection.
         </p>
       </div>
+    </div>
+  );
+}
+
+interface ArchitectureGraphRowProps {
+  components: ArchitectureComponent[];
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+}
+
+function ArchitectureGraphRow({
+  components,
+  selectedId,
+  onSelect,
+}: ArchitectureGraphRowProps) {
+  if (components.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="flex items-center justify-center gap-5">
+      {components.map((component, index) => (
+        <div
+          key={component.id}
+          className="flex items-center gap-5"
+        >
+          <div className="w-[250px]">
+            <ArchitectureNode
+              component={component}
+              selected={
+                selectedId === component.id
+              }
+              onSelect={() =>
+                onSelect(component.id)
+              }
+            />
+          </div>
+
+          {index < components.length - 1 && (
+            <FlowArrow />
+          )}
+        </div>
+      ))}
     </div>
   );
 }
@@ -807,7 +1140,10 @@ function ArchitectureNode({
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center border border-slate-800 bg-[#050810]">
-            <Icon size={15} className={config.className} />
+            <Icon
+              size={15}
+              className={config.className}
+            />
           </div>
 
           <div>
@@ -854,7 +1190,11 @@ function FlowArrow() {
   return (
     <div className="flex items-center gap-1">
       <div className="h-px w-8 bg-slate-800" />
-      <ArrowRight size={14} className="text-slate-700" />
+
+      <ArrowRight
+        size={14}
+        className="text-slate-700"
+      />
     </div>
   );
 }
@@ -872,7 +1212,8 @@ function ArchitectureFindingRow({
 }: ArchitectureFindingRowProps) {
   const severityStyles = {
     high: "text-red-400 border-red-500/20 bg-red-500/10",
-    medium: "text-amber-400 border-amber-500/20 bg-amber-500/10",
+    medium:
+      "text-amber-400 border-amber-500/20 bg-amber-500/10",
     low: "text-blue-400 border-blue-500/20 bg-blue-500/10",
   };
 
@@ -888,7 +1229,9 @@ function ArchitectureFindingRow({
       type="button"
       onClick={onSelect}
       className={`w-full p-5 text-left transition ${
-        selected ? "bg-violet-500/[0.04]" : "hover:bg-white/[0.015]"
+        selected
+          ? "bg-violet-500/[0.04]"
+          : "hover:bg-white/[0.015]"
       }`}
     >
       <div className="flex gap-4">
@@ -925,6 +1268,7 @@ function ArchitectureFindingRow({
                 <p className="mb-1 text-[9px] uppercase tracking-wider text-slate-700">
                   Impact
                 </p>
+
                 <p className="text-[10px] leading-5 text-slate-500">
                   {finding.impact}
                 </p>
@@ -934,6 +1278,7 @@ function ArchitectureFindingRow({
                 <p className="mb-1 text-[9px] uppercase tracking-wider text-slate-700">
                   Recommendation
                 </p>
+
                 <p className="text-[10px] leading-5 text-slate-500">
                   {finding.recommendation}
                 </p>
@@ -945,7 +1290,9 @@ function ArchitectureFindingRow({
         <ChevronRight
           size={14}
           className={`mt-1 shrink-0 ${
-            selected ? "text-violet-400" : "text-slate-700"
+            selected
+              ? "text-violet-400"
+              : "text-slate-700"
           }`}
         />
       </div>

@@ -15,6 +15,7 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@google/genai": "^2.24.0",
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
     "adm-zip": "^0.6.1",
@@ -24,6 +25,7 @@
     "dotenv": "^18.0.1",
     "express": "^5.2.1",
     "google-auth-library": "^11.1.0",
+    "openai": "^7.23.0",
     "pg": "^8.23.0",
     "zod": "^4.6.5"
   },
@@ -36,6 +38,6 @@
     "@types/pg": "^8.23.1",
     "prisma": "^7.10.0",
     "tsx": "^4.23.13",
-    "typescript": "^7.0.2"
+    "typescript": "^6.0.3"
   }
 }

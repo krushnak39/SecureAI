@@ -1997,7 +1997,15 @@ export const FindingScalarFieldEnum = {
   confidence: 'confidence',
   resolvedAt: 'resolvedAt',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  aiConfidence: 'aiConfidence',
+  aiExplanation: 'aiExplanation',
+  aiImpact: 'aiImpact',
+  aiModel: 'aiModel',
+  aiRecommendation: 'aiRecommendation',
+  aiReviewedAt: 'aiReviewedAt',
+  aiRootCause: 'aiRootCause',
+  aiSuggestedFix: 'aiSuggestedFix'
 } as const
 
 export type FindingScalarFieldEnum = (typeof FindingScalarFieldEnum)[keyof typeof FindingScalarFieldEnum]
@@ -2558,6 +2566,20 @@ export type EnumCheckStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$Pris
  * Reference to a field of type 'CheckStatus[]'
  */
 export type ListEnumCheckStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CheckStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'BigInt'
+ */
+export type BigIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BigInt'>
+    
+
+
+/**
+ * Reference to a field of type 'BigInt[]'
+ */
+export type ListBigIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BigInt[]'>
     
 
 

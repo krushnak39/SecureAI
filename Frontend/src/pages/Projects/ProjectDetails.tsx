@@ -114,7 +114,7 @@ const modules: {
   title: string;
   description: string;
   icon: LucideIcon;
-  path: string;
+  route: string;
   metric: string;
 }[] = [
   {
@@ -122,7 +122,7 @@ const modules: {
     description:
       "AI findings across code quality and maintainability.",
     icon: Code2,
-    path: "/dashboard/review",
+    route: "review",
     metric: "Analysis pending",
   },
   {
@@ -130,7 +130,7 @@ const modules: {
     description:
       "Security issues, exposure risks, and remediation.",
     icon: ShieldCheck,
-    path: "/dashboard/security",
+    route: "security",
     metric: "Analysis pending",
   },
   {
@@ -138,7 +138,7 @@ const modules: {
     description:
       "Package health, advisories, and upgrade intelligence.",
     icon: Boxes,
-    path: "/dashboard/dependencies",
+    route: "dependencies",
     metric: "Analysis pending",
   },
   {
@@ -146,7 +146,7 @@ const modules: {
     description:
       "System boundaries, relationships, and coupling signals.",
     icon: Network,
-    path: "/dashboard/architecture",
+    route: "architecture",
     metric: "Analysis pending",
   },
   {
@@ -154,7 +154,7 @@ const modules: {
     description:
       "Hotspots affecting API, database, and frontend speed.",
     icon: Zap,
-    path: "/dashboard/performance",
+    route: "performance",
     metric: "Analysis pending",
   },
   {
@@ -162,7 +162,7 @@ const modules: {
     description:
       "Ask questions against repository-aware AI context.",
     icon: MessageSquare,
-    path: "/dashboard/chat",
+    route: "chat",
     metric: "RAG pending",
   },
   {
@@ -170,7 +170,7 @@ const modules: {
     description:
       "Generate and inspect repository documentation.",
     icon: FileCode2,
-    path: "/dashboard/documentation",
+    route: "documentation",
     metric: "Generation pending",
   },
   {
@@ -178,7 +178,7 @@ const modules: {
     description:
       "Pull request checks and automated analysis results.",
     icon: GitCommitHorizontal,
-    path: "/dashboard/cicd",
+    route: "cicd",
     metric: "Integration pending",
   },
 ];
@@ -432,6 +432,19 @@ function ProjectDetails() {
 
   const repositoryLanguage =
     repository?.language ?? "Not detected";
+
+  /*
+   * Canonical project workspace base.
+   *
+   * Every intelligence module is intentionally scoped
+   * to this project so the project context is never lost.
+   *
+   * Example:
+   * /projects/:id/review
+   * /projects/:id/security
+   * /projects/:id/chat
+   */
+  const projectWorkspacePath = `/projects/${project.id}`;
 
   return (
     <div className="min-h-[calc(100vh-4rem)]">
@@ -879,11 +892,12 @@ function ProjectDetails() {
         <div className="grid sm:grid-cols-2 xl:grid-cols-4">
           {modules.map((module) => {
             const Icon = module.icon;
+            const modulePath = `${projectWorkspacePath}/${module.route}`;
 
             return (
               <Link
                 key={module.title}
-                to={module.path}
+                to={modulePath}
                 className="group border-b border-slate-800 p-5 transition hover:bg-[#0d1422] sm:nth-[even]:border-l xl:border-r xl:nth-[4n]:border-r-0"
               >
                 <div className="flex items-start justify-between">
@@ -995,25 +1009,25 @@ function ProjectDetails() {
 
           <div className="grid sm:grid-cols-2">
             <QuickAction
-              to="/dashboard/review"
+              to={`${projectWorkspacePath}/review`}
               icon={Code2}
               label="Review code"
             />
 
             <QuickAction
-              to="/dashboard/security"
+              to={`${projectWorkspacePath}/security`}
               icon={ShieldCheck}
               label="Inspect security"
             />
 
             <QuickAction
-              to="/dashboard/chat"
+              to={`${projectWorkspacePath}/chat`}
               icon={MessageSquare}
               label="Ask the codebase"
             />
 
             <QuickAction
-              to="/dashboard/cicd"
+              to={`${projectWorkspacePath}/cicd`}
               icon={Terminal}
               label="Inspect CI/CD"
             />

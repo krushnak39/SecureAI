@@ -1,14 +1,18 @@
 import "dotenv/config";
-
+import cicdRoutes from "./routes/cicd.routes.js";
+import performanceRoutes from "./routes/performance.routes.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import chatRoutes from "./routes/chat.routes.js";
 import express from "express";
-
+import findingRoutes from "./routes/finding.routes.js";
+import architectureRoutes from "./routes/architecture.routes.js";
 import healthRoutes from "./routes/health.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import projectRoutes from "./routes/project.routes.js";
 import githubRoutes from "./routes/github.routes.js";
 import analysisRoutes from "./routes/analysis.routes.js";
+import dependencyRoutes from "./routes/dependency.routes.js";
 
 const app = express();
 
@@ -22,6 +26,7 @@ app.use(
     origin: (origin, callback) => {
       /*
        * Allow requests without an Origin header.
+       *
        * This is useful for direct server/API requests.
        */
       if (!origin) {
@@ -66,17 +71,22 @@ app.use(cookieParser());
 
 app.use(express.json());
 
-app.use(express.urlencoded({
-  extended: true,
-}));
+app.use(
+  express.urlencoded({
+    extended: true,
+  }),
+);
 
 /*
  * API routes
  */
+
 app.use(
   "/api/health",
   healthRoutes,
 );
+
+app.use("/api", cicdRoutes);
 
 app.use(
   "/api/auth",
@@ -89,6 +99,13 @@ app.use(
 );
 
 app.use(
+  "/api/projects",
+  performanceRoutes,
+);
+
+app.use("/api", chatRoutes);
+
+app.use(
   "/api/github",
   githubRoutes,
 );
@@ -98,9 +115,21 @@ app.use(
   analysisRoutes,
 );
 
+app.use(
+  "/api/projects",
+  dependencyRoutes,
+);
+
+app.use(
+  "/api/projects",
+  findingRoutes,
+);
+
+app.use("/api/projects", architectureRoutes);
 /*
  * Global error handler
  */
+
 app.use(
   (
     error: unknown,

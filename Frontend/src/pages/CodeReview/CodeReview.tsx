@@ -1,4 +1,9 @@
-import { useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { useParams } from "react-router-dom";
 import {
   AlertTriangle,
   Check,
@@ -15,114 +20,63 @@ import {
   Zap,
 } from "lucide-react";
 
-type Severity = "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
+import { apiRequest } from "../../services/api";
+
+type Severity =
+  | "CRITICAL"
+  | "HIGH"
+  | "MEDIUM"
+  | "LOW"
+  | "INFO";
 
 interface Finding {
-  id: number;
+  id: string;
   severity: Severity;
+  status: string;
   category: string;
   title: string;
-  file: string;
-  line: number;
-  functionName: string;
-  problem: string;
-  why: string;
-  evidence: string;
-  fix: string;
-  confidence: number;
+  description: string;
+  impact: string | null;
+  recommendation: string | null;
+  filePath: string | null;
+  lineStart: number | null;
+  lineEnd: number | null;
+  functionName: string | null;
+  rule: string | null;
+  scanner: string | null;
+  evidence: string | null;
+  confidence: number | null;
+
+  // Phase 2 — AI Code Review
+  aiExplanation: string | null;
+  aiRootCause: string | null;
+  aiImpact: string | null;
+  aiRecommendation: string | null;
+  aiSuggestedFix: string | null;
+  aiConfidence: number | null;
+  aiModel: string | null;
+  aiReviewedAt: string | null;
 }
 
-const findings: Finding[] = [
-  {
-    id: 1,
-    severity: "HIGH",
-    category: "Performance",
-    title: "Repeated database access inside iteration",
-    file: "src/services/repository.ts",
-    line: 84,
-    functionName: "syncRepositories()",
-    problem:
-      "A database query is executed for every repository inside the iteration.",
-    why:
-      "Repeated database round trips can significantly increase execution time as the repository count grows.",
-    evidence:
-      "repositories.map(async (repo) => { await db.repository.findUnique(...) })",
-    fix:
-      "Collect the required repository IDs first and replace the repeated queries with a single batched database operation.",
-    confidence: 96,
-  },
-  {
-    id: 2,
-    severity: "HIGH",
-    category: "Security",
-    title: "Potential unsafe input handling",
-    file: "src/controllers/user.ts",
-    line: 67,
-    functionName: "updateUser()",
-    problem:
-      "Request data is passed into a database operation without an explicit validation step.",
-    why:
-      "Unvalidated input can allow unexpected values to reach sensitive application logic.",
-    evidence:
-      "const userData = req.body; await userService.update(userId, userData);",
-    fix:
-      "Validate and sanitize the request body against a strict schema before passing it to the service layer.",
-    confidence: 93,
-  },
-  {
-    id: 3,
-    severity: "MEDIUM",
-    category: "Maintainability",
-    title: "High cyclomatic complexity",
-    file: "src/utils/parser.ts",
-    line: 122,
-    functionName: "parseRepository()",
-    problem:
-      "The function contains multiple nested branches and handles several responsibilities.",
-    why:
-      "Highly complex functions are harder to test, modify, and reason about.",
-    evidence:
-      "if (...) { if (...) { switch (...) { ... } } }",
-    fix:
-      "Extract parsing strategies into smaller functions with one responsibility each.",
-    confidence: 89,
-  },
-  {
-    id: 4,
-    severity: "MEDIUM",
-    category: "Code Quality",
-    title: "Duplicate transformation logic",
-    file: "src/services/analyzer.ts",
-    line: 201,
-    functionName: "buildAnalysisResult()",
-    problem:
-      "Similar data transformation logic is repeated across multiple branches.",
-    why:
-      "Duplicated logic increases maintenance cost and can cause inconsistent behavior after changes.",
-    evidence:
-      "result.files = files.map(...)\nresult.dependencies = files.map(...)",
-    fix:
-      "Extract the shared transformation into a reusable helper.",
-    confidence: 86,
-  },
-  {
-    id: 5,
-    severity: "LOW",
-    category: "Style",
-    title: "Variable can be declared closer to usage",
-    file: "src/components/ReviewPanel.tsx",
-    line: 41,
-    functionName: "ReviewPanel()",
-    problem:
-      "A variable is initialized significantly earlier than where it is consumed.",
-    why:
-      "Keeping declarations close to their usage improves local readability.",
-    evidence: "const reviewContext = buildContext();",
-    fix:
-      "Move the declaration closer to the code that consumes reviewContext.",
-    confidence: 81,
-  },
-];
+interface AnalysisSummary {
+  id: string;
+  status: string;
+  filesAnalyzed: number;
+  linesAnalyzed: number;
+  codeQuality: number | null;
+  securityScore: number | null;
+  performance: number | null;
+  architecture: number | null;
+  maintainability: number | null;
+  healthScore: number | null;
+  completedAt: string | null;
+}
+
+interface FindingsResponse {
+  success: boolean;
+  analysis: AnalysisSummary | null;
+  findings: Finding[];
+}
 
 const severityConfig: Record<
   Severity,
@@ -157,37 +111,129 @@ const severityConfig: Record<
     bg: "bg-blue-500/[0.06]",
     icon: Info,
   },
+  INFO: {
+    text: "text-slate-400",
+    border: "border-slate-500/30",
+    bg: "bg-slate-500/[0.06]",
+    icon: Info,
+  },
 };
 
 function CodeReview() {
-  const [selectedId, setSelectedId] = useState(1);
-  const [filter, setFilter] = useState<"ALL" | Severity>("ALL");
+  const { id: projectId } = useParams();
+
+  const [findings, setFindings] = useState<Finding[]>([]);
+  const [analysis, setAnalysis] =
+    useState<AnalysisSummary | null>(null);
+
+  const [selectedId, setSelectedId] =
+    useState<string | null>(null);
+
+  const [filter, setFilter] =
+    useState<"ALL" | Severity>("ALL");
+
   const [search, setSearch] = useState("");
-  const [resolved, setResolved] = useState<number[]>([]);
+
+  const [resolved, setResolved] =
+    useState<string[]>([]);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (!projectId) {
+      setError("Project ID is missing.");
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadFindings() {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const data =
+          await apiRequest<FindingsResponse>(
+            `/projects/${projectId}/findings`,
+          );
+
+        if (cancelled) {
+          return;
+        }
+
+        setAnalysis(data.analysis);
+        setFindings(data.findings);
+
+        setSelectedId(
+          data.findings[0]?.id ?? null,
+        );
+      } catch (requestError) {
+        if (cancelled) {
+          return;
+        }
+
+        setError(
+          requestError instanceof Error
+            ? requestError.message
+            : "Failed to load code review findings.",
+        );
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void loadFindings();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId]);
 
   const filteredFindings = useMemo(() => {
     return findings.filter((finding) => {
       const matchesFilter =
-        filter === "ALL" || finding.severity === filter;
+        filter === "ALL" ||
+        finding.severity === filter;
 
-      const searchText = search.toLowerCase();
+      const searchText =
+        search.trim().toLowerCase();
 
       const matchesSearch =
         searchText.length === 0 ||
-        finding.title.toLowerCase().includes(searchText) ||
-        finding.file.toLowerCase().includes(searchText) ||
-        finding.category.toLowerCase().includes(searchText);
+        finding.title
+          .toLowerCase()
+          .includes(searchText) ||
+        (finding.filePath ?? "")
+          .toLowerCase()
+          .includes(searchText) ||
+        finding.category
+          .toLowerCase()
+          .includes(searchText) ||
+        (finding.functionName ?? "")
+          .toLowerCase()
+          .includes(searchText);
 
       return matchesFilter && matchesSearch;
     });
-  }, [filter, search]);
+  }, [findings, filter, search]);
 
   const selectedFinding =
-    findings.find((finding) => finding.id === selectedId) ??
-    findings[0];
+    findings.find(
+      (finding) => finding.id === selectedId,
+    ) ??
+    filteredFindings[0] ??
+    findings[0] ??
+    null;
 
   const criticalCount = findings.filter(
-    (finding) => finding.severity === "CRITICAL",
+    (finding) =>
+      finding.severity === "CRITICAL",
   ).length;
 
   const highCount = findings.filter(
@@ -195,20 +241,98 @@ function CodeReview() {
   ).length;
 
   const mediumCount = findings.filter(
-    (finding) => finding.severity === "MEDIUM",
+    (finding) =>
+      finding.severity === "MEDIUM",
   ).length;
 
   const lowCount = findings.filter(
     (finding) => finding.severity === "LOW",
   ).length;
 
-  const toggleResolved = (id: number) => {
+  const aiConfidenceValues = findings
+    .map((finding) => finding.aiConfidence)
+    .filter(
+      (confidence): confidence is number =>
+        typeof confidence === "number",
+    );
+
+  const averageConfidence =
+    aiConfidenceValues.length > 0
+      ? Math.round(
+          aiConfidenceValues.reduce(
+            (sum, confidence) =>
+              sum + confidence,
+            0,
+          ) / aiConfidenceValues.length,
+        )
+      : 0;
+
+  const aiReviewedCount = findings.filter(
+    (finding) =>
+      finding.aiReviewedAt !== null,
+  ).length;
+
+  const openFindings = findings.filter(
+    (finding) =>
+      !resolved.includes(finding.id),
+  ).length;
+
+  const toggleResolved = (id: string) => {
     setResolved((current) =>
       current.includes(id)
-        ? current.filter((item) => item !== id)
+        ? current.filter(
+            (item) => item !== id,
+          )
         : [...current, id],
     );
   };
+
+  const getLineText = (
+    finding: Finding,
+  ) => {
+    if (
+      finding.lineStart === null &&
+      finding.lineEnd === null
+    ) {
+      return "—";
+    }
+
+    if (
+      finding.lineStart !== null &&
+      finding.lineEnd !== null &&
+      finding.lineStart !== finding.lineEnd
+    ) {
+      return `${finding.lineStart}-${finding.lineEnd}`;
+    }
+
+    return String(
+      finding.lineStart ??
+        finding.lineEnd ??
+        "—",
+    );
+  };
+
+  const formatReviewedAt = (
+    value: string | null,
+  ) => {
+    if (!value) {
+      return null;
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return value;
+    }
+
+    return date.toLocaleString();
+  };
+
+  const qualityImpact =
+    analysis?.healthScore !== null &&
+    analysis?.healthScore !== undefined
+      ? `${analysis.healthScore}/100`
+      : "—";
 
   return (
     <div className="space-y-6">
@@ -217,7 +341,10 @@ function CodeReview() {
         <div>
           <div className="flex items-center gap-2 text-xs text-slate-600">
             <Code2 size={13} />
-            <span>ANALYSIS / CODE REVIEW</span>
+
+            <span>
+              ANALYSIS / CODE REVIEW
+            </span>
           </div>
 
           <h1 className="mt-2 text-2xl font-semibold tracking-tight text-white">
@@ -225,14 +352,18 @@ function CodeReview() {
           </h1>
 
           <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
-            AI-powered analysis of correctness, maintainability,
-            performance, and engineering risks across the repository.
+            AI-powered analysis of correctness,
+            maintainability, performance, and
+            engineering risks across the repository.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2 border border-emerald-400/20 bg-emerald-400/[0.04] px-3 py-2">
-            <Sparkles size={14} className="text-emerald-400" />
+            <Sparkles
+              size={14}
+              className="text-emerald-400"
+            />
 
             <span className="font-mono text-[10px] text-emerald-400">
               REVIEW ENGINE READY
@@ -249,382 +380,835 @@ function CodeReview() {
         </div>
       </div>
 
-      {/* Summary */}
-      <div className="grid gap-px border border-slate-800 bg-slate-800 md:grid-cols-2 xl:grid-cols-5">
-        <Summary
-          label="Files reviewed"
-          value="142"
-          meta="100% analyzed"
-          icon={FileCode2}
-        />
+      {/* Loading */}
+      {loading && (
+        <div className="border border-slate-800 bg-[#080d15] p-10 text-center">
+          <Sparkles
+            size={20}
+            className="mx-auto animate-pulse text-violet-400"
+          />
 
-        <Summary
-          label="Findings"
-          value={String(findings.length)}
-          meta={`${resolved.length} resolved`}
-          icon={AlertTriangle}
-        />
+          <p className="mt-3 text-sm text-slate-400">
+            Loading code review findings...
+          </p>
+        </div>
+      )}
 
-        <Summary
-          label="AI confidence"
-          value="91%"
-          meta="High confidence"
-          icon={Sparkles}
-        />
-
-        <Summary
-          label="Quality impact"
-          value="−12"
-          meta="Potential score impact"
-          icon={Zap}
-        />
-
-        <Summary
-          label="Review status"
-          value="ACTIVE"
-          meta="Analysis complete"
-          icon={CheckCircle2}
-          accent
-        />
-      </div>
-
-      {/* Severity strip */}
-      <div className="border border-slate-800 bg-[#080d15]">
-        <div className="flex flex-col gap-4 border-b border-slate-800 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-sm font-medium text-white">
-              Review findings
-            </p>
-
-            <p className="mt-1 text-[11px] text-slate-600">
-              Prioritized by severity and engineering impact.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-4 font-mono text-[10px]">
-            <SeverityCount
-              label="CRITICAL"
-              count={criticalCount}
-              className="text-red-400"
+      {/* Error */}
+      {!loading && error && (
+        <div className="border border-red-500/20 bg-red-500/[0.04] p-5">
+          <div className="flex items-start gap-3">
+            <AlertTriangle
+              size={16}
+              className="mt-0.5 text-red-400"
             />
 
-            <SeverityCount
-              label="HIGH"
-              count={highCount}
-              className="text-orange-400"
-            />
+            <div>
+              <p className="text-sm font-medium text-red-300">
+                Unable to load code review
+              </p>
 
-            <SeverityCount
-              label="MEDIUM"
-              count={mediumCount}
-              className="text-amber-400"
-            />
-
-            <SeverityCount
-              label="LOW"
-              count={lowCount}
-              className="text-blue-400"
-            />
+              <p className="mt-1 text-xs leading-5 text-slate-500">
+                {error}
+              </p>
+            </div>
           </div>
         </div>
+      )}
 
-        {/* Filters */}
-        <div className="flex flex-col gap-3 border-b border-slate-800 p-4 lg:flex-row lg:items-center">
-          <div className="flex items-center gap-2 text-slate-600">
-            <Filter size={14} />
-
-            <span className="font-mono text-[10px] uppercase tracking-wider">
-              Filter
-            </span>
-          </div>
-
-          <div className="flex flex-wrap gap-1">
-            {(["ALL", "CRITICAL", "HIGH", "MEDIUM", "LOW"] as const).map(
-              (item) => (
-                <button
-                  key={item}
-                  type="button"
-                  onClick={() => setFilter(item)}
-                  className={`border px-3 py-1.5 font-mono text-[9px] transition ${
-                    filter === item
-                      ? "border-violet-400/30 bg-violet-500/[0.08] text-violet-300"
-                      : "border-transparent text-slate-600 hover:border-slate-800 hover:text-slate-300"
-                  }`}
-                >
-                  {item}
-                </button>
-              ),
-            )}
-          </div>
-
-          <div className="relative ml-auto w-full lg:max-w-xs">
-            <Search
-              size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-700"
+      {!loading && !error && (
+        <>
+          {/* Summary */}
+          <div className="grid gap-px border border-slate-800 bg-slate-800 md:grid-cols-2 xl:grid-cols-5">
+            <Summary
+              label="Files reviewed"
+              value={String(
+                analysis?.filesAnalyzed ?? 0,
+              )}
+              meta={
+                analysis
+                  ? "100% analyzed"
+                  : "No completed analysis"
+              }
+              icon={FileCode2}
             />
 
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search findings..."
-              className="w-full border border-slate-800 bg-[#0a0f18] py-2 pl-9 pr-3 text-xs text-slate-300 outline-none transition placeholder:text-slate-700 focus:border-slate-600"
+            <Summary
+              label="Findings"
+              value={String(
+                findings.length,
+              )}
+              meta={`${openFindings} open`}
+              icon={AlertTriangle}
+            />
+
+            <Summary
+              label="AI confidence"
+              value={`${averageConfidence}%`}
+              meta={
+                aiConfidenceValues.length > 0
+                  ? `${aiReviewedCount}/${findings.length} AI reviewed`
+                  : "AI review pending"
+              }
+              icon={Sparkles}
+            />
+
+            <Summary
+              label="Health score"
+              value={qualityImpact}
+              meta={
+                analysis
+                  ? "Latest analysis"
+                  : "No analysis"
+              }
+              icon={Zap}
+            />
+
+            <Summary
+              label="Review status"
+              value={
+                analysis?.status ?? "READY"
+              }
+              meta={
+                analysis?.completedAt
+                  ? "Analysis complete"
+                  : "Awaiting analysis"
+              }
+              icon={CheckCircle2}
+              accent={
+                analysis?.status ===
+                "COMPLETED"
+              }
             />
           </div>
-        </div>
 
-        {/* Main review workspace */}
-        <div className="grid min-h-[560px] lg:grid-cols-[390px_minmax(0,1fr)]">
-          {/* Findings */}
-          <div className="border-b border-slate-800 lg:border-b-0 lg:border-r">
-            <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3">
-              <span className="font-mono text-[9px] uppercase tracking-wider text-slate-600">
-                Findings
-              </span>
+          {/* Severity strip */}
+          <div className="border border-slate-800 bg-[#080d15]">
+            <div className="flex flex-col gap-4 border-b border-slate-800 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p className="text-sm font-medium text-white">
+                  Review findings
+                </p>
 
-              <span className="font-mono text-[9px] text-slate-700">
-                {filteredFindings.length} RESULTS
-              </span>
+                <p className="mt-1 text-[11px] text-slate-600">
+                  Prioritized by severity and
+                  engineering impact.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-4 font-mono text-[10px]">
+                <SeverityCount
+                  label="CRITICAL"
+                  count={criticalCount}
+                  className="text-red-400"
+                />
+
+                <SeverityCount
+                  label="HIGH"
+                  count={highCount}
+                  className="text-orange-400"
+                />
+
+                <SeverityCount
+                  label="MEDIUM"
+                  count={mediumCount}
+                  className="text-amber-400"
+                />
+
+                <SeverityCount
+                  label="LOW"
+                  count={lowCount}
+                  className="text-blue-400"
+                />
+              </div>
             </div>
 
-            <div className="divide-y divide-slate-800">
-              {filteredFindings.length === 0 ? (
-                <div className="p-6 text-center">
-                  <p className="text-sm text-slate-500">
-                    No findings match this filter.
-                  </p>
-                </div>
-              ) : (
-                filteredFindings.map((finding) => {
-                  const config = severityConfig[finding.severity];
-                  const Icon = config.icon;
-                  const isSelected = finding.id === selectedFinding.id;
-                  const isResolved = resolved.includes(finding.id);
+            {/* Filters */}
+            <div className="flex flex-col gap-3 border-b border-slate-800 p-4 lg:flex-row lg:items-center">
+              <div className="flex items-center gap-2 text-slate-600">
+                <Filter size={14} />
 
-                  return (
-                    <button
-                      key={finding.id}
-                      type="button"
-                      onClick={() => setSelectedId(finding.id)}
-                      className={`w-full border-l-2 p-4 text-left transition ${
-                        isSelected
-                          ? "border-violet-400 bg-violet-500/[0.045]"
-                          : "border-transparent hover:bg-white/[0.02]"
-                      }`}
-                    >
-                      <div className="flex gap-3">
-                        <div className={`mt-0.5 ${config.text}`}>
-                          <Icon size={15} />
-                        </div>
+                <span className="font-mono text-[10px] uppercase tracking-wider">
+                  Filter
+                </span>
+              </div>
 
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-start gap-2">
-                            <span
-                              className={`font-mono text-[9px] ${config.text}`}
+              <div className="flex flex-wrap gap-1">
+                {(
+                  [
+                    "ALL",
+                    "CRITICAL",
+                    "HIGH",
+                    "MEDIUM",
+                    "LOW",
+                  ] as const
+                ).map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    onClick={() =>
+                      setFilter(item)
+                    }
+                    className={`border px-3 py-1.5 font-mono text-[9px] transition ${
+                      filter === item
+                        ? "border-violet-400/30 bg-violet-500/[0.08] text-violet-300"
+                        : "border-transparent text-slate-600 hover:border-slate-800 hover:text-slate-300"
+                    }`}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+
+              <div className="relative ml-auto w-full lg:max-w-xs">
+                <Search
+                  size={14}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-700"
+                />
+
+                <input
+                  value={search}
+                  onChange={(event) =>
+                    setSearch(
+                      event.target.value,
+                    )
+                  }
+                  placeholder="Search findings..."
+                  className="w-full border border-slate-800 bg-[#0a0f18] py-2 pl-9 pr-3 text-xs text-slate-300 outline-none transition placeholder:text-slate-700 focus:border-slate-600"
+                />
+              </div>
+            </div>
+
+            {/* Empty state */}
+            {findings.length === 0 ? (
+              <div className="min-h-[420px] p-10 text-center">
+                <CheckCircle2
+                  size={30}
+                  className="mx-auto text-emerald-400"
+                />
+
+                <h2 className="mt-4 text-sm font-medium text-white">
+                  No code review findings
+                </h2>
+
+                <p className="mx-auto mt-2 max-w-md text-xs leading-5 text-slate-600">
+                  The latest completed analysis
+                  did not produce any code review
+                  findings.
+                </p>
+              </div>
+            ) : (
+              /* Main review workspace */
+              <div className="grid min-h-[560px] lg:grid-cols-[390px_minmax(0,1fr)]">
+                {/* Findings */}
+                <div className="border-b border-slate-800 lg:border-b-0 lg:border-r">
+                  <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3">
+                    <span className="font-mono text-[9px] uppercase tracking-wider text-slate-600">
+                      Findings
+                    </span>
+
+                    <span className="font-mono text-[9px] text-slate-700">
+                      {filteredFindings.length}{" "}
+                      RESULTS
+                    </span>
+                  </div>
+
+                  <div className="divide-y divide-slate-800">
+                    {filteredFindings.length ===
+                    0 ? (
+                      <div className="p-6 text-center">
+                        <p className="text-sm text-slate-500">
+                          No findings match this
+                          filter.
+                        </p>
+                      </div>
+                    ) : (
+                      filteredFindings.map(
+                        (finding) => {
+                          const config =
+                            severityConfig[
+                              finding.severity
+                            ];
+
+                          const Icon =
+                            config.icon;
+
+                          const isSelected =
+                            finding.id ===
+                            selectedFinding?.id;
+
+                          const isResolved =
+                            resolved.includes(
+                              finding.id,
+                            );
+
+                          return (
+                            <button
+                              key={finding.id}
+                              type="button"
+                              onClick={() =>
+                                setSelectedId(
+                                  finding.id,
+                                )
+                              }
+                              className={`w-full border-l-2 p-4 text-left transition ${
+                                isSelected
+                                  ? "border-violet-400 bg-violet-500/[0.045]"
+                                  : "border-transparent hover:bg-white/[0.02]"
+                              }`}
                             >
-                              {finding.severity}
-                            </span>
+                              <div className="flex gap-3">
+                                <div
+                                  className={`mt-0.5 ${config.text}`}
+                                >
+                                  <Icon size={15} />
+                                </div>
 
-                            {isResolved && (
-                              <span className="font-mono text-[9px] text-emerald-400">
-                                RESOLVED
-                              </span>
-                            )}
-                          </div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-start gap-2">
+                                    <span
+                                      className={`font-mono text-[9px] ${config.text}`}
+                                    >
+                                      {
+                                        finding.severity
+                                      }
+                                    </span>
 
-                          <p
-                            className={`mt-1 text-sm ${
-                              isResolved
-                                ? "text-slate-600 line-through"
-                                : "text-slate-200"
+                                    {finding.aiReviewedAt && (
+                                      <span className="flex items-center gap-1 font-mono text-[8px] text-violet-400">
+                                        <Sparkles
+                                          size={9}
+                                        />
+                                        AI
+                                      </span>
+                                    )}
+
+                                    {isResolved && (
+                                      <span className="font-mono text-[9px] text-emerald-400">
+                                        RESOLVED
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  <p
+                                    className={`mt-1 text-sm ${
+                                      isResolved
+                                        ? "text-slate-600 line-through"
+                                        : "text-slate-200"
+                                    }`}
+                                  >
+                                    {
+                                      finding.title
+                                    }
+                                  </p>
+
+                                  <div className="mt-2 flex items-center gap-1.5 font-mono text-[9px] text-slate-600">
+                                    <FileCode2
+                                      size={11}
+                                    />
+
+                                    <span className="truncate">
+                                      {finding.filePath ??
+                                        "Unknown file"}
+                                    </span>
+
+                                    <span>
+                                      :
+                                    </span>
+
+                                    <span>
+                                      {getLineText(
+                                        finding,
+                                      )}
+                                    </span>
+                                  </div>
+
+                                  <div className="mt-2 text-[9px] text-slate-700">
+                                    {
+                                      finding.category
+                                    }
+                                  </div>
+                                </div>
+
+                                <ChevronRight
+                                  size={14}
+                                  className={`mt-1 shrink-0 ${
+                                    isSelected
+                                      ? "text-violet-400"
+                                      : "text-slate-800"
+                                  }`}
+                                />
+                              </div>
+                            </button>
+                          );
+                        },
+                      )
+                    )}
+                  </div>
+                </div>
+
+                {/* Finding details */}
+                <div className="min-w-0">
+                  {selectedFinding ? (
+                    <>
+                      <div className="border-b border-slate-800 px-5 py-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span
+                            className={`border px-2 py-1 font-mono text-[9px] ${
+                              severityConfig[
+                                selectedFinding
+                                  .severity
+                              ].border
+                            } ${
+                              severityConfig[
+                                selectedFinding
+                                  .severity
+                              ].bg
+                            } ${
+                              severityConfig[
+                                selectedFinding
+                                  .severity
+                              ].text
                             }`}
                           >
-                            {finding.title}
-                          </p>
+                            {
+                              selectedFinding.severity
+                            }
+                          </span>
 
-                          <div className="mt-2 flex items-center gap-1.5 font-mono text-[9px] text-slate-600">
-                            <FileCode2 size={11} />
-                            <span className="truncate">
-                              {finding.file}
+                          <span className="border border-slate-800 px-2 py-1 font-mono text-[9px] text-slate-600">
+                            {
+                              selectedFinding.category
+                            }
+                          </span>
+
+                          {selectedFinding.aiReviewedAt && (
+                            <span className="flex items-center gap-1 border border-violet-400/20 bg-violet-500/[0.04] px-2 py-1 font-mono text-[9px] text-violet-300">
+                              <Sparkles size={10} />
+                              AI REVIEWED
+                            </span>
+                          )}
+
+                          <span className="ml-auto font-mono text-[9px] text-slate-700">
+                            FINDING #
+                            {selectedFinding.id.slice(
+                              -6,
+                            )}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-7 p-5">
+                        <div>
+                          <h2 className="text-lg font-medium text-white">
+                            {
+                              selectedFinding.title
+                            }
+                          </h2>
+
+                          <div className="mt-2 flex flex-wrap items-center gap-2 font-mono text-[10px] text-slate-600">
+                            <FileCode2
+                              size={12}
+                            />
+
+                            <span>
+                              {selectedFinding.filePath ??
+                                "Unknown file"}
                             </span>
 
                             <span>:</span>
 
-                            <span>{finding.line}</span>
-                          </div>
+                            <span>
+                              {getLineText(
+                                selectedFinding,
+                              )}
+                            </span>
 
-                          <div className="mt-2 text-[9px] text-slate-700">
-                            {finding.category}
+                            {selectedFinding
+                              .functionName && (
+                              <>
+                                <span className="text-slate-800">
+                                  ·
+                                </span>
+
+                                <span>
+                                  {
+                                    selectedFinding.functionName
+                                  }
+                                </span>
+                              </>
+                            )}
                           </div>
                         </div>
 
-                        <ChevronRight
-                          size={14}
-                          className={`mt-1 shrink-0 ${
-                            isSelected
-                              ? "text-violet-400"
-                              : "text-slate-800"
-                          }`}
-                        />
+                        {/* Static analysis */}
+                        <div className="border border-slate-800 bg-[#080d15]">
+                          <div className="flex items-center gap-2 border-b border-slate-800 px-4 py-3">
+                            <Code2
+                              size={13}
+                              className="text-slate-500"
+                            />
+
+                            <div>
+                              <p className="text-xs font-medium text-slate-300">
+                                Static analysis
+                              </p>
+
+                              <p className="mt-0.5 font-mono text-[8px] uppercase tracking-wider text-slate-700">
+                                Deterministic finding
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="space-y-6 p-4">
+                            {/* Problem */}
+                            <DetailBlock title="Problem">
+                              <p className="text-sm leading-6 text-slate-400">
+                                {
+                                  selectedFinding.description
+                                }
+                              </p>
+                            </DetailBlock>
+
+                            {/* Evidence */}
+                            {selectedFinding.evidence && (
+                              <DetailBlock title="Evidence">
+                                <div className="overflow-x-auto border border-slate-800 bg-[#050810]">
+                                  <div className="flex min-w-max font-mono text-[10px]">
+                                    <div className="select-none border-r border-slate-800 px-3 py-3 text-right text-slate-700">
+                                      {selectedFinding.lineStart ??
+                                        "—"}
+                                    </div>
+
+                                    <pre className="whitespace-pre-wrap px-4 py-3 leading-6 text-slate-400">
+                                      <code>
+                                        {
+                                          selectedFinding.evidence
+                                        }
+                                      </code>
+                                    </pre>
+                                  </div>
+                                </div>
+                              </DetailBlock>
+                            )}
+
+                            {/* Static impact */}
+                            {selectedFinding.impact && (
+                              <DetailBlock title="Why it matters">
+                                <div className="border-l border-amber-400/30 bg-amber-400/[0.025] px-4 py-3">
+                                  <p className="text-sm leading-6 text-slate-400">
+                                    {
+                                      selectedFinding.impact
+                                    }
+                                  </p>
+                                </div>
+                              </DetailBlock>
+                            )}
+
+                            {/* Existing recommendation */}
+                            {selectedFinding.recommendation && (
+                              <DetailBlock title="Static recommendation">
+                                <p className="text-sm leading-6 text-slate-400">
+                                  {
+                                    selectedFinding.recommendation
+                                  }
+                                </p>
+                              </DetailBlock>
+                            )}
+
+                            {/* Scanner metadata */}
+                            {(selectedFinding.rule ||
+                              selectedFinding.scanner) && (
+                              <div className="grid gap-3 border-t border-slate-800 pt-4 sm:grid-cols-2">
+                                {selectedFinding.rule && (
+                                  <div>
+                                    <p className="font-mono text-[9px] uppercase tracking-wider text-slate-700">
+                                      Rule
+                                    </p>
+
+                                    <p className="mt-1 font-mono text-[10px] text-slate-500">
+                                      {
+                                        selectedFinding.rule
+                                      }
+                                    </p>
+                                  </div>
+                                )}
+
+                                {selectedFinding.scanner && (
+                                  <div>
+                                    <p className="font-mono text-[9px] uppercase tracking-wider text-slate-700">
+                                      Scanner
+                                    </p>
+
+                                    <p className="mt-1 font-mono text-[10px] text-slate-500">
+                                      {
+                                        selectedFinding.scanner
+                                      }
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* AI Review */}
+                        <div className="border border-violet-400/15 bg-violet-500/[0.018]">
+                          <div className="flex flex-col gap-3 border-b border-violet-400/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="flex items-center gap-2">
+                              <Sparkles
+                                size={14}
+                                className="text-violet-400"
+                              />
+
+                              <div>
+                                <p className="text-xs font-medium text-violet-200">
+                                  AI Review
+                                </p>
+
+                                <p className="mt-0.5 font-mono text-[8px] uppercase tracking-wider text-slate-700">
+                                  Qwen code intelligence
+                                </p>
+                              </div>
+                            </div>
+
+                            {selectedFinding.aiReviewedAt && (
+                              <div className="flex items-center gap-3">
+                                {selectedFinding.aiModel && (
+                                  <span className="font-mono text-[8px] text-slate-600">
+                                    {selectedFinding.aiModel}
+                                  </span>
+                                )}
+
+                                <span className="font-mono text-[8px] text-slate-700">
+                                  {formatReviewedAt(
+                                    selectedFinding.aiReviewedAt,
+                                  )}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          {selectedFinding.aiReviewedAt ? (
+                            <div className="space-y-6 p-4">
+                              {/* AI explanation */}
+                              {selectedFinding.aiExplanation && (
+                                <DetailBlock
+                                  title="AI explanation"
+                                  icon={
+                                    <Sparkles
+                                      size={13}
+                                    />
+                                  }
+                                >
+                                  <p className="text-sm leading-6 text-slate-300">
+                                    {
+                                      selectedFinding.aiExplanation
+                                    }
+                                  </p>
+                                </DetailBlock>
+                              )}
+
+                              {/* Root cause */}
+                              {selectedFinding.aiRootCause && (
+                                <DetailBlock title="Root cause">
+                                  <div className="border-l border-violet-400/30 bg-violet-500/[0.025] px-4 py-3">
+                                    <p className="text-sm leading-6 text-slate-400">
+                                      {
+                                        selectedFinding.aiRootCause
+                                      }
+                                    </p>
+                                  </div>
+                                </DetailBlock>
+                              )}
+
+                              {/* AI impact */}
+                              {selectedFinding.aiImpact && (
+                                <DetailBlock title="AI impact">
+                                  <p className="text-sm leading-6 text-slate-400">
+                                    {
+                                      selectedFinding.aiImpact
+                                    }
+                                  </p>
+                                </DetailBlock>
+                              )}
+
+                              {/* AI recommendation */}
+                              {selectedFinding.aiRecommendation && (
+                                <DetailBlock title="AI recommendation">
+                                  <div className="border border-violet-400/15 bg-violet-500/[0.025] p-4">
+                                    <p className="text-sm leading-6 text-slate-300">
+                                      {
+                                        selectedFinding.aiRecommendation
+                                      }
+                                    </p>
+                                  </div>
+                                </DetailBlock>
+                              )}
+
+                              {/* Suggested fix */}
+                              {selectedFinding.aiSuggestedFix && (
+                                <DetailBlock title="Suggested fix">
+                                  <div className="overflow-x-auto border border-emerald-400/10 bg-[#050810]">
+                                    <pre className="whitespace-pre-wrap p-4 font-mono text-[11px] leading-6 text-emerald-300/80">
+                                      <code>
+                                        {
+                                          selectedFinding.aiSuggestedFix
+                                        }
+                                      </code>
+                                    </pre>
+                                  </div>
+                                </DetailBlock>
+                              )}
+
+                              {/* AI confidence */}
+                              {selectedFinding.aiConfidence !==
+                                null && (
+                                <div className="border-t border-violet-400/10 pt-4">
+                                  <div className="flex items-center justify-between">
+                                    <div>
+                                      <p className="font-mono text-[9px] uppercase tracking-wider text-slate-600">
+                                        AI confidence
+                                      </p>
+
+                                      <p className="mt-1 text-[10px] text-slate-700">
+                                        Model-generated confidence
+                                        score
+                                      </p>
+                                    </div>
+
+                                    <span className="font-mono text-lg font-semibold text-violet-300">
+                                      {
+                                        selectedFinding.aiConfidence
+                                      }
+                                      %
+                                    </span>
+                                  </div>
+
+                                  <div className="mt-3 h-1.5 overflow-hidden bg-slate-900">
+                                    <div
+                                      className="h-full bg-violet-400 transition-all"
+                                      style={{
+                                        width: `${Math.min(
+                                          Math.max(
+                                            selectedFinding.aiConfidence,
+                                            0,
+                                          ),
+                                          100,
+                                        )}%`,
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="p-6">
+                              <div className="flex items-start gap-3">
+                                <Sparkles
+                                  size={15}
+                                  className="mt-0.5 text-slate-700"
+                                />
+
+                                <div>
+                                  <p className="text-xs font-medium text-slate-500">
+                                    AI review not available
+                                  </p>
+
+                                  <p className="mt-1 text-[11px] leading-5 text-slate-700">
+                                    This finding has not been
+                                    enriched by the AI review
+                                    engine yet.
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex flex-wrap gap-2 border-t border-slate-800 pt-5">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              toggleResolved(
+                                selectedFinding.id,
+                              )
+                            }
+                            className={`flex items-center gap-2 px-3 py-2 text-xs font-medium transition ${
+                              resolved.includes(
+                                selectedFinding.id,
+                              )
+                                ? "border border-emerald-400/20 bg-emerald-400/[0.05] text-emerald-400"
+                                : "bg-white text-black hover:bg-slate-200"
+                            }`}
+                          >
+                            <Check size={14} />
+
+                            {resolved.includes(
+                              selectedFinding.id,
+                            )
+                              ? "Resolved"
+                              : "Mark resolved"}
+                          </button>
+
+                          <button
+                            type="button"
+                            className="border border-slate-800 px-3 py-2 text-xs text-slate-500 transition hover:border-slate-700 hover:text-slate-200"
+                          >
+                            Open file
+                          </button>
+
+                          <button
+                            type="button"
+                            className="border border-slate-800 px-3 py-2 text-xs text-slate-500 transition hover:border-slate-700 hover:text-slate-200"
+                          >
+                            Ignore finding
+                          </button>
+                        </div>
                       </div>
-                    </button>
-                  );
-                })
-              )}
-            </div>
-          </div>
+                    </>
+                  ) : (
+                    <div className="flex min-h-[560px] items-center justify-center p-10 text-center">
+                      <div>
+                        <Info
+                          size={24}
+                          className="mx-auto text-slate-700"
+                        />
 
-          {/* Finding details */}
-          <div className="min-w-0">
-            <div className="border-b border-slate-800 px-5 py-3">
-              <div className="flex flex-wrap items-center gap-2">
-                <span
-                  className={`border px-2 py-1 font-mono text-[9px] ${
-                    severityConfig[selectedFinding.severity].border
-                  } ${
-                    severityConfig[selectedFinding.severity].bg
-                  } ${
-                    severityConfig[selectedFinding.severity].text
-                  }`}
-                >
-                  {selectedFinding.severity}
-                </span>
-
-                <span className="border border-slate-800 px-2 py-1 font-mono text-[9px] text-slate-600">
-                  {selectedFinding.category}
-                </span>
-
-                <span className="ml-auto font-mono text-[9px] text-slate-700">
-                  FINDING #{String(selectedFinding.id).padStart(3, "0")}
-                </span>
-              </div>
-            </div>
-
-            <div className="space-y-6 p-5">
-              <div>
-                <h2 className="text-lg font-medium text-white">
-                  {selectedFinding.title}
-                </h2>
-
-                <div className="mt-2 flex flex-wrap items-center gap-2 font-mono text-[10px] text-slate-600">
-                  <FileCode2 size={12} />
-
-                  <span>{selectedFinding.file}</span>
-
-                  <span>:</span>
-
-                  <span>{selectedFinding.line}</span>
-
-                  <span className="text-slate-800">·</span>
-
-                  <span>{selectedFinding.functionName}</span>
-                </div>
-              </div>
-
-              {/* Problem */}
-              <DetailBlock title="Problem">
-                <p className="text-sm leading-6 text-slate-400">
-                  {selectedFinding.problem}
-                </p>
-              </DetailBlock>
-
-              {/* Evidence */}
-              <DetailBlock title="Evidence">
-                <div className="overflow-x-auto border border-slate-800 bg-[#050810]">
-                  <div className="flex min-w-max font-mono text-[10px]">
-                    <div className="select-none border-r border-slate-800 px-3 py-3 text-right text-slate-700">
-                      {selectedFinding.line}
+                        <p className="mt-3 text-sm text-slate-500">
+                          Select a finding to inspect
+                          its details.
+                        </p>
+                      </div>
                     </div>
-
-                    <pre className="px-4 py-3 leading-6 text-slate-400">
-                      <code>{selectedFinding.evidence}</code>
-                    </pre>
-                  </div>
+                  )}
                 </div>
-              </DetailBlock>
-
-              {/* Why */}
-              <DetailBlock title="Why it matters">
-                <div className="border-l border-amber-400/30 bg-amber-400/[0.025] px-4 py-3">
-                  <p className="text-sm leading-6 text-slate-400">
-                    {selectedFinding.why}
-                  </p>
-                </div>
-              </DetailBlock>
-
-              {/* AI recommendation */}
-              <DetailBlock
-                title="AI recommendation"
-                icon={<Sparkles size={13} />}
-              >
-                <div className="border border-violet-400/15 bg-violet-500/[0.025] p-4">
-                  <p className="text-sm leading-6 text-slate-300">
-                    {selectedFinding.fix}
-                  </p>
-
-                  <div className="mt-4 flex items-center justify-between border-t border-violet-400/10 pt-3">
-                    <span className="font-mono text-[9px] text-slate-600">
-                      AI CONFIDENCE
-                    </span>
-
-                    <span className="font-mono text-[10px] text-violet-300">
-                      {selectedFinding.confidence}%
-                    </span>
-                  </div>
-                </div>
-              </DetailBlock>
-
-              {/* Actions */}
-              <div className="flex flex-wrap gap-2 border-t border-slate-800 pt-5">
-                <button
-                  type="button"
-                  onClick={() => toggleResolved(selectedFinding.id)}
-                  className={`flex items-center gap-2 px-3 py-2 text-xs font-medium transition ${
-                    resolved.includes(selectedFinding.id)
-                      ? "border border-emerald-400/20 bg-emerald-400/[0.05] text-emerald-400"
-                      : "bg-white text-black hover:bg-slate-200"
-                  }`}
-                >
-                  <Check size={14} />
-
-                  {resolved.includes(selectedFinding.id)
-                    ? "Resolved"
-                    : "Mark resolved"}
-                </button>
-
-                <button
-                  type="button"
-                  className="border border-slate-800 px-3 py-2 text-xs text-slate-500 transition hover:border-slate-700 hover:text-slate-200"
-                >
-                  Open file
-                </button>
-
-                <button
-                  type="button"
-                  className="border border-slate-800 px-3 py-2 text-xs text-slate-500 transition hover:border-slate-700 hover:text-slate-200"
-                >
-                  Ignore finding
-                </button>
               </div>
+            )}
+          </div>
+
+          {/* Bottom engineering note */}
+          <div className="flex items-start gap-3 border border-slate-800 bg-[#080d15] px-5 py-4">
+            <Info
+              size={14}
+              className="mt-0.5 shrink-0 text-cyan-400"
+            />
+
+            <div>
+              <p className="text-xs font-medium text-slate-300">
+                SecureAI review pipeline
+              </p>
+
+              <p className="mt-1 text-[11px] leading-5 text-slate-600">
+                Repository → parser → static analysis
+                → AI reasoning → finding enrichment
+                → developer recommendation.
+              </p>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Bottom engineering note */}
-      <div className="flex items-start gap-3 border border-slate-800 bg-[#080d15] px-5 py-4">
-        <Info size={14} className="mt-0.5 shrink-0 text-cyan-400" />
-
-        <div>
-          <p className="text-xs font-medium text-slate-300">
-            SecureAI review pipeline
-          </p>
-
-          <p className="mt-1 text-[11px] leading-5 text-slate-600">
-            Repository → parser → code intelligence → AI reasoning →
-            finding classification → developer recommendation.
-          </p>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 }
@@ -652,14 +1236,18 @@ function Summary({
         <Icon
           size={14}
           className={
-            accent ? "text-emerald-400" : "text-slate-700"
+            accent
+              ? "text-emerald-400"
+              : "text-slate-700"
           }
         />
       </div>
 
       <p
         className={`mt-4 text-2xl font-semibold tracking-tight ${
-          accent ? "text-emerald-400" : "text-white"
+          accent
+            ? "text-emerald-400"
+            : "text-white"
         }`}
       >
         {value}
@@ -683,8 +1271,13 @@ function SeverityCount({
 }) {
   return (
     <span className="flex items-center gap-2">
-      <span className={className}>{label}</span>
-      <span className="text-slate-400">{count}</span>
+      <span className={className}>
+        {label}
+      </span>
+
+      <span className="text-slate-400">
+        {count}
+      </span>
     </span>
   );
 }
@@ -701,7 +1294,11 @@ function DetailBlock({
   return (
     <section>
       <div className="mb-2 flex items-center gap-2">
-        {icon && <span className="text-violet-400">{icon}</span>}
+        {icon && (
+          <span className="text-violet-400">
+            {icon}
+          </span>
+        )}
 
         <h3 className="font-mono text-[9px] uppercase tracking-[0.16em] text-slate-600">
           {title}
