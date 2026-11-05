@@ -55,27 +55,39 @@ async function githubRequest<T>(
   accessToken?: string,
   options: RequestInit = {},
 ): Promise<T> {
-  const response = await fetch(
-    `${GITHUB_API_URL}${endpoint}`,
-    {
-      ...options,
-      headers: {
-        Accept: "application/vnd.github+json",
-        "X-GitHub-Api-Version":
-          GITHUB_API_VERSION,
-        ...(accessToken
-          ? {
-              Authorization:
-                `Bearer ${accessToken}`,
-            }
-          : {}),
-        ...(options.headers ?? {}),
+
+  let response: Response;
+
+  try {
+    response = await fetch(
+      `${GITHUB_API_URL}${endpoint}`,
+      {
+        ...options,
+        headers: {
+          Accept: "application/vnd.github+json",
+          ...(accessToken
+  ? { Authorization: `Bearer ${accessToken}` }
+  : {}),
+          ...options.headers,
+        },
       },
-    },
-  );
+    );
+  } catch (error) {
+    console.error("[GitHub API transport error]", {
+      endpoint,
+      method: options.method ?? "GET",
+      message:
+        error instanceof Error
+          ? error.message
+          : String(error),
+    });
+
+    throw error;
+  }
 
   const data =
     await response.json().catch(() => null);
+
 
   if (!response.ok) {
     const message =

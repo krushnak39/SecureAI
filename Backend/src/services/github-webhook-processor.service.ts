@@ -1,3 +1,4 @@
+
 import { prisma } from "../lib/prisma.js";
 
 import {
@@ -60,16 +61,14 @@ export async function processGitHubPullRequestWebhook(
   if (!fullName) {
     return {
       handled: false,
-      reason:
-        "Repository full_name is missing.",
+      reason: "Repository full_name is missing.",
     };
   }
 
   if (!pullNumber) {
     return {
       handled: false,
-      reason:
-        "Pull request number is missing.",
+      reason: "Pull request number is missing.",
     };
   }
 
@@ -96,9 +95,7 @@ export async function processGitHubPullRequestWebhook(
   }
 
   const installation =
-    await getRepositoryInstallation(
-      fullName,
-    );
+    await getRepositoryInstallation(fullName);
 
   const installationToken =
     await getInstallationAccessToken(
@@ -118,17 +115,24 @@ export async function processGitHubPullRequestWebhook(
   if (!headSha) {
     return {
       handled: false,
-      reason:
-        "Pull request head SHA is missing.",
+      reason: "Pull request head SHA is missing.",
     };
   }
 
   const analyzableFiles = [];
 
+  const skippedFiles: {
+    filename: string;
+    reason: string;
+  }[] = [];
+
   for (const file of changedFiles) {
-    if (
-      file.status === "deleted"
-    ) {
+    if (file.status === "deleted") {
+      skippedFiles.push({
+        filename: file.filename,
+        reason: "Deleted file",
+      });
+
       continue;
     }
 
@@ -136,6 +140,11 @@ export async function processGitHubPullRequestWebhook(
       getLanguage(file.filename);
 
     if (!language) {
+      skippedFiles.push({
+        filename: file.filename,
+        reason: "Unsupported file type",
+      });
+
       continue;
     }
 
@@ -148,6 +157,11 @@ export async function processGitHubPullRequestWebhook(
       );
 
     if (content === null) {
+      skippedFiles.push({
+        filename: file.filename,
+        reason: "File content unavailable",
+      });
+
       continue;
     }
 
@@ -162,122 +176,185 @@ export async function processGitHubPullRequestWebhook(
     });
   }
 
+  // Log why changed files were excluded from analysis.
+  console.log("[PR File Analysis Summary]", {
+    totalChangedFiles: changedFiles.length,
+    analyzableFiles: analyzableFiles.length,
+    skippedFiles,
+  });
+
   const codeReviewFindings =
-    reviewRepositoryCode(
-      analyzableFiles,
-    );
+    reviewRepositoryCode(analyzableFiles);
 
   const securityScan =
-    scanRepositorySecurity(
-      analyzableFiles,
-    );
+    scanRepositorySecurity(analyzableFiles);
 
   const changedLines =
-  changedFiles.reduce(
-    (total, file) =>
-      total +
-      file.additions +
-      file.deletions,
-    0,
-  );
+    changedFiles.reduce(
+      (total, file) =>
+        total +
+        file.additions +
+        file.deletions,
+      0,
+    );
 
-const riskAnalysis =
-  calculatePRRisk({
-    codeReviewFindings,
-    securityFindings:
-      securityScan.findings,
-    changedFiles:
-      changedFiles.length,
-    changedLines,
-  });
+  const riskAnalysis =
+    calculatePRRisk({
+      codeReviewFindings,
+      securityFindings:
+        securityScan.findings,
+      changedFiles: changedFiles.length,
+      changedLines,
+    });
 
   const analysis =
-  await prisma.analysis.create({
-    data: {
-      repositoryId:
-        repository.id,
+    await prisma.analysis.create({
+      data: {
+        repositoryId: repository.id,
 
-      pullRequestId:
-        null,
+        pullRequestId: null,
 
-      status:
-        "COMPLETED",
+        status: "COMPLETED",
 
-      trigger:
-        "PULL_REQUEST",
+        trigger: "PULL_REQUEST",
 
-      branch:
-        payload.pull_request?.head?.ref ??
-        null,
+        branch:
+          payload.pull_request?.head?.ref ??
+          null,
 
-      commitSha:
-        headSha,
+        commitSha: headSha,
 
-      filesAnalyzed:
-        analyzableFiles.length,
+        filesAnalyzed:
+          analyzableFiles.length,
 
-      linesAnalyzed:
-        analyzableFiles.reduce(
-          (total, file) =>
-            total + file.lines,
-          0,
-        ),
+        linesAnalyzed:
+          analyzableFiles.reduce(
+            (total, file) =>
+              total + file.lines,
+            0,
+          ),
 
-      riskScore:
-        riskAnalysis.riskScore,
+        riskScore:
+          riskAnalysis.riskScore,
 
-      riskLevel:
-        riskAnalysis.riskLevel,
+        riskLevel:
+          riskAnalysis.riskLevel,
 
-      mergeReadiness:
-        riskAnalysis.mergeReadiness,
+        mergeReadiness:
+          riskAnalysis.mergeReadiness,
 
-      codeQuality:
-        Math.max(
-          0,
-          100 -
-            codeReviewFindings.length * 5,
-        ),
+        codeQuality:
+          Math.max(
+            0,
+            100 - codeReviewFindings.length * 5,
+          ),
 
-      securityScore:
-        securityScan.securityScore,
+        securityScore:
+          securityScan.securityScore,
 
-      startedAt:
-        new Date(),
+        startedAt: new Date(),
 
-      completedAt:
-        new Date(),
-    },
-  });
+        completedAt: new Date(),
+      },
+    });
+
+  // Persist code review and security findings.
+  const findingsToPersist = [
+    ...codeReviewFindings.map((finding) => ({
+      severity: finding.severity,
+      category: finding.category,
+      title: finding.title,
+      description: finding.description,
+      impact: finding.impact,
+      recommendation: finding.recommendation,
+      filePath: finding.filePath,
+      lineStart: finding.lineStart,
+      lineEnd: finding.lineEnd,
+      functionName: finding.functionName,
+      rule: finding.rule,
+      scanner: finding.scanner,
+      evidence: finding.evidence,
+      confidence: finding.confidence,
+    })),
+
+    ...securityScan.findings.map((finding) => ({
+      severity: finding.severity,
+      category: "SECURITY" as const,
+      title: finding.title,
+      description: finding.description,
+      impact: finding.impact,
+      recommendation: finding.recommendation,
+      filePath: finding.filePath,
+      lineStart: finding.lineStart,
+      lineEnd: finding.lineEnd,
+      functionName: null,
+      rule: finding.rule,
+      scanner: finding.scanner,
+      evidence: finding.evidence,
+      confidence: finding.confidence,
+    })),
+  ];
+
+  // Avoid saving the same issue twice within one analysis.
+  const uniqueFindings = new Map<
+    string,
+    (typeof findingsToPersist)[number]
+  >();
+
+  for (const finding of findingsToPersist) {
+    const key = JSON.stringify([
+      finding.filePath,
+      finding.lineStart,
+      finding.title,
+    ]);
+
+    if (!uniqueFindings.has(key)) {
+      uniqueFindings.set(key, finding);
+    }
+  }
+
+  const findingsToSave = Array.from(
+    uniqueFindings.values(),
+  ).map((finding) => ({
+    ...finding,
+    analysisId: analysis.id,
+  }));
+
+  if (findingsToSave.length > 0) {
+    await prisma.finding.createMany({
+      data: findingsToSave,
+    });
+  }
 
   const checkConclusion =
-  riskAnalysis.mergeReadiness ===
-    "BLOCKED"
-    ? "failure"
-    : riskAnalysis.mergeReadiness ===
-        "REVIEW_REQUIRED"
-      ? "neutral"
-      : "success";
+    riskAnalysis.mergeReadiness === "BLOCKED"
+      ? "failure"
+      : riskAnalysis.mergeReadiness === "REVIEW_REQUIRED"
+        ? "neutral"
+        : "success";
 
-await createGitHubCheckRun(
-  installationToken.token,
-  fullName,
-  {
-    name: "SecureAI PR Analysis",
-    headSha,
-    status: "completed",
-    conclusion:
-      checkConclusion,
-    title:
-      `Risk: ${riskAnalysis.riskLevel} • ${riskAnalysis.riskScore}/100`,
-    summary:
-      `Merge readiness: ${riskAnalysis.mergeReadiness}`,
-    text:
-      [
+  await createGitHubCheckRun(
+    installationToken.token,
+    fullName,
+    {
+      name: "SecureAI PR Analysis",
+      headSha,
+      status: "completed",
+      conclusion: checkConclusion,
+
+      title:
+        `Risk: ${riskAnalysis.riskLevel} • ${riskAnalysis.riskScore}/100`,
+
+      summary:
+        `Merge readiness: ${riskAnalysis.mergeReadiness}`,
+
+      text: [
         `**Risk Score:** ${riskAnalysis.riskScore}/100`,
         `**Risk Level:** ${riskAnalysis.riskLevel}`,
         `**Merge Readiness:** ${riskAnalysis.mergeReadiness}`,
         `**Changed Files:** ${changedFiles.length}`,
+        `**Analyzed Files:** ${analyzableFiles.length}`,
+        `**Skipped Files:** ${skippedFiles.length}`,
         `**Changed Lines:** ${changedLines}`,
         "",
         "**Risk Factors:**",
@@ -285,26 +362,21 @@ await createGitHubCheckRun(
           (reason) => `- ${reason}`,
         ),
       ].join("\n"),
-  },
-);
+    },
+  );
 
   return {
     handled: true,
 
-    repositoryId:
-      repository.id,
+    repositoryId: repository.id,
 
-    projectId:
-      repository.projectId,
+    projectId: repository.projectId,
 
-    repository:
-      repository.fullName,
+    repository: repository.fullName,
 
-    pullRequestNumber:
-      pullNumber,
+    pullRequestNumber: pullNumber,
 
-    action:
-      payload.action ?? null,
+    action: payload.action ?? null,
 
     title:
       payload.pull_request?.title ??
@@ -321,66 +393,42 @@ await createGitHubCheckRun(
     headSha,
 
     changedFiles:
-      changedFiles.map(
-        (file) => ({
-          filename:
-            file.filename,
-
-          status:
-            file.status,
-
-          additions:
-            file.additions,
-
-          deletions:
-            file.deletions,
-
-          changes:
-            file.changes,
-
-          patch:
-            file.patch ?? null,
-
-          previousFilename:
-            file.previous_filename ??
-            null,
-        }),
-      ),
+      changedFiles.map((file) => ({
+        filename: file.filename,
+        status: file.status,
+        additions: file.additions,
+        deletions: file.deletions,
+        changes: file.changes,
+        patch: file.patch ?? null,
+        previousFilename:
+          file.previous_filename ?? null,
+      })),
 
     analysis: {
-      analyzableFiles:
-        analyzableFiles.length,
+      analyzableFiles: analyzableFiles.length,
 
-        risk: {
-  score:
-    riskAnalysis.riskScore,
+      skippedFiles,
 
-  level:
-    riskAnalysis.riskLevel,
-
-  mergeReadiness:
-    riskAnalysis.mergeReadiness,
-
-  reasons:
-    riskAnalysis.reasons,
-
-  changedLines,
-},
+      risk: {
+        score: riskAnalysis.riskScore,
+        level: riskAnalysis.riskLevel,
+        mergeReadiness:
+          riskAnalysis.mergeReadiness,
+        reasons: riskAnalysis.reasons,
+        changedLines,
+      },
 
       codeReview: {
-        findings:
-          codeReviewFindings,
+        findings: codeReviewFindings,
         totalFindings:
           codeReviewFindings.length,
       },
 
       security: {
-        findings:
-          securityScan.findings,
+        findings: securityScan.findings,
         securityScore:
           securityScan.securityScore,
-        counts:
-          securityScan.counts,
+        counts: securityScan.counts,
       },
     },
   };
