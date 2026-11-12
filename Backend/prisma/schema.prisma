@@ -97,30 +97,37 @@ model Repository {
 }
 
 model Analysis {
-  id                     String                  @id @default(cuid())
-  repositoryId           String
-  status                 AnalysisStatus          @default(QUEUED)
-  trigger                AnalysisTrigger         @default(MANUAL)
-  branch                 String?
-  commitSha              String?
-  startedAt              DateTime?
-  completedAt            DateTime?
-  healthScore            Int?
-  codeQuality            Int?
-  securityScore          Int?
-  performance            Int?
-  architecture           Int?
-  maintainability        Int?
-  filesAnalyzed          Int                     @default(0)
-  linesAnalyzed          Int                     @default(0)
-  errorMessage           String?
-  createdAt              DateTime                @default(now())
+  id              String            @id @default(cuid())
+  repositoryId    String
+  pullRequestId   String?
+  status          AnalysisStatus    @default(QUEUED)
+  trigger         AnalysisTrigger   @default(MANUAL)
+  branch          String?
+  commitSha       String?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  healthScore     Int?
+  codeQuality     Int?
+  securityScore   Int?
+  performance     Int?
+  architecture    Int?
+  maintainability Int?
+  filesAnalyzed   Int               @default(0)
+  linesAnalyzed   Int               @default(0)
+  errorMessage    String?
+  riskScore       Int?
+  riskLevel       PRRiskLevel?
+  mergeReadiness  PRMergeReadiness?
+  createdAt       DateTime          @default(now())
+
   repository             Repository              @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  pullRequest            PullRequest?            @relation(fields: [pullRequestId], references: [id], onDelete: Cascade)
   architectureComponents ArchitectureComponent[]
   findings               Finding[]
   performanceIssues      PerformanceIssue[]
 
   @@index([repositoryId])
+  @@index([pullRequestId])
   @@index([status])
   @@index([createdAt])
 }
@@ -251,7 +258,7 @@ model ArchitectureRelationship {
 }
 
 model CodeChunk {
-  id           String   @id @default(cuid())
+  id           String                 @id @default(cuid())
   repositoryId String
   filePath     String
   symbolName   String?
@@ -371,7 +378,7 @@ model CICheck {
 model PullRequest {
   id           String            @id @default(cuid())
   repositoryId String
-  externalId BigInt?
+  externalId   BigInt?
   number       Int?
   title        String
   author       String?
@@ -383,6 +390,7 @@ model PullRequest {
   updatedAt    DateTime          @updatedAt
   mergedAt     DateTime?
   repository   Repository        @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  analyses     Analysis[]
 
   @@unique([repositoryId, number])
   @@index([repositoryId])
@@ -524,3 +532,15 @@ enum CheckStatus {
   CANCELLED
 }
 
+enum PRRiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum PRMergeReadiness {
+  READY
+  REVIEW_REQUIRED
+  BLOCKED
+}

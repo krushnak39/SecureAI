@@ -1,4 +1,5 @@
 import "dotenv/config";
+import githubWebhookRoutes from "./routes/github-webhook.routes.js";
 import cicdRoutes from "./routes/cicd.routes.js";
 import performanceRoutes from "./routes/performance.routes.js";
 import cors from "cors";
@@ -68,6 +69,18 @@ app.use(
 );
 
 app.use(cookieParser());
+
+app.use(
+  "/api/webhooks",
+  express.raw({
+    type: "application/json",
+  }),
+);
+
+app.use(
+  "/api/webhooks",
+  githubWebhookRoutes,
+);
 
 app.use(express.json());
 

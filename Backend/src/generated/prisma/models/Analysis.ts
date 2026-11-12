@@ -35,6 +35,7 @@ export type AnalysisAvgAggregateOutputType = {
   maintainability: number | null
   filesAnalyzed: number | null
   linesAnalyzed: number | null
+  riskScore: number | null
 }
 
 export type AnalysisSumAggregateOutputType = {
@@ -46,11 +47,13 @@ export type AnalysisSumAggregateOutputType = {
   maintainability: number | null
   filesAnalyzed: number | null
   linesAnalyzed: number | null
+  riskScore: number | null
 }
 
 export type AnalysisMinAggregateOutputType = {
   id: string | null
   repositoryId: string | null
+  pullRequestId: string | null
   status: $Enums.AnalysisStatus | null
   trigger: $Enums.AnalysisTrigger | null
   branch: string | null
@@ -66,12 +69,16 @@ export type AnalysisMinAggregateOutputType = {
   filesAnalyzed: number | null
   linesAnalyzed: number | null
   errorMessage: string | null
+  riskScore: number | null
+  riskLevel: $Enums.PRRiskLevel | null
+  mergeReadiness: $Enums.PRMergeReadiness | null
   createdAt: Date | null
 }
 
 export type AnalysisMaxAggregateOutputType = {
   id: string | null
   repositoryId: string | null
+  pullRequestId: string | null
   status: $Enums.AnalysisStatus | null
   trigger: $Enums.AnalysisTrigger | null
   branch: string | null
@@ -87,12 +94,16 @@ export type AnalysisMaxAggregateOutputType = {
   filesAnalyzed: number | null
   linesAnalyzed: number | null
   errorMessage: string | null
+  riskScore: number | null
+  riskLevel: $Enums.PRRiskLevel | null
+  mergeReadiness: $Enums.PRMergeReadiness | null
   createdAt: Date | null
 }
 
 export type AnalysisCountAggregateOutputType = {
   id: number
   repositoryId: number
+  pullRequestId: number
   status: number
   trigger: number
   branch: number
@@ -108,6 +119,9 @@ export type AnalysisCountAggregateOutputType = {
   filesAnalyzed: number
   linesAnalyzed: number
   errorMessage: number
+  riskScore: number
+  riskLevel: number
+  mergeReadiness: number
   createdAt: number
   _all: number
 }
@@ -122,6 +136,7 @@ export type AnalysisAvgAggregateInputType = {
   maintainability?: true
   filesAnalyzed?: true
   linesAnalyzed?: true
+  riskScore?: true
 }
 
 export type AnalysisSumAggregateInputType = {
@@ -133,11 +148,13 @@ export type AnalysisSumAggregateInputType = {
   maintainability?: true
   filesAnalyzed?: true
   linesAnalyzed?: true
+  riskScore?: true
 }
 
 export type AnalysisMinAggregateInputType = {
   id?: true
   repositoryId?: true
+  pullRequestId?: true
   status?: true
   trigger?: true
   branch?: true
@@ -153,12 +170,16 @@ export type AnalysisMinAggregateInputType = {
   filesAnalyzed?: true
   linesAnalyzed?: true
   errorMessage?: true
+  riskScore?: true
+  riskLevel?: true
+  mergeReadiness?: true
   createdAt?: true
 }
 
 export type AnalysisMaxAggregateInputType = {
   id?: true
   repositoryId?: true
+  pullRequestId?: true
   status?: true
   trigger?: true
   branch?: true
@@ -174,12 +195,16 @@ export type AnalysisMaxAggregateInputType = {
   filesAnalyzed?: true
   linesAnalyzed?: true
   errorMessage?: true
+  riskScore?: true
+  riskLevel?: true
+  mergeReadiness?: true
   createdAt?: true
 }
 
 export type AnalysisCountAggregateInputType = {
   id?: true
   repositoryId?: true
+  pullRequestId?: true
   status?: true
   trigger?: true
   branch?: true
@@ -195,6 +220,9 @@ export type AnalysisCountAggregateInputType = {
   filesAnalyzed?: true
   linesAnalyzed?: true
   errorMessage?: true
+  riskScore?: true
+  riskLevel?: true
+  mergeReadiness?: true
   createdAt?: true
   _all?: true
 }
@@ -288,6 +316,7 @@ export type AnalysisGroupByArgs<ExtArgs extends runtime.Types.Extensions.Interna
 export type AnalysisGroupByOutputType = {
   id: string
   repositoryId: string
+  pullRequestId: string | null
   status: $Enums.AnalysisStatus
   trigger: $Enums.AnalysisTrigger
   branch: string | null
@@ -303,6 +332,9 @@ export type AnalysisGroupByOutputType = {
   filesAnalyzed: number
   linesAnalyzed: number
   errorMessage: string | null
+  riskScore: number | null
+  riskLevel: $Enums.PRRiskLevel | null
+  mergeReadiness: $Enums.PRMergeReadiness | null
   createdAt: Date
   _count: AnalysisCountAggregateOutputType | null
   _avg: AnalysisAvgAggregateOutputType | null
@@ -332,6 +364,7 @@ export type AnalysisWhereInput = {
   NOT?: Prisma.AnalysisWhereInput | Prisma.AnalysisWhereInput[]
   id?: Prisma.StringFilter<"Analysis"> | string
   repositoryId?: Prisma.StringFilter<"Analysis"> | string
+  pullRequestId?: Prisma.StringNullableFilter<"Analysis"> | string | null
   status?: Prisma.EnumAnalysisStatusFilter<"Analysis"> | $Enums.AnalysisStatus
   trigger?: Prisma.EnumAnalysisTriggerFilter<"Analysis"> | $Enums.AnalysisTrigger
   branch?: Prisma.StringNullableFilter<"Analysis"> | string | null
@@ -347,8 +380,12 @@ export type AnalysisWhereInput = {
   filesAnalyzed?: Prisma.IntFilter<"Analysis"> | number
   linesAnalyzed?: Prisma.IntFilter<"Analysis"> | number
   errorMessage?: Prisma.StringNullableFilter<"Analysis"> | string | null
+  riskScore?: Prisma.IntNullableFilter<"Analysis"> | number | null
+  riskLevel?: Prisma.EnumPRRiskLevelNullableFilter<"Analysis"> | $Enums.PRRiskLevel | null
+  mergeReadiness?: Prisma.EnumPRMergeReadinessNullableFilter<"Analysis"> | $Enums.PRMergeReadiness | null
   createdAt?: Prisma.DateTimeFilter<"Analysis"> | Date | string
   repository?: Prisma.XOR<Prisma.RepositoryScalarRelationFilter, Prisma.RepositoryWhereInput>
+  pullRequest?: Prisma.XOR<Prisma.PullRequestNullableScalarRelationFilter, Prisma.PullRequestWhereInput> | null
   architectureComponents?: Prisma.ArchitectureComponentListRelationFilter
   findings?: Prisma.FindingListRelationFilter
   performanceIssues?: Prisma.PerformanceIssueListRelationFilter
@@ -357,6 +394,7 @@ export type AnalysisWhereInput = {
 export type AnalysisOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   repositoryId?: Prisma.SortOrder
+  pullRequestId?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   trigger?: Prisma.SortOrder
   branch?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -372,8 +410,12 @@ export type AnalysisOrderByWithRelationInput = {
   filesAnalyzed?: Prisma.SortOrder
   linesAnalyzed?: Prisma.SortOrder
   errorMessage?: Prisma.SortOrderInput | Prisma.SortOrder
+  riskScore?: Prisma.SortOrderInput | Prisma.SortOrder
+  riskLevel?: Prisma.SortOrderInput | Prisma.SortOrder
+  mergeReadiness?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   repository?: Prisma.RepositoryOrderByWithRelationInput
+  pullRequest?: Prisma.PullRequestOrderByWithRelationInput
   architectureComponents?: Prisma.ArchitectureComponentOrderByRelationAggregateInput
   findings?: Prisma.FindingOrderByRelationAggregateInput
   performanceIssues?: Prisma.PerformanceIssueOrderByRelationAggregateInput
@@ -385,6 +427,7 @@ export type AnalysisWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.AnalysisWhereInput[]
   NOT?: Prisma.AnalysisWhereInput | Prisma.AnalysisWhereInput[]
   repositoryId?: Prisma.StringFilter<"Analysis"> | string
+  pullRequestId?: Prisma.StringNullableFilter<"Analysis"> | string | null
   status?: Prisma.EnumAnalysisStatusFilter<"Analysis"> | $Enums.AnalysisStatus
   trigger?: Prisma.EnumAnalysisTriggerFilter<"Analysis"> | $Enums.AnalysisTrigger
   branch?: Prisma.StringNullableFilter<"Analysis"> | string | null
@@ -400,8 +443,12 @@ export type AnalysisWhereUniqueInput = Prisma.AtLeast<{
   filesAnalyzed?: Prisma.IntFilter<"Analysis"> | number
   linesAnalyzed?: Prisma.IntFilter<"Analysis"> | number
   errorMessage?: Prisma.StringNullableFilter<"Analysis"> | string | null
+  riskScore?: Prisma.IntNullableFilter<"Analysis"> | number | null
+  riskLevel?: Prisma.EnumPRRiskLevelNullableFilter<"Analysis"> | $Enums.PRRiskLevel | null
+  mergeReadiness?: Prisma.EnumPRMergeReadinessNullableFilter<"Analysis"> | $Enums.PRMergeReadiness | null
   createdAt?: Prisma.DateTimeFilter<"Analysis"> | Date | string
   repository?: Prisma.XOR<Prisma.RepositoryScalarRelationFilter, Prisma.RepositoryWhereInput>
+  pullRequest?: Prisma.XOR<Prisma.PullRequestNullableScalarRelationFilter, Prisma.PullRequestWhereInput> | null
   architectureComponents?: Prisma.ArchitectureComponentListRelationFilter
   findings?: Prisma.FindingListRelationFilter
   performanceIssues?: Prisma.PerformanceIssueListRelationFilter
@@ -410,6 +457,7 @@ export type AnalysisWhereUniqueInput = Prisma.AtLeast<{
 export type AnalysisOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   repositoryId?: Prisma.SortOrder
+  pullRequestId?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   trigger?: Prisma.SortOrder
   branch?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -425,6 +473,9 @@ export type AnalysisOrderByWithAggregationInput = {
   filesAnalyzed?: Prisma.SortOrder
   linesAnalyzed?: Prisma.SortOrder
   errorMessage?: Prisma.SortOrderInput | Prisma.SortOrder
+  riskScore?: Prisma.SortOrderInput | Prisma.SortOrder
+  riskLevel?: Prisma.SortOrderInput | Prisma.SortOrder
+  mergeReadiness?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.AnalysisCountOrderByAggregateInput
   _avg?: Prisma.AnalysisAvgOrderByAggregateInput
@@ -439,6 +490,7 @@ export type AnalysisScalarWhereWithAggregatesInput = {
   NOT?: Prisma.AnalysisScalarWhereWithAggregatesInput | Prisma.AnalysisScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"Analysis"> | string
   repositoryId?: Prisma.StringWithAggregatesFilter<"Analysis"> | string
+  pullRequestId?: Prisma.StringNullableWithAggregatesFilter<"Analysis"> | string | null
   status?: Prisma.EnumAnalysisStatusWithAggregatesFilter<"Analysis"> | $Enums.AnalysisStatus
   trigger?: Prisma.EnumAnalysisTriggerWithAggregatesFilter<"Analysis"> | $Enums.AnalysisTrigger
   branch?: Prisma.StringNullableWithAggregatesFilter<"Analysis"> | string | null
@@ -454,6 +506,9 @@ export type AnalysisScalarWhereWithAggregatesInput = {
   filesAnalyzed?: Prisma.IntWithAggregatesFilter<"Analysis"> | number
   linesAnalyzed?: Prisma.IntWithAggregatesFilter<"Analysis"> | number
   errorMessage?: Prisma.StringNullableWithAggregatesFilter<"Analysis"> | string | null
+  riskScore?: Prisma.IntNullableWithAggregatesFilter<"Analysis"> | number | null
+  riskLevel?: Prisma.EnumPRRiskLevelNullableWithAggregatesFilter<"Analysis"> | $Enums.PRRiskLevel | null
+  mergeReadiness?: Prisma.EnumPRMergeReadinessNullableWithAggregatesFilter<"Analysis"> | $Enums.PRMergeReadiness | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Analysis"> | Date | string
 }
 
@@ -474,8 +529,12 @@ export type AnalysisCreateInput = {
   filesAnalyzed?: number
   linesAnalyzed?: number
   errorMessage?: string | null
+  riskScore?: number | null
+  riskLevel?: $Enums.PRRiskLevel | null
+  mergeReadiness?: $Enums.PRMergeReadiness | null
   createdAt?: Date | string
   repository: Prisma.RepositoryCreateNestedOneWithoutAnalysesInput
+  pullRequest?: Prisma.PullRequestCreateNestedOneWithoutAnalysesInput
   architectureComponents?: Prisma.ArchitectureComponentCreateNestedManyWithoutAnalysisInput
   findings?: Prisma.FindingCreateNestedManyWithoutAnalysisInput
   performanceIssues?: Prisma.PerformanceIssueCreateNestedManyWithoutAnalysisInput
@@ -484,6 +543,7 @@ export type AnalysisCreateInput = {
 export type AnalysisUncheckedCreateInput = {
   id?: string
   repositoryId: string
+  pullRequestId?: string | null
   status?: $Enums.AnalysisStatus
   trigger?: $Enums.AnalysisTrigger
   branch?: string | null
@@ -499,6 +559,9 @@ export type AnalysisUncheckedCreateInput = {
   filesAnalyzed?: number
   linesAnalyzed?: number
   errorMessage?: string | null
+  riskScore?: number | null
+  riskLevel?: $Enums.PRRiskLevel | null
+  mergeReadiness?: $Enums.PRMergeReadiness | null
   createdAt?: Date | string
   architectureComponents?: Prisma.ArchitectureComponentUncheckedCreateNestedManyWithoutAnalysisInput
   findings?: Prisma.FindingUncheckedCreateNestedManyWithoutAnalysisInput
@@ -522,8 +585,12 @@ export type AnalysisUpdateInput = {
   filesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
   linesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riskScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  riskLevel?: Prisma.NullableEnumPRRiskLevelFieldUpdateOperationsInput | $Enums.PRRiskLevel | null
+  mergeReadiness?: Prisma.NullableEnumPRMergeReadinessFieldUpdateOperationsInput | $Enums.PRMergeReadiness | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   repository?: Prisma.RepositoryUpdateOneRequiredWithoutAnalysesNestedInput
+  pullRequest?: Prisma.PullRequestUpdateOneWithoutAnalysesNestedInput
   architectureComponents?: Prisma.ArchitectureComponentUpdateManyWithoutAnalysisNestedInput
   findings?: Prisma.FindingUpdateManyWithoutAnalysisNestedInput
   performanceIssues?: Prisma.PerformanceIssueUpdateManyWithoutAnalysisNestedInput
@@ -532,6 +599,7 @@ export type AnalysisUpdateInput = {
 export type AnalysisUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   repositoryId?: Prisma.StringFieldUpdateOperationsInput | string
+  pullRequestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumAnalysisStatusFieldUpdateOperationsInput | $Enums.AnalysisStatus
   trigger?: Prisma.EnumAnalysisTriggerFieldUpdateOperationsInput | $Enums.AnalysisTrigger
   branch?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -547,6 +615,9 @@ export type AnalysisUncheckedUpdateInput = {
   filesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
   linesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riskScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  riskLevel?: Prisma.NullableEnumPRRiskLevelFieldUpdateOperationsInput | $Enums.PRRiskLevel | null
+  mergeReadiness?: Prisma.NullableEnumPRMergeReadinessFieldUpdateOperationsInput | $Enums.PRMergeReadiness | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   architectureComponents?: Prisma.ArchitectureComponentUncheckedUpdateManyWithoutAnalysisNestedInput
   findings?: Prisma.FindingUncheckedUpdateManyWithoutAnalysisNestedInput
@@ -556,6 +627,7 @@ export type AnalysisUncheckedUpdateInput = {
 export type AnalysisCreateManyInput = {
   id?: string
   repositoryId: string
+  pullRequestId?: string | null
   status?: $Enums.AnalysisStatus
   trigger?: $Enums.AnalysisTrigger
   branch?: string | null
@@ -571,6 +643,9 @@ export type AnalysisCreateManyInput = {
   filesAnalyzed?: number
   linesAnalyzed?: number
   errorMessage?: string | null
+  riskScore?: number | null
+  riskLevel?: $Enums.PRRiskLevel | null
+  mergeReadiness?: $Enums.PRMergeReadiness | null
   createdAt?: Date | string
 }
 
@@ -591,12 +666,16 @@ export type AnalysisUpdateManyMutationInput = {
   filesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
   linesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riskScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  riskLevel?: Prisma.NullableEnumPRRiskLevelFieldUpdateOperationsInput | $Enums.PRRiskLevel | null
+  mergeReadiness?: Prisma.NullableEnumPRMergeReadinessFieldUpdateOperationsInput | $Enums.PRMergeReadiness | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type AnalysisUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   repositoryId?: Prisma.StringFieldUpdateOperationsInput | string
+  pullRequestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumAnalysisStatusFieldUpdateOperationsInput | $Enums.AnalysisStatus
   trigger?: Prisma.EnumAnalysisTriggerFieldUpdateOperationsInput | $Enums.AnalysisTrigger
   branch?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -612,6 +691,9 @@ export type AnalysisUncheckedUpdateManyInput = {
   filesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
   linesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riskScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  riskLevel?: Prisma.NullableEnumPRRiskLevelFieldUpdateOperationsInput | $Enums.PRRiskLevel | null
+  mergeReadiness?: Prisma.NullableEnumPRMergeReadinessFieldUpdateOperationsInput | $Enums.PRMergeReadiness | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -628,6 +710,7 @@ export type AnalysisOrderByRelationAggregateInput = {
 export type AnalysisCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   repositoryId?: Prisma.SortOrder
+  pullRequestId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   trigger?: Prisma.SortOrder
   branch?: Prisma.SortOrder
@@ -643,6 +726,9 @@ export type AnalysisCountOrderByAggregateInput = {
   filesAnalyzed?: Prisma.SortOrder
   linesAnalyzed?: Prisma.SortOrder
   errorMessage?: Prisma.SortOrder
+  riskScore?: Prisma.SortOrder
+  riskLevel?: Prisma.SortOrder
+  mergeReadiness?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -655,11 +741,13 @@ export type AnalysisAvgOrderByAggregateInput = {
   maintainability?: Prisma.SortOrder
   filesAnalyzed?: Prisma.SortOrder
   linesAnalyzed?: Prisma.SortOrder
+  riskScore?: Prisma.SortOrder
 }
 
 export type AnalysisMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   repositoryId?: Prisma.SortOrder
+  pullRequestId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   trigger?: Prisma.SortOrder
   branch?: Prisma.SortOrder
@@ -675,12 +763,16 @@ export type AnalysisMaxOrderByAggregateInput = {
   filesAnalyzed?: Prisma.SortOrder
   linesAnalyzed?: Prisma.SortOrder
   errorMessage?: Prisma.SortOrder
+  riskScore?: Prisma.SortOrder
+  riskLevel?: Prisma.SortOrder
+  mergeReadiness?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
 export type AnalysisMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   repositoryId?: Prisma.SortOrder
+  pullRequestId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   trigger?: Prisma.SortOrder
   branch?: Prisma.SortOrder
@@ -696,6 +788,9 @@ export type AnalysisMinOrderByAggregateInput = {
   filesAnalyzed?: Prisma.SortOrder
   linesAnalyzed?: Prisma.SortOrder
   errorMessage?: Prisma.SortOrder
+  riskScore?: Prisma.SortOrder
+  riskLevel?: Prisma.SortOrder
+  mergeReadiness?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -708,6 +803,7 @@ export type AnalysisSumOrderByAggregateInput = {
   maintainability?: Prisma.SortOrder
   filesAnalyzed?: Prisma.SortOrder
   linesAnalyzed?: Prisma.SortOrder
+  riskScore?: Prisma.SortOrder
 }
 
 export type AnalysisScalarRelationFilter = {
@@ -781,6 +877,14 @@ export type IntFieldUpdateOperationsInput = {
   divide?: number
 }
 
+export type NullableEnumPRRiskLevelFieldUpdateOperationsInput = {
+  set?: $Enums.PRRiskLevel | null
+}
+
+export type NullableEnumPRMergeReadinessFieldUpdateOperationsInput = {
+  set?: $Enums.PRMergeReadiness | null
+}
+
 export type AnalysisCreateNestedOneWithoutFindingsInput = {
   create?: Prisma.XOR<Prisma.AnalysisCreateWithoutFindingsInput, Prisma.AnalysisUncheckedCreateWithoutFindingsInput>
   connectOrCreate?: Prisma.AnalysisCreateOrConnectWithoutFindingsInput
@@ -823,6 +927,48 @@ export type AnalysisUpdateOneRequiredWithoutArchitectureComponentsNestedInput = 
   update?: Prisma.XOR<Prisma.XOR<Prisma.AnalysisUpdateToOneWithWhereWithoutArchitectureComponentsInput, Prisma.AnalysisUpdateWithoutArchitectureComponentsInput>, Prisma.AnalysisUncheckedUpdateWithoutArchitectureComponentsInput>
 }
 
+export type AnalysisCreateNestedManyWithoutPullRequestInput = {
+  create?: Prisma.XOR<Prisma.AnalysisCreateWithoutPullRequestInput, Prisma.AnalysisUncheckedCreateWithoutPullRequestInput> | Prisma.AnalysisCreateWithoutPullRequestInput[] | Prisma.AnalysisUncheckedCreateWithoutPullRequestInput[]
+  connectOrCreate?: Prisma.AnalysisCreateOrConnectWithoutPullRequestInput | Prisma.AnalysisCreateOrConnectWithoutPullRequestInput[]
+  createMany?: Prisma.AnalysisCreateManyPullRequestInputEnvelope
+  connect?: Prisma.AnalysisWhereUniqueInput | Prisma.AnalysisWhereUniqueInput[]
+}
+
+export type AnalysisUncheckedCreateNestedManyWithoutPullRequestInput = {
+  create?: Prisma.XOR<Prisma.AnalysisCreateWithoutPullRequestInput, Prisma.AnalysisUncheckedCreateWithoutPullRequestInput> | Prisma.AnalysisCreateWithoutPullRequestInput[] | Prisma.AnalysisUncheckedCreateWithoutPullRequestInput[]
+  connectOrCreate?: Prisma.AnalysisCreateOrConnectWithoutPullRequestInput | Prisma.AnalysisCreateOrConnectWithoutPullRequestInput[]
+  createMany?: Prisma.AnalysisCreateManyPullRequestInputEnvelope
+  connect?: Prisma.AnalysisWhereUniqueInput | Prisma.AnalysisWhereUniqueInput[]
+}
+
+export type AnalysisUpdateManyWithoutPullRequestNestedInput = {
+  create?: Prisma.XOR<Prisma.AnalysisCreateWithoutPullRequestInput, Prisma.AnalysisUncheckedCreateWithoutPullRequestInput> | Prisma.AnalysisCreateWithoutPullRequestInput[] | Prisma.AnalysisUncheckedCreateWithoutPullRequestInput[]
+  connectOrCreate?: Prisma.AnalysisCreateOrConnectWithoutPullRequestInput | Prisma.AnalysisCreateOrConnectWithoutPullRequestInput[]
+  upsert?: Prisma.AnalysisUpsertWithWhereUniqueWithoutPullRequestInput | Prisma.AnalysisUpsertWithWhereUniqueWithoutPullRequestInput[]
+  createMany?: Prisma.AnalysisCreateManyPullRequestInputEnvelope
+  set?: Prisma.AnalysisWhereUniqueInput | Prisma.AnalysisWhereUniqueInput[]
+  disconnect?: Prisma.AnalysisWhereUniqueInput | Prisma.AnalysisWhereUniqueInput[]
+  delete?: Prisma.AnalysisWhereUniqueInput | Prisma.AnalysisWhereUniqueInput[]
+  connect?: Prisma.AnalysisWhereUniqueInput | Prisma.AnalysisWhereUniqueInput[]
+  update?: Prisma.AnalysisUpdateWithWhereUniqueWithoutPullRequestInput | Prisma.AnalysisUpdateWithWhereUniqueWithoutPullRequestInput[]
+  updateMany?: Prisma.AnalysisUpdateManyWithWhereWithoutPullRequestInput | Prisma.AnalysisUpdateManyWithWhereWithoutPullRequestInput[]
+  deleteMany?: Prisma.AnalysisScalarWhereInput | Prisma.AnalysisScalarWhereInput[]
+}
+
+export type AnalysisUncheckedUpdateManyWithoutPullRequestNestedInput = {
+  create?: Prisma.XOR<Prisma.AnalysisCreateWithoutPullRequestInput, Prisma.AnalysisUncheckedCreateWithoutPullRequestInput> | Prisma.AnalysisCreateWithoutPullRequestInput[] | Prisma.AnalysisUncheckedCreateWithoutPullRequestInput[]
+  connectOrCreate?: Prisma.AnalysisCreateOrConnectWithoutPullRequestInput | Prisma.AnalysisCreateOrConnectWithoutPullRequestInput[]
+  upsert?: Prisma.AnalysisUpsertWithWhereUniqueWithoutPullRequestInput | Prisma.AnalysisUpsertWithWhereUniqueWithoutPullRequestInput[]
+  createMany?: Prisma.AnalysisCreateManyPullRequestInputEnvelope
+  set?: Prisma.AnalysisWhereUniqueInput | Prisma.AnalysisWhereUniqueInput[]
+  disconnect?: Prisma.AnalysisWhereUniqueInput | Prisma.AnalysisWhereUniqueInput[]
+  delete?: Prisma.AnalysisWhereUniqueInput | Prisma.AnalysisWhereUniqueInput[]
+  connect?: Prisma.AnalysisWhereUniqueInput | Prisma.AnalysisWhereUniqueInput[]
+  update?: Prisma.AnalysisUpdateWithWhereUniqueWithoutPullRequestInput | Prisma.AnalysisUpdateWithWhereUniqueWithoutPullRequestInput[]
+  updateMany?: Prisma.AnalysisUpdateManyWithWhereWithoutPullRequestInput | Prisma.AnalysisUpdateManyWithWhereWithoutPullRequestInput[]
+  deleteMany?: Prisma.AnalysisScalarWhereInput | Prisma.AnalysisScalarWhereInput[]
+}
+
 export type AnalysisCreateWithoutRepositoryInput = {
   id?: string
   status?: $Enums.AnalysisStatus
@@ -840,7 +986,11 @@ export type AnalysisCreateWithoutRepositoryInput = {
   filesAnalyzed?: number
   linesAnalyzed?: number
   errorMessage?: string | null
+  riskScore?: number | null
+  riskLevel?: $Enums.PRRiskLevel | null
+  mergeReadiness?: $Enums.PRMergeReadiness | null
   createdAt?: Date | string
+  pullRequest?: Prisma.PullRequestCreateNestedOneWithoutAnalysesInput
   architectureComponents?: Prisma.ArchitectureComponentCreateNestedManyWithoutAnalysisInput
   findings?: Prisma.FindingCreateNestedManyWithoutAnalysisInput
   performanceIssues?: Prisma.PerformanceIssueCreateNestedManyWithoutAnalysisInput
@@ -848,6 +998,7 @@ export type AnalysisCreateWithoutRepositoryInput = {
 
 export type AnalysisUncheckedCreateWithoutRepositoryInput = {
   id?: string
+  pullRequestId?: string | null
   status?: $Enums.AnalysisStatus
   trigger?: $Enums.AnalysisTrigger
   branch?: string | null
@@ -863,6 +1014,9 @@ export type AnalysisUncheckedCreateWithoutRepositoryInput = {
   filesAnalyzed?: number
   linesAnalyzed?: number
   errorMessage?: string | null
+  riskScore?: number | null
+  riskLevel?: $Enums.PRRiskLevel | null
+  mergeReadiness?: $Enums.PRMergeReadiness | null
   createdAt?: Date | string
   architectureComponents?: Prisma.ArchitectureComponentUncheckedCreateNestedManyWithoutAnalysisInput
   findings?: Prisma.FindingUncheckedCreateNestedManyWithoutAnalysisInput
@@ -901,6 +1055,7 @@ export type AnalysisScalarWhereInput = {
   NOT?: Prisma.AnalysisScalarWhereInput | Prisma.AnalysisScalarWhereInput[]
   id?: Prisma.StringFilter<"Analysis"> | string
   repositoryId?: Prisma.StringFilter<"Analysis"> | string
+  pullRequestId?: Prisma.StringNullableFilter<"Analysis"> | string | null
   status?: Prisma.EnumAnalysisStatusFilter<"Analysis"> | $Enums.AnalysisStatus
   trigger?: Prisma.EnumAnalysisTriggerFilter<"Analysis"> | $Enums.AnalysisTrigger
   branch?: Prisma.StringNullableFilter<"Analysis"> | string | null
@@ -916,6 +1071,9 @@ export type AnalysisScalarWhereInput = {
   filesAnalyzed?: Prisma.IntFilter<"Analysis"> | number
   linesAnalyzed?: Prisma.IntFilter<"Analysis"> | number
   errorMessage?: Prisma.StringNullableFilter<"Analysis"> | string | null
+  riskScore?: Prisma.IntNullableFilter<"Analysis"> | number | null
+  riskLevel?: Prisma.EnumPRRiskLevelNullableFilter<"Analysis"> | $Enums.PRRiskLevel | null
+  mergeReadiness?: Prisma.EnumPRMergeReadinessNullableFilter<"Analysis"> | $Enums.PRMergeReadiness | null
   createdAt?: Prisma.DateTimeFilter<"Analysis"> | Date | string
 }
 
@@ -936,8 +1094,12 @@ export type AnalysisCreateWithoutFindingsInput = {
   filesAnalyzed?: number
   linesAnalyzed?: number
   errorMessage?: string | null
+  riskScore?: number | null
+  riskLevel?: $Enums.PRRiskLevel | null
+  mergeReadiness?: $Enums.PRMergeReadiness | null
   createdAt?: Date | string
   repository: Prisma.RepositoryCreateNestedOneWithoutAnalysesInput
+  pullRequest?: Prisma.PullRequestCreateNestedOneWithoutAnalysesInput
   architectureComponents?: Prisma.ArchitectureComponentCreateNestedManyWithoutAnalysisInput
   performanceIssues?: Prisma.PerformanceIssueCreateNestedManyWithoutAnalysisInput
 }
@@ -945,6 +1107,7 @@ export type AnalysisCreateWithoutFindingsInput = {
 export type AnalysisUncheckedCreateWithoutFindingsInput = {
   id?: string
   repositoryId: string
+  pullRequestId?: string | null
   status?: $Enums.AnalysisStatus
   trigger?: $Enums.AnalysisTrigger
   branch?: string | null
@@ -960,6 +1123,9 @@ export type AnalysisUncheckedCreateWithoutFindingsInput = {
   filesAnalyzed?: number
   linesAnalyzed?: number
   errorMessage?: string | null
+  riskScore?: number | null
+  riskLevel?: $Enums.PRRiskLevel | null
+  mergeReadiness?: $Enums.PRMergeReadiness | null
   createdAt?: Date | string
   architectureComponents?: Prisma.ArchitectureComponentUncheckedCreateNestedManyWithoutAnalysisInput
   performanceIssues?: Prisma.PerformanceIssueUncheckedCreateNestedManyWithoutAnalysisInput
@@ -998,8 +1164,12 @@ export type AnalysisUpdateWithoutFindingsInput = {
   filesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
   linesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riskScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  riskLevel?: Prisma.NullableEnumPRRiskLevelFieldUpdateOperationsInput | $Enums.PRRiskLevel | null
+  mergeReadiness?: Prisma.NullableEnumPRMergeReadinessFieldUpdateOperationsInput | $Enums.PRMergeReadiness | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   repository?: Prisma.RepositoryUpdateOneRequiredWithoutAnalysesNestedInput
+  pullRequest?: Prisma.PullRequestUpdateOneWithoutAnalysesNestedInput
   architectureComponents?: Prisma.ArchitectureComponentUpdateManyWithoutAnalysisNestedInput
   performanceIssues?: Prisma.PerformanceIssueUpdateManyWithoutAnalysisNestedInput
 }
@@ -1007,6 +1177,7 @@ export type AnalysisUpdateWithoutFindingsInput = {
 export type AnalysisUncheckedUpdateWithoutFindingsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   repositoryId?: Prisma.StringFieldUpdateOperationsInput | string
+  pullRequestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumAnalysisStatusFieldUpdateOperationsInput | $Enums.AnalysisStatus
   trigger?: Prisma.EnumAnalysisTriggerFieldUpdateOperationsInput | $Enums.AnalysisTrigger
   branch?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1022,6 +1193,9 @@ export type AnalysisUncheckedUpdateWithoutFindingsInput = {
   filesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
   linesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riskScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  riskLevel?: Prisma.NullableEnumPRRiskLevelFieldUpdateOperationsInput | $Enums.PRRiskLevel | null
+  mergeReadiness?: Prisma.NullableEnumPRMergeReadinessFieldUpdateOperationsInput | $Enums.PRMergeReadiness | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   architectureComponents?: Prisma.ArchitectureComponentUncheckedUpdateManyWithoutAnalysisNestedInput
   performanceIssues?: Prisma.PerformanceIssueUncheckedUpdateManyWithoutAnalysisNestedInput
@@ -1044,8 +1218,12 @@ export type AnalysisCreateWithoutPerformanceIssuesInput = {
   filesAnalyzed?: number
   linesAnalyzed?: number
   errorMessage?: string | null
+  riskScore?: number | null
+  riskLevel?: $Enums.PRRiskLevel | null
+  mergeReadiness?: $Enums.PRMergeReadiness | null
   createdAt?: Date | string
   repository: Prisma.RepositoryCreateNestedOneWithoutAnalysesInput
+  pullRequest?: Prisma.PullRequestCreateNestedOneWithoutAnalysesInput
   architectureComponents?: Prisma.ArchitectureComponentCreateNestedManyWithoutAnalysisInput
   findings?: Prisma.FindingCreateNestedManyWithoutAnalysisInput
 }
@@ -1053,6 +1231,7 @@ export type AnalysisCreateWithoutPerformanceIssuesInput = {
 export type AnalysisUncheckedCreateWithoutPerformanceIssuesInput = {
   id?: string
   repositoryId: string
+  pullRequestId?: string | null
   status?: $Enums.AnalysisStatus
   trigger?: $Enums.AnalysisTrigger
   branch?: string | null
@@ -1068,6 +1247,9 @@ export type AnalysisUncheckedCreateWithoutPerformanceIssuesInput = {
   filesAnalyzed?: number
   linesAnalyzed?: number
   errorMessage?: string | null
+  riskScore?: number | null
+  riskLevel?: $Enums.PRRiskLevel | null
+  mergeReadiness?: $Enums.PRMergeReadiness | null
   createdAt?: Date | string
   architectureComponents?: Prisma.ArchitectureComponentUncheckedCreateNestedManyWithoutAnalysisInput
   findings?: Prisma.FindingUncheckedCreateNestedManyWithoutAnalysisInput
@@ -1106,8 +1288,12 @@ export type AnalysisUpdateWithoutPerformanceIssuesInput = {
   filesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
   linesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riskScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  riskLevel?: Prisma.NullableEnumPRRiskLevelFieldUpdateOperationsInput | $Enums.PRRiskLevel | null
+  mergeReadiness?: Prisma.NullableEnumPRMergeReadinessFieldUpdateOperationsInput | $Enums.PRMergeReadiness | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   repository?: Prisma.RepositoryUpdateOneRequiredWithoutAnalysesNestedInput
+  pullRequest?: Prisma.PullRequestUpdateOneWithoutAnalysesNestedInput
   architectureComponents?: Prisma.ArchitectureComponentUpdateManyWithoutAnalysisNestedInput
   findings?: Prisma.FindingUpdateManyWithoutAnalysisNestedInput
 }
@@ -1115,6 +1301,7 @@ export type AnalysisUpdateWithoutPerformanceIssuesInput = {
 export type AnalysisUncheckedUpdateWithoutPerformanceIssuesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   repositoryId?: Prisma.StringFieldUpdateOperationsInput | string
+  pullRequestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumAnalysisStatusFieldUpdateOperationsInput | $Enums.AnalysisStatus
   trigger?: Prisma.EnumAnalysisTriggerFieldUpdateOperationsInput | $Enums.AnalysisTrigger
   branch?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1130,6 +1317,9 @@ export type AnalysisUncheckedUpdateWithoutPerformanceIssuesInput = {
   filesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
   linesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riskScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  riskLevel?: Prisma.NullableEnumPRRiskLevelFieldUpdateOperationsInput | $Enums.PRRiskLevel | null
+  mergeReadiness?: Prisma.NullableEnumPRMergeReadinessFieldUpdateOperationsInput | $Enums.PRMergeReadiness | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   architectureComponents?: Prisma.ArchitectureComponentUncheckedUpdateManyWithoutAnalysisNestedInput
   findings?: Prisma.FindingUncheckedUpdateManyWithoutAnalysisNestedInput
@@ -1152,8 +1342,12 @@ export type AnalysisCreateWithoutArchitectureComponentsInput = {
   filesAnalyzed?: number
   linesAnalyzed?: number
   errorMessage?: string | null
+  riskScore?: number | null
+  riskLevel?: $Enums.PRRiskLevel | null
+  mergeReadiness?: $Enums.PRMergeReadiness | null
   createdAt?: Date | string
   repository: Prisma.RepositoryCreateNestedOneWithoutAnalysesInput
+  pullRequest?: Prisma.PullRequestCreateNestedOneWithoutAnalysesInput
   findings?: Prisma.FindingCreateNestedManyWithoutAnalysisInput
   performanceIssues?: Prisma.PerformanceIssueCreateNestedManyWithoutAnalysisInput
 }
@@ -1161,6 +1355,7 @@ export type AnalysisCreateWithoutArchitectureComponentsInput = {
 export type AnalysisUncheckedCreateWithoutArchitectureComponentsInput = {
   id?: string
   repositoryId: string
+  pullRequestId?: string | null
   status?: $Enums.AnalysisStatus
   trigger?: $Enums.AnalysisTrigger
   branch?: string | null
@@ -1176,6 +1371,9 @@ export type AnalysisUncheckedCreateWithoutArchitectureComponentsInput = {
   filesAnalyzed?: number
   linesAnalyzed?: number
   errorMessage?: string | null
+  riskScore?: number | null
+  riskLevel?: $Enums.PRRiskLevel | null
+  mergeReadiness?: $Enums.PRMergeReadiness | null
   createdAt?: Date | string
   findings?: Prisma.FindingUncheckedCreateNestedManyWithoutAnalysisInput
   performanceIssues?: Prisma.PerformanceIssueUncheckedCreateNestedManyWithoutAnalysisInput
@@ -1214,8 +1412,12 @@ export type AnalysisUpdateWithoutArchitectureComponentsInput = {
   filesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
   linesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riskScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  riskLevel?: Prisma.NullableEnumPRRiskLevelFieldUpdateOperationsInput | $Enums.PRRiskLevel | null
+  mergeReadiness?: Prisma.NullableEnumPRMergeReadinessFieldUpdateOperationsInput | $Enums.PRMergeReadiness | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   repository?: Prisma.RepositoryUpdateOneRequiredWithoutAnalysesNestedInput
+  pullRequest?: Prisma.PullRequestUpdateOneWithoutAnalysesNestedInput
   findings?: Prisma.FindingUpdateManyWithoutAnalysisNestedInput
   performanceIssues?: Prisma.PerformanceIssueUpdateManyWithoutAnalysisNestedInput
 }
@@ -1223,6 +1425,7 @@ export type AnalysisUpdateWithoutArchitectureComponentsInput = {
 export type AnalysisUncheckedUpdateWithoutArchitectureComponentsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   repositoryId?: Prisma.StringFieldUpdateOperationsInput | string
+  pullRequestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumAnalysisStatusFieldUpdateOperationsInput | $Enums.AnalysisStatus
   trigger?: Prisma.EnumAnalysisTriggerFieldUpdateOperationsInput | $Enums.AnalysisTrigger
   branch?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1238,12 +1441,15 @@ export type AnalysisUncheckedUpdateWithoutArchitectureComponentsInput = {
   filesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
   linesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riskScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  riskLevel?: Prisma.NullableEnumPRRiskLevelFieldUpdateOperationsInput | $Enums.PRRiskLevel | null
+  mergeReadiness?: Prisma.NullableEnumPRMergeReadinessFieldUpdateOperationsInput | $Enums.PRMergeReadiness | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   findings?: Prisma.FindingUncheckedUpdateManyWithoutAnalysisNestedInput
   performanceIssues?: Prisma.PerformanceIssueUncheckedUpdateManyWithoutAnalysisNestedInput
 }
 
-export type AnalysisCreateManyRepositoryInput = {
+export type AnalysisCreateWithoutPullRequestInput = {
   id?: string
   status?: $Enums.AnalysisStatus
   trigger?: $Enums.AnalysisTrigger
@@ -1260,6 +1466,90 @@ export type AnalysisCreateManyRepositoryInput = {
   filesAnalyzed?: number
   linesAnalyzed?: number
   errorMessage?: string | null
+  riskScore?: number | null
+  riskLevel?: $Enums.PRRiskLevel | null
+  mergeReadiness?: $Enums.PRMergeReadiness | null
+  createdAt?: Date | string
+  repository: Prisma.RepositoryCreateNestedOneWithoutAnalysesInput
+  architectureComponents?: Prisma.ArchitectureComponentCreateNestedManyWithoutAnalysisInput
+  findings?: Prisma.FindingCreateNestedManyWithoutAnalysisInput
+  performanceIssues?: Prisma.PerformanceIssueCreateNestedManyWithoutAnalysisInput
+}
+
+export type AnalysisUncheckedCreateWithoutPullRequestInput = {
+  id?: string
+  repositoryId: string
+  status?: $Enums.AnalysisStatus
+  trigger?: $Enums.AnalysisTrigger
+  branch?: string | null
+  commitSha?: string | null
+  startedAt?: Date | string | null
+  completedAt?: Date | string | null
+  healthScore?: number | null
+  codeQuality?: number | null
+  securityScore?: number | null
+  performance?: number | null
+  architecture?: number | null
+  maintainability?: number | null
+  filesAnalyzed?: number
+  linesAnalyzed?: number
+  errorMessage?: string | null
+  riskScore?: number | null
+  riskLevel?: $Enums.PRRiskLevel | null
+  mergeReadiness?: $Enums.PRMergeReadiness | null
+  createdAt?: Date | string
+  architectureComponents?: Prisma.ArchitectureComponentUncheckedCreateNestedManyWithoutAnalysisInput
+  findings?: Prisma.FindingUncheckedCreateNestedManyWithoutAnalysisInput
+  performanceIssues?: Prisma.PerformanceIssueUncheckedCreateNestedManyWithoutAnalysisInput
+}
+
+export type AnalysisCreateOrConnectWithoutPullRequestInput = {
+  where: Prisma.AnalysisWhereUniqueInput
+  create: Prisma.XOR<Prisma.AnalysisCreateWithoutPullRequestInput, Prisma.AnalysisUncheckedCreateWithoutPullRequestInput>
+}
+
+export type AnalysisCreateManyPullRequestInputEnvelope = {
+  data: Prisma.AnalysisCreateManyPullRequestInput | Prisma.AnalysisCreateManyPullRequestInput[]
+  skipDuplicates?: boolean
+}
+
+export type AnalysisUpsertWithWhereUniqueWithoutPullRequestInput = {
+  where: Prisma.AnalysisWhereUniqueInput
+  update: Prisma.XOR<Prisma.AnalysisUpdateWithoutPullRequestInput, Prisma.AnalysisUncheckedUpdateWithoutPullRequestInput>
+  create: Prisma.XOR<Prisma.AnalysisCreateWithoutPullRequestInput, Prisma.AnalysisUncheckedCreateWithoutPullRequestInput>
+}
+
+export type AnalysisUpdateWithWhereUniqueWithoutPullRequestInput = {
+  where: Prisma.AnalysisWhereUniqueInput
+  data: Prisma.XOR<Prisma.AnalysisUpdateWithoutPullRequestInput, Prisma.AnalysisUncheckedUpdateWithoutPullRequestInput>
+}
+
+export type AnalysisUpdateManyWithWhereWithoutPullRequestInput = {
+  where: Prisma.AnalysisScalarWhereInput
+  data: Prisma.XOR<Prisma.AnalysisUpdateManyMutationInput, Prisma.AnalysisUncheckedUpdateManyWithoutPullRequestInput>
+}
+
+export type AnalysisCreateManyRepositoryInput = {
+  id?: string
+  pullRequestId?: string | null
+  status?: $Enums.AnalysisStatus
+  trigger?: $Enums.AnalysisTrigger
+  branch?: string | null
+  commitSha?: string | null
+  startedAt?: Date | string | null
+  completedAt?: Date | string | null
+  healthScore?: number | null
+  codeQuality?: number | null
+  securityScore?: number | null
+  performance?: number | null
+  architecture?: number | null
+  maintainability?: number | null
+  filesAnalyzed?: number
+  linesAnalyzed?: number
+  errorMessage?: string | null
+  riskScore?: number | null
+  riskLevel?: $Enums.PRRiskLevel | null
+  mergeReadiness?: $Enums.PRMergeReadiness | null
   createdAt?: Date | string
 }
 
@@ -1280,7 +1570,11 @@ export type AnalysisUpdateWithoutRepositoryInput = {
   filesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
   linesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riskScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  riskLevel?: Prisma.NullableEnumPRRiskLevelFieldUpdateOperationsInput | $Enums.PRRiskLevel | null
+  mergeReadiness?: Prisma.NullableEnumPRMergeReadinessFieldUpdateOperationsInput | $Enums.PRMergeReadiness | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  pullRequest?: Prisma.PullRequestUpdateOneWithoutAnalysesNestedInput
   architectureComponents?: Prisma.ArchitectureComponentUpdateManyWithoutAnalysisNestedInput
   findings?: Prisma.FindingUpdateManyWithoutAnalysisNestedInput
   performanceIssues?: Prisma.PerformanceIssueUpdateManyWithoutAnalysisNestedInput
@@ -1288,6 +1582,7 @@ export type AnalysisUpdateWithoutRepositoryInput = {
 
 export type AnalysisUncheckedUpdateWithoutRepositoryInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  pullRequestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumAnalysisStatusFieldUpdateOperationsInput | $Enums.AnalysisStatus
   trigger?: Prisma.EnumAnalysisTriggerFieldUpdateOperationsInput | $Enums.AnalysisTrigger
   branch?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1303,6 +1598,9 @@ export type AnalysisUncheckedUpdateWithoutRepositoryInput = {
   filesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
   linesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riskScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  riskLevel?: Prisma.NullableEnumPRRiskLevelFieldUpdateOperationsInput | $Enums.PRRiskLevel | null
+  mergeReadiness?: Prisma.NullableEnumPRMergeReadinessFieldUpdateOperationsInput | $Enums.PRMergeReadiness | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   architectureComponents?: Prisma.ArchitectureComponentUncheckedUpdateManyWithoutAnalysisNestedInput
   findings?: Prisma.FindingUncheckedUpdateManyWithoutAnalysisNestedInput
@@ -1311,6 +1609,7 @@ export type AnalysisUncheckedUpdateWithoutRepositoryInput = {
 
 export type AnalysisUncheckedUpdateManyWithoutRepositoryInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  pullRequestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumAnalysisStatusFieldUpdateOperationsInput | $Enums.AnalysisStatus
   trigger?: Prisma.EnumAnalysisTriggerFieldUpdateOperationsInput | $Enums.AnalysisTrigger
   branch?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1326,6 +1625,111 @@ export type AnalysisUncheckedUpdateManyWithoutRepositoryInput = {
   filesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
   linesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riskScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  riskLevel?: Prisma.NullableEnumPRRiskLevelFieldUpdateOperationsInput | $Enums.PRRiskLevel | null
+  mergeReadiness?: Prisma.NullableEnumPRMergeReadinessFieldUpdateOperationsInput | $Enums.PRMergeReadiness | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type AnalysisCreateManyPullRequestInput = {
+  id?: string
+  repositoryId: string
+  status?: $Enums.AnalysisStatus
+  trigger?: $Enums.AnalysisTrigger
+  branch?: string | null
+  commitSha?: string | null
+  startedAt?: Date | string | null
+  completedAt?: Date | string | null
+  healthScore?: number | null
+  codeQuality?: number | null
+  securityScore?: number | null
+  performance?: number | null
+  architecture?: number | null
+  maintainability?: number | null
+  filesAnalyzed?: number
+  linesAnalyzed?: number
+  errorMessage?: string | null
+  riskScore?: number | null
+  riskLevel?: $Enums.PRRiskLevel | null
+  mergeReadiness?: $Enums.PRMergeReadiness | null
+  createdAt?: Date | string
+}
+
+export type AnalysisUpdateWithoutPullRequestInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumAnalysisStatusFieldUpdateOperationsInput | $Enums.AnalysisStatus
+  trigger?: Prisma.EnumAnalysisTriggerFieldUpdateOperationsInput | $Enums.AnalysisTrigger
+  branch?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  commitSha?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  healthScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  codeQuality?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  securityScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  performance?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  architecture?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  maintainability?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  filesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
+  linesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
+  errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riskScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  riskLevel?: Prisma.NullableEnumPRRiskLevelFieldUpdateOperationsInput | $Enums.PRRiskLevel | null
+  mergeReadiness?: Prisma.NullableEnumPRMergeReadinessFieldUpdateOperationsInput | $Enums.PRMergeReadiness | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  repository?: Prisma.RepositoryUpdateOneRequiredWithoutAnalysesNestedInput
+  architectureComponents?: Prisma.ArchitectureComponentUpdateManyWithoutAnalysisNestedInput
+  findings?: Prisma.FindingUpdateManyWithoutAnalysisNestedInput
+  performanceIssues?: Prisma.PerformanceIssueUpdateManyWithoutAnalysisNestedInput
+}
+
+export type AnalysisUncheckedUpdateWithoutPullRequestInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  repositoryId?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumAnalysisStatusFieldUpdateOperationsInput | $Enums.AnalysisStatus
+  trigger?: Prisma.EnumAnalysisTriggerFieldUpdateOperationsInput | $Enums.AnalysisTrigger
+  branch?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  commitSha?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  healthScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  codeQuality?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  securityScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  performance?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  architecture?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  maintainability?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  filesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
+  linesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
+  errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riskScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  riskLevel?: Prisma.NullableEnumPRRiskLevelFieldUpdateOperationsInput | $Enums.PRRiskLevel | null
+  mergeReadiness?: Prisma.NullableEnumPRMergeReadinessFieldUpdateOperationsInput | $Enums.PRMergeReadiness | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  architectureComponents?: Prisma.ArchitectureComponentUncheckedUpdateManyWithoutAnalysisNestedInput
+  findings?: Prisma.FindingUncheckedUpdateManyWithoutAnalysisNestedInput
+  performanceIssues?: Prisma.PerformanceIssueUncheckedUpdateManyWithoutAnalysisNestedInput
+}
+
+export type AnalysisUncheckedUpdateManyWithoutPullRequestInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  repositoryId?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumAnalysisStatusFieldUpdateOperationsInput | $Enums.AnalysisStatus
+  trigger?: Prisma.EnumAnalysisTriggerFieldUpdateOperationsInput | $Enums.AnalysisTrigger
+  branch?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  commitSha?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  healthScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  codeQuality?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  securityScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  performance?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  architecture?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  maintainability?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  filesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
+  linesAnalyzed?: Prisma.IntFieldUpdateOperationsInput | number
+  errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riskScore?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  riskLevel?: Prisma.NullableEnumPRRiskLevelFieldUpdateOperationsInput | $Enums.PRRiskLevel | null
+  mergeReadiness?: Prisma.NullableEnumPRMergeReadinessFieldUpdateOperationsInput | $Enums.PRMergeReadiness | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -1381,6 +1785,7 @@ export type AnalysisCountOutputTypeCountPerformanceIssuesArgs<ExtArgs extends ru
 export type AnalysisSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   repositoryId?: boolean
+  pullRequestId?: boolean
   status?: boolean
   trigger?: boolean
   branch?: boolean
@@ -1396,8 +1801,12 @@ export type AnalysisSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   filesAnalyzed?: boolean
   linesAnalyzed?: boolean
   errorMessage?: boolean
+  riskScore?: boolean
+  riskLevel?: boolean
+  mergeReadiness?: boolean
   createdAt?: boolean
   repository?: boolean | Prisma.RepositoryDefaultArgs<ExtArgs>
+  pullRequest?: boolean | Prisma.Analysis$pullRequestArgs<ExtArgs>
   architectureComponents?: boolean | Prisma.Analysis$architectureComponentsArgs<ExtArgs>
   findings?: boolean | Prisma.Analysis$findingsArgs<ExtArgs>
   performanceIssues?: boolean | Prisma.Analysis$performanceIssuesArgs<ExtArgs>
@@ -1407,6 +1816,7 @@ export type AnalysisSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
 export type AnalysisSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   repositoryId?: boolean
+  pullRequestId?: boolean
   status?: boolean
   trigger?: boolean
   branch?: boolean
@@ -1422,13 +1832,18 @@ export type AnalysisSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   filesAnalyzed?: boolean
   linesAnalyzed?: boolean
   errorMessage?: boolean
+  riskScore?: boolean
+  riskLevel?: boolean
+  mergeReadiness?: boolean
   createdAt?: boolean
   repository?: boolean | Prisma.RepositoryDefaultArgs<ExtArgs>
+  pullRequest?: boolean | Prisma.Analysis$pullRequestArgs<ExtArgs>
 }, ExtArgs["result"]["analysis"]>
 
 export type AnalysisSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   repositoryId?: boolean
+  pullRequestId?: boolean
   status?: boolean
   trigger?: boolean
   branch?: boolean
@@ -1444,13 +1859,18 @@ export type AnalysisSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   filesAnalyzed?: boolean
   linesAnalyzed?: boolean
   errorMessage?: boolean
+  riskScore?: boolean
+  riskLevel?: boolean
+  mergeReadiness?: boolean
   createdAt?: boolean
   repository?: boolean | Prisma.RepositoryDefaultArgs<ExtArgs>
+  pullRequest?: boolean | Prisma.Analysis$pullRequestArgs<ExtArgs>
 }, ExtArgs["result"]["analysis"]>
 
 export type AnalysisSelectScalar = {
   id?: boolean
   repositoryId?: boolean
+  pullRequestId?: boolean
   status?: boolean
   trigger?: boolean
   branch?: boolean
@@ -1466,12 +1886,16 @@ export type AnalysisSelectScalar = {
   filesAnalyzed?: boolean
   linesAnalyzed?: boolean
   errorMessage?: boolean
+  riskScore?: boolean
+  riskLevel?: boolean
+  mergeReadiness?: boolean
   createdAt?: boolean
 }
 
-export type AnalysisOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "repositoryId" | "status" | "trigger" | "branch" | "commitSha" | "startedAt" | "completedAt" | "healthScore" | "codeQuality" | "securityScore" | "performance" | "architecture" | "maintainability" | "filesAnalyzed" | "linesAnalyzed" | "errorMessage" | "createdAt", ExtArgs["result"]["analysis"]>
+export type AnalysisOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "repositoryId" | "pullRequestId" | "status" | "trigger" | "branch" | "commitSha" | "startedAt" | "completedAt" | "healthScore" | "codeQuality" | "securityScore" | "performance" | "architecture" | "maintainability" | "filesAnalyzed" | "linesAnalyzed" | "errorMessage" | "riskScore" | "riskLevel" | "mergeReadiness" | "createdAt", ExtArgs["result"]["analysis"]>
 export type AnalysisInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   repository?: boolean | Prisma.RepositoryDefaultArgs<ExtArgs>
+  pullRequest?: boolean | Prisma.Analysis$pullRequestArgs<ExtArgs>
   architectureComponents?: boolean | Prisma.Analysis$architectureComponentsArgs<ExtArgs>
   findings?: boolean | Prisma.Analysis$findingsArgs<ExtArgs>
   performanceIssues?: boolean | Prisma.Analysis$performanceIssuesArgs<ExtArgs>
@@ -1479,15 +1903,18 @@ export type AnalysisInclude<ExtArgs extends runtime.Types.Extensions.InternalArg
 }
 export type AnalysisIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   repository?: boolean | Prisma.RepositoryDefaultArgs<ExtArgs>
+  pullRequest?: boolean | Prisma.Analysis$pullRequestArgs<ExtArgs>
 }
 export type AnalysisIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   repository?: boolean | Prisma.RepositoryDefaultArgs<ExtArgs>
+  pullRequest?: boolean | Prisma.Analysis$pullRequestArgs<ExtArgs>
 }
 
 export type $AnalysisPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Analysis"
   objects: {
     repository: Prisma.$RepositoryPayload<ExtArgs>
+    pullRequest: Prisma.$PullRequestPayload<ExtArgs> | null
     architectureComponents: Prisma.$ArchitectureComponentPayload<ExtArgs>[]
     findings: Prisma.$FindingPayload<ExtArgs>[]
     performanceIssues: Prisma.$PerformanceIssuePayload<ExtArgs>[]
@@ -1495,6 +1922,7 @@ export type $AnalysisPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     repositoryId: string
+    pullRequestId: string | null
     status: $Enums.AnalysisStatus
     trigger: $Enums.AnalysisTrigger
     branch: string | null
@@ -1510,6 +1938,9 @@ export type $AnalysisPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     filesAnalyzed: number
     linesAnalyzed: number
     errorMessage: string | null
+    riskScore: number | null
+    riskLevel: $Enums.PRRiskLevel | null
+    mergeReadiness: $Enums.PRMergeReadiness | null
     createdAt: Date
   }, ExtArgs["result"]["analysis"]>
   composites: {}
@@ -1906,6 +2337,7 @@ readonly fields: AnalysisFieldRefs;
 export interface Prisma__AnalysisClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   repository<T extends Prisma.RepositoryDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.RepositoryDefaultArgs<ExtArgs>>): Prisma.Prisma__RepositoryClient<runtime.Types.Result.GetResult<Prisma.$RepositoryPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  pullRequest<T extends Prisma.Analysis$pullRequestArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Analysis$pullRequestArgs<ExtArgs>>): Prisma.Prisma__PullRequestClient<runtime.Types.Result.GetResult<Prisma.$PullRequestPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   architectureComponents<T extends Prisma.Analysis$architectureComponentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Analysis$architectureComponentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ArchitectureComponentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   findings<T extends Prisma.Analysis$findingsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Analysis$findingsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FindingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   performanceIssues<T extends Prisma.Analysis$performanceIssuesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Analysis$performanceIssuesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PerformanceIssuePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -1940,6 +2372,7 @@ export interface Prisma__AnalysisClient<T, Null = never, ExtArgs extends runtime
 export interface AnalysisFieldRefs {
   readonly id: Prisma.FieldRef<"Analysis", 'String'>
   readonly repositoryId: Prisma.FieldRef<"Analysis", 'String'>
+  readonly pullRequestId: Prisma.FieldRef<"Analysis", 'String'>
   readonly status: Prisma.FieldRef<"Analysis", 'AnalysisStatus'>
   readonly trigger: Prisma.FieldRef<"Analysis", 'AnalysisTrigger'>
   readonly branch: Prisma.FieldRef<"Analysis", 'String'>
@@ -1955,6 +2388,9 @@ export interface AnalysisFieldRefs {
   readonly filesAnalyzed: Prisma.FieldRef<"Analysis", 'Int'>
   readonly linesAnalyzed: Prisma.FieldRef<"Analysis", 'Int'>
   readonly errorMessage: Prisma.FieldRef<"Analysis", 'String'>
+  readonly riskScore: Prisma.FieldRef<"Analysis", 'Int'>
+  readonly riskLevel: Prisma.FieldRef<"Analysis", 'PRRiskLevel'>
+  readonly mergeReadiness: Prisma.FieldRef<"Analysis", 'PRMergeReadiness'>
   readonly createdAt: Prisma.FieldRef<"Analysis", 'DateTime'>
 }
     
@@ -2354,6 +2790,25 @@ export type AnalysisDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Inte
    * Limit how many Analyses to delete.
    */
   limit?: number
+}
+
+/**
+ * Analysis.pullRequest
+ */
+export type Analysis$pullRequestArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the PullRequest
+   */
+  select?: Prisma.PullRequestSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the PullRequest
+   */
+  omit?: Prisma.PullRequestOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.PullRequestInclude<ExtArgs> | null
+  where?: Prisma.PullRequestWhereInput
 }
 
 /**

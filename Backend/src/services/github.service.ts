@@ -55,27 +55,39 @@ async function githubRequest<T>(
   accessToken?: string,
   options: RequestInit = {},
 ): Promise<T> {
-  const response = await fetch(
-    `${GITHUB_API_URL}${endpoint}`,
-    {
-      ...options,
-      headers: {
-        Accept: "application/vnd.github+json",
-        "X-GitHub-Api-Version":
-          GITHUB_API_VERSION,
-        ...(accessToken
-          ? {
-              Authorization:
-                `Bearer ${accessToken}`,
-            }
-          : {}),
-        ...(options.headers ?? {}),
+
+  let response: Response;
+
+  try {
+    response = await fetch(
+      `${GITHUB_API_URL}${endpoint}`,
+      {
+        ...options,
+        headers: {
+          Accept: "application/vnd.github+json",
+          ...(accessToken
+  ? { Authorization: `Bearer ${accessToken}` }
+  : {}),
+          ...options.headers,
+        },
       },
-    },
-  );
+    );
+  } catch (error) {
+    console.error("[GitHub API transport error]", {
+      endpoint,
+      method: options.method ?? "GET",
+      message:
+        error instanceof Error
+          ? error.message
+          : String(error),
+    });
+
+    throw error;
+  }
 
   const data =
     await response.json().catch(() => null);
+
 
   if (!response.ok) {
     const message =
@@ -666,6 +678,70 @@ export async function listGitHubPullRequests(
     `/repos/${fullName}/pulls?state=all&sort=updated&direction=desc&per_page=50`,
     accessToken,
   );
+
+}
+
+export interface GitHubPullRequestFile {
+  sha: string;
+  filename: string;
+  status:
+    | "added"
+    | "modified"
+    | "deleted"
+    | "renamed"
+    | "copied"
+    | "changed"
+    | "unchanged";
+  additions: number;
+  deletions: number;
+  changes: number;
+  patch?: string;
+  previous_filename?: string;
+}
+
+export async function getGitHubFileContent(
+  accessToken: string,
+  fullName: string,
+  filePath: string,
+  ref: string,
+) {
+  const encodedPath = filePath
+    .split("/")
+    .map((part) => encodeURIComponent(part))
+    .join("/");
+
+  const response = await githubRequest<{
+    content?: string;
+    encoding?: string;
+    path?: string;
+  }>(
+    `/repos/${fullName}/contents/${encodedPath}?ref=${encodeURIComponent(ref)}`,
+    accessToken,
+  );
+
+  if (!response.content) {
+    return null;
+  }
+
+  if (response.encoding === "base64") {
+    return Buffer.from(
+      response.content.replace(/\s/g, ""),
+      "base64",
+    ).toString("utf8");
+  }
+
+  return response.content;
+}
+
+export async function listGitHubPullRequestFiles(
+  accessToken: string,
+  fullName: string,
+  pullNumber: number,
+) {
+  return githubRequest<GitHubPullRequestFile[]>(
+    `/repos/${fullName}/pulls/${pullNumber}/files?per_page=100`,
+    accessToken,
+  );
 }
 
 export async function listGitHubWorkflows(
@@ -714,6 +790,59 @@ export async function listGitHubCheckRuns(
   );
 
   return response.check_runs;
+}
+
+export interface CreateGitHubCheckRunInput {
+  name: string;
+  headSha: string;
+  status?: "queued" | "in_progress" | "completed";
+  conclusion?:
+    | "success"
+    | "failure"
+    | "neutral"
+    | "cancelled"
+    | "skipped"
+    | "timed_out"
+    | "action_required";
+  title?: string;
+  summary?: string;
+  text?: string;
+}
+
+export async function createGitHubCheckRun(
+  accessToken: string,
+  fullName: string,
+  input: CreateGitHubCheckRunInput,
+) {
+  return githubRequest<GitHubCheckRun>(
+    `/repos/${fullName}/check-runs`,
+    accessToken,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept:
+          "application/vnd.github+json",
+      },
+      body: JSON.stringify({
+        name: input.name,
+        head_sha: input.headSha,
+        status: input.status ?? "completed",
+        conclusion:
+          input.conclusion ?? "neutral",
+        output: {
+          title:
+            input.title ??
+            "SecureAI Pull Request Analysis",
+          summary:
+            input.summary ??
+            "SecureAI analysis completed.",
+          text:
+            input.text ?? "",
+        },
+      }),
+    },
+  );
 }
 
 export async function dispatchGitHubWorkflow(

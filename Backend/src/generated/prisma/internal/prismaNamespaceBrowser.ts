@@ -164,6 +164,7 @@ export type RepositoryScalarFieldEnum = (typeof RepositoryScalarFieldEnum)[keyof
 export const AnalysisScalarFieldEnum = {
   id: 'id',
   repositoryId: 'repositoryId',
+  pullRequestId: 'pullRequestId',
   status: 'status',
   trigger: 'trigger',
   branch: 'branch',
@@ -179,6 +180,9 @@ export const AnalysisScalarFieldEnum = {
   filesAnalyzed: 'filesAnalyzed',
   linesAnalyzed: 'linesAnalyzed',
   errorMessage: 'errorMessage',
+  riskScore: 'riskScore',
+  riskLevel: 'riskLevel',
+  mergeReadiness: 'mergeReadiness',
   createdAt: 'createdAt'
 } as const
 
